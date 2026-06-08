@@ -87,7 +87,7 @@ public class LevelFlowController : MonoBehaviour
 
         yield return mergeSystem.RunMerge(cell);
 
-        if (tray.RemainingStacks <= 0)
+        if (board.IsBoardEmpty)
         {
             SetState(LevelFlowState.Packshot);
             packshot.Show();

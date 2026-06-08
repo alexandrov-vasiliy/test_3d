@@ -122,9 +122,11 @@ public class MergeAnimator : MonoBehaviour
             SpawnDisappearEffect(effectPosition, color);
             PlayAllElementsDisappearCompleteSound();
         });
-
+		
         AdvanceSpeed();
         yield return sequence.WaitForCompletion(true);
+		yield return new WaitForSeconds(0.5f);
+
     }
 
     private void SpawnDisappearEffect(Vector3 position, HexColor color)

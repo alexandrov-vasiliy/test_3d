@@ -5,6 +5,7 @@ public class SoundPlayer : MonoBehaviour
 {
     [Header("Clips")]
     [SerializeField] private AudioClip stackPickupClip;
+    [SerializeField] private AudioClip stackDropClip;
     [SerializeField] private AudioClip elementFlyToStackClip;
     [SerializeField] private AudioClip elementDisappearClip;
     [SerializeField] private AudioClip allElementsDisappearCompleteClip;
@@ -12,6 +13,7 @@ public class SoundPlayer : MonoBehaviour
     [Header("Volume")]
     [SerializeField, Range(0f, 1f)] private float masterVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float stackPickupVolume = 1f;
+    [SerializeField, Range(0f, 1f)] private float stackDropVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float elementFlyToStackVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float elementDisappearVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float allElementsDisappearCompleteVolume = 1f;
@@ -50,6 +52,11 @@ public class SoundPlayer : MonoBehaviour
     public void PlayStackPickup()
     {
         Play(stackPickupClip, stackPickupVolume);
+    }
+
+    public void PlayStackDrop()
+    {
+        Play(stackDropClip, stackDropVolume);
     }
 
     public void PlayElementFlyToStack()

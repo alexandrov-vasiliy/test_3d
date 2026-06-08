@@ -34,6 +34,9 @@ public class Main : MonoBehaviour
     [SerializeField] private float lightIntensity = 1.25f;
     [SerializeField] private Color ambientLight = new Color(0.36f, 0.39f, 0.43f);
 
+    [Header("Valid Cell Highlight")]
+    [SerializeField] private HexCellHighlightSettings cellHighlight = new HexCellHighlightSettings();
+
     private bool sceneBuilt;
     private readonly DiContainer container = new DiContainer();
     private Transform runtimeRoot;
@@ -217,8 +220,15 @@ public class Main : MonoBehaviour
 
     private void RegisterRuntimeDependencies(Camera camera, GameAssets assets)
     {
+        if (cellHighlight == null)
+        {
+            cellHighlight = new HexCellHighlightSettings();
+        }
+
+        container.RegisterInstance(container);
         container.RegisterInstance(assets);
         container.RegisterInstance(camera);
+        container.RegisterInstance(cellHighlight);
         container.RegisterInstance(boardController);
         container.RegisterInstance(stackTrayController);
         container.RegisterInstance(dragController);

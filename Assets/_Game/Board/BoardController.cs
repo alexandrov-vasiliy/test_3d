@@ -12,14 +12,33 @@ public class BoardController : MonoBehaviour
     private BoardOutline boardOutline;
     private GameAssets assets;
     private Camera inputCamera;
+    private DiContainer container;
+    private HexCellHighlightSettings cellHighlightSettings;
 
     public IEnumerable<HexCell> Cells => cells.Values;
+    public bool IsBoardEmpty
+    {
+        get
+        {
+            foreach (HexCell cell in cells.Values)
+            {
+                if (cell != null && !cell.IsEmpty)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
 
     [Inject]
-    private void Construct(GameAssets assets, Camera inputCamera)
+    private void Construct(GameAssets assets, Camera inputCamera, DiContainer container, HexCellHighlightSettings cellHighlightSettings)
     {
         this.assets = assets;
         this.inputCamera = inputCamera;
+        this.container = container;
+        this.cellHighlightSettings = cellHighlightSettings;
     }
 
     public void Initialize(int radius)
@@ -60,6 +79,8 @@ public class BoardController : MonoBehaviour
             {
                 view = cellObject.AddComponent<HexCellView>();
             }
+            container?.Inject(view);
+            view.ConfigureHighlight(cellHighlightSettings);
             view.ConfigureGeometry(gridGenerator.CellSize, gridGenerator.Orientation);
             view.Initialize(cell);
             views.Add(cell, view);
@@ -110,14 +131,14 @@ public class BoardController : MonoBehaviour
         cell.stack = stack;
     }
 
-    public void PlaceStackView(HexCell cell, HexStackView stackView)
+    public void PlaceStackView(HexCell cell, HexStackView stackView, bool playDropSound = false)
     {
         if (cell == null || stackView == null || !views.TryGetValue(cell, out HexCellView view))
         {
             return;
         }
 
-        view.SetStackView(stackView);
+        view.SetStackView(stackView, playDropSound);
         stackView.transform.position = view.transform.position + Vector3.up * 0.08f;
     }
 

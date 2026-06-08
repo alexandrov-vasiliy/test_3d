@@ -7,7 +7,8 @@ public class HexGridShapeEditorWindow : EditorWindow
     private enum EditMode
     {
         Shape,
-        StartStacks
+        StartStacks,
+        TrayStacks
     }
 
     private enum ShapeBrush
@@ -21,6 +22,8 @@ public class HexGridShapeEditorWindow : EditorWindow
     private const float HexPixelRadius = 28f;
     private const float CanvasPadding = 44f;
     private const float MinCanvasHeight = 320f;
+    private const float StackChipSize = 18f;
+    private const float TrayCardHeight = 58f;
 
     private static readonly Color ActiveCellColor = new Color(0.18f, 0.72f, 0.9f, 1f);
     private static readonly Color InactiveCellColor = new Color(0.3f, 0.3f, 0.3f, 1f);
@@ -32,6 +35,7 @@ public class HexGridShapeEditorWindow : EditorWindow
     private SerializedObject mainObject;
     private SerializedProperty boardRadius;
     private SerializedProperty startingBoardStacks;
+    private SerializedProperty trayStacks;
     private SerializedProperty tutorialTargetCell;
 
     private HexGridGenerator generator;
@@ -50,6 +54,8 @@ public class HexGridShapeEditorWindow : EditorWindow
     private ShapeBrush shapeBrush;
     private bool showAdvancedSettings;
     private bool showRawStartStacks;
+    private bool showRawTrayStacks;
+    private int selectedTrayStackIndex = -1;
 
     [MenuItem("Tools/Hex Grid Shape Editor")]
     public static void Open()
@@ -112,13 +118,25 @@ public class HexGridShapeEditorWindow : EditorWindow
 
         DrawContextTools();
         DrawLegendAndStats();
-        DrawGridEditor();
-        DrawSelectedCellEditor();
+        if (editMode == EditMode.TrayStacks)
+        {
+            DrawTrayStackEditor();
+        }
+        else
+        {
+            DrawGridEditor();
+            DrawSelectedCellEditor();
+        }
 
-        if (showRawStartStacks)
+        if (showRawStartStacks && startingBoardStacks != null)
         {
             EditorGUILayout.Space(4f);
             EditorGUILayout.PropertyField(startingBoardStacks, true);
+        }
+        if (showRawTrayStacks && trayStacks != null)
+        {
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.PropertyField(trayStacks, true);
         }
         EditorGUILayout.EndScrollView();
 
@@ -148,13 +166,33 @@ public class HexGridShapeEditorWindow : EditorWindow
     {
         EditorGUILayout.Space(2f);
         EditorGUILayout.LabelField("Hex Board Layout", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Edit board shape first, then place starting stacks on active cells. Shape edits are saved in HexGridGenerator, stack edits are saved in Main.", MessageType.None);
+        EditorGUILayout.HelpBox("Edit board shape first, then place starting board stacks or tray stacks. Shape edits are saved in HexGridGenerator, stack edits are saved in Main.", MessageType.None);
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawWorkflowStep("1", "Shape", "Choose active cells.", editMode == EditMode.Shape);
+            DrawWorkflowStep("2", "Board Starts", "Place stacks on cells.", editMode == EditMode.StartStacks);
+            DrawWorkflowStep("3", "Tray Starts", "Build draggable stacks.", editMode == EditMode.TrayStacks);
+        }
     }
 
     private void DrawModeTabs()
     {
-        string[] modes = { "1. Shape", "2. Start Stacks" };
+        string[] modes = { "1. Shape", "2. Board Starts", "3. Tray Starts" };
         editMode = (EditMode)GUILayout.Toolbar((int)editMode, modes, GUILayout.Height(28f));
+        EditorGUILayout.Space(4f);
+    }
+
+    private void DrawWorkflowStep(string number, string title, string description, bool active)
+    {
+        Color previous = GUI.backgroundColor;
+        GUI.backgroundColor = active ? SelectedCellColor : Color.white;
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.MinHeight(48f)))
+        {
+            GUI.backgroundColor = previous;
+            EditorGUILayout.LabelField(number + ". " + title, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(description, EditorStyles.miniLabel);
+        }
+        GUI.backgroundColor = previous;
     }
 
     private void DrawGridSettings()
@@ -214,7 +252,8 @@ public class HexGridShapeEditorWindow : EditorWindow
                 {
                     DrawCustomLayoutPopup();
                 }
-                showRawStartStacks = EditorGUILayout.Toggle("Show Raw Start Stacks", showRawStartStacks);
+                showRawStartStacks = EditorGUILayout.Toggle("Show Raw Board Start Stacks", showRawStartStacks);
+                showRawTrayStacks = EditorGUILayout.Toggle("Show Raw Tray Start Stacks", showRawTrayStacks);
             }
         }
     }
@@ -235,9 +274,13 @@ public class HexGridShapeEditorWindow : EditorWindow
             {
                 DrawShapeTools();
             }
-            else
+            else if (editMode == EditMode.StartStacks)
             {
                 DrawStartStackTools();
+            }
+            else
+            {
+                DrawTrayStackTools();
             }
         }
     }
@@ -245,23 +288,24 @@ public class HexGridShapeEditorWindow : EditorWindow
     private void DrawShapeTools()
     {
         EditorGUILayout.LabelField("Shape Brush", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Pick a brush, then click cells in the canvas. Presets replace the custom shape inside Edit Radius.", MessageType.None);
         shapeBrush = (ShapeBrush)GUILayout.Toolbar((int)shapeBrush, new[] { "Toggle", "Add", "Erase", "Select" }, GUILayout.Height(26f));
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            if (GUILayout.Button(new GUIContent("Square Preset", "Replace custom shape with a square using Edit Radius.")))
+            if (GUILayout.Button(new GUIContent("Use Square Preset", "Replace custom shape with a square using Edit Radius.")))
             {
                 SetCustomCoordinates(GenerateSquareCoordinates(radius.intValue), HexGridGenerator.BoardShape.Square);
             }
-            if (GUILayout.Button(new GUIContent("Hex Preset", "Replace custom shape with a hexagon using Edit Radius.")))
+            if (GUILayout.Button(new GUIContent("Use Hex Preset", "Replace custom shape with a hexagon using Edit Radius.")))
             {
                 SetCustomCoordinates(GenerateHexagonCoordinates(radius.intValue), HexGridGenerator.BoardShape.Hexagon);
             }
-            if (GUILayout.Button(new GUIContent("Invert", "Invert active cells inside the visible edit area.")))
+            if (GUILayout.Button(new GUIContent("Invert Visible", "Invert active cells inside the visible edit area.")))
             {
                 InvertVisibleShape();
             }
-            if (GUILayout.Button(new GUIContent("Clear", "Remove every custom cell.")))
+            if (GUILayout.Button(new GUIContent("Clear Shape", "Remove every custom cell.")))
             {
                 if (EditorUtility.DisplayDialog("Clear Shape", "Remove all custom cells and start stacks outside the empty shape?", "Clear", "Cancel"))
                 {
@@ -274,12 +318,12 @@ public class HexGridShapeEditorWindow : EditorWindow
 
     private void DrawStartStackTools()
     {
-        EditorGUILayout.LabelField("Start Stack Tools", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Click an active cell to select it. Empty active cells get a red starter stack on first click.", MessageType.None);
+        EditorGUILayout.LabelField("Board Start Stack Tools", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Click an active cell to select it. If the selected cell is empty, use Add Stack or click it in Board Starts mode to create a red starter stack.", MessageType.None);
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            if (GUILayout.Button("Remove Stacks Outside Shape"))
+            if (GUILayout.Button("Clean Stacks Outside Shape"))
             {
                 Undo.RecordObject(main, "Remove Start Stacks Outside Shape");
                 RemoveStartStacksOutsideShape();
@@ -287,10 +331,87 @@ public class HexGridShapeEditorWindow : EditorWindow
             }
             using (new EditorGUI.DisabledScope(!hasSelectedCell))
             {
-                if (GUILayout.Button("Set Tutorial To Selected"))
+                if (GUILayout.Button("Use Selected As Tutorial Target"))
                 {
                     Undo.RecordObject(main, "Set Tutorial Target");
                     tutorialTargetCell.vector2IntValue = selectedCell;
+                    EditorUtility.SetDirty(main);
+                }
+            }
+        }
+    }
+
+    private void DrawTrayStackTools()
+    {
+        EditorGUILayout.LabelField("Tray Start Stack Tools", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Edit draggable stacks that appear in the tray at level start. Colors are stored bottom to top.", MessageType.None);
+        if (trayStacks == null)
+        {
+            EditorGUILayout.HelpBox("Main.trayStacks was not found.", MessageType.Warning);
+            return;
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Add Stack"))
+            {
+                Undo.RecordObject(main, "Add Tray Stack");
+                selectedTrayStackIndex = AddTrayStack();
+                EditorUtility.SetDirty(main);
+            }
+            using (new EditorGUI.DisabledScope(!HasSelectedTrayStack()))
+            {
+                if (GUILayout.Button("Duplicate Selected"))
+                {
+                    Undo.RecordObject(main, "Duplicate Tray Stack");
+                    DuplicateSelectedTrayStack(GetSelectedTrayStackColors());
+                    EditorUtility.SetDirty(main);
+                }
+                if (GUILayout.Button("Move Left"))
+                {
+                    Undo.RecordObject(main, "Move Tray Stack");
+                    MoveSelectedTrayStack(-1);
+                    EditorUtility.SetDirty(main);
+                }
+                if (GUILayout.Button("Move Right"))
+                {
+                    Undo.RecordObject(main, "Move Tray Stack");
+                    MoveSelectedTrayStack(1);
+                    EditorUtility.SetDirty(main);
+                }
+                if (GUILayout.Button("Delete Selected"))
+                {
+                    Undo.RecordObject(main, "Remove Tray Stack");
+                    RemoveSelectedTrayStack();
+                    EditorUtility.SetDirty(main);
+                }
+            }
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Generate Default Tray"))
+            {
+                bool replace = trayStacks.arraySize == 0 || EditorUtility.DisplayDialog("Generate Default Tray", "Replace all tray stacks with the default generated set?", "Replace", "Cancel");
+                if (replace)
+                {
+                    Undo.RecordObject(main, "Generate Tray Stacks");
+                    GenerateTrayStacks();
+                    selectedTrayStackIndex = trayStacks.arraySize > 0 ? 0 : -1;
+                    EditorUtility.SetDirty(main);
+                }
+            }
+            using (new EditorGUI.DisabledScope(trayStacks.arraySize == 0))
+            {
+                if (GUILayout.Button("Clear All Tray Stacks"))
+                {
+                    if (EditorUtility.DisplayDialog("Clear Tray Stacks", "Remove every tray stack?", "Clear", "Cancel"))
+                    {
+                        Undo.RecordObject(main, "Clear Tray Stacks");
+                        trayStacks.ClearArray();
+                        selectedTrayStackIndex = -1;
+                        EditorUtility.SetDirty(main);
+                    }
                 }
             }
         }
@@ -300,7 +421,19 @@ public class HexGridShapeEditorWindow : EditorWindow
     {
         int activeCount = generator.GenerateCoordinates().Count;
         int startCount = startingBoardStacks.arraySize;
+        int trayCount = trayStacks != null ? trayStacks.arraySize : 0;
         string selected = hasSelectedCell ? selectedCell.ToString() : "none";
+
+        if (editMode == EditMode.TrayStacks)
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Tray Stacks: " + trayCount + "   Selected Tray: " + (HasSelectedTrayStack() ? selectedTrayStackIndex.ToString() : "none"), EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField("Colors are shown bottom -> top. T marks the top piece.", EditorStyles.miniLabel, GUILayout.Width(260f));
+            }
+            return;
+        }
 
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
         {
@@ -310,7 +443,7 @@ public class HexGridShapeEditorWindow : EditorWindow
             DrawLegendSwatch(TutorialCellColor, "Tutorial");
             DrawLegendSwatch(SelectedCellColor, "Selected");
             GUILayout.FlexibleSpace();
-            EditorGUILayout.LabelField("Cells: " + activeCount + "   Starts: " + startCount + "   Selected: " + selected, GUILayout.Width(260f));
+            EditorGUILayout.LabelField("Cells: " + activeCount + "   Board: " + startCount + "   Tray: " + trayCount + "   Selected: " + selected, GUILayout.Width(330f));
         }
     }
 
@@ -328,7 +461,9 @@ public class HexGridShapeEditorWindow : EditorWindow
         EditorGUILayout.Space(4f);
         string hint = editMode == EditMode.Shape
             ? "Shape mode: use the brush above, then click hexes. The canvas uses the same layout formulas as the runtime board."
-            : "Start Stacks mode: only active hexes are editable. The label shows stack colors from bottom to top.";
+            : editMode == EditMode.StartStacks
+                ? "Board Starts mode: only active hexes are editable. The label shows stack colors from bottom to top."
+                : "Tray Starts mode: the board canvas is read-only here. Use the tray editor below.";
         EditorGUILayout.HelpBox(hint, MessageType.None);
 
         int editRadius = Mathf.Max(0, radius.intValue);
@@ -524,10 +659,16 @@ public class HexGridShapeEditorWindow : EditorWindow
             return;
         }
 
+        if (editMode == EditMode.TrayStacks)
+        {
+            return;
+        }
+
         if (isActive && !hasStart)
         {
             Undo.RecordObject(main, "Add Start Stack");
             AddOrUpdateStartStack(coordinate);
+            EditorUtility.SetDirty(main);
         }
     }
 
@@ -559,16 +700,19 @@ public class HexGridShapeEditorWindow : EditorWindow
                 {
                     Undo.RecordObject(main, "Add Start Stack");
                     AddOrUpdateStartStack(selectedCell);
+                    EditorUtility.SetDirty(main);
                 }
                 if (GUILayout.Button("Remove Start Stack"))
                 {
                     Undo.RecordObject(main, "Remove Start Stack");
                     RemoveStartStack(selectedCell);
+                    EditorUtility.SetDirty(main);
                 }
                 if (GUILayout.Button("Tutorial Target"))
                 {
                     Undo.RecordObject(main, "Set Tutorial Target");
                     tutorialTargetCell.vector2IntValue = selectedCell;
+                    EditorUtility.SetDirty(main);
                 }
             }
 
@@ -581,23 +725,11 @@ public class HexGridShapeEditorWindow : EditorWindow
 
             SerializedProperty item = startingBoardStacks.GetArrayElementAtIndex(index);
             SerializedProperty colors = GetBoardStackColorsProperty(item);
-            EditorGUILayout.LabelField("Stack", StackSummary(colors));
+            EditorGUILayout.LabelField("Stack", StackSummary(colors), EditorStyles.boldLabel);
+            DrawStackPreview(colors);
             EditorGUILayout.PropertyField(colors, new GUIContent("Colors Bottom To Top"), true);
 
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                foreach (HexColor color in System.Enum.GetValues(typeof(HexColor)))
-                {
-                    Color previousColor = GUI.backgroundColor;
-                    GUI.backgroundColor = GetHexColorPreview(color);
-                    if (GUILayout.Button(color.ToString()[0].ToString(), GUILayout.Height(24f)))
-                    {
-                        Undo.RecordObject(main, "Add Stack Color");
-                        AddColorToStack(colors, color);
-                    }
-                    GUI.backgroundColor = previousColor;
-                }
-            }
+            DrawColorPalette(colors, "Add Stack Color");
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -605,11 +737,13 @@ public class HexGridShapeEditorWindow : EditorWindow
                 {
                     Undo.RecordObject(main, "Remove Stack Color");
                     RemoveTopColor(colors);
+                    EditorUtility.SetDirty(main);
                 }
                 if (GUILayout.Button("Clear Stack"))
                 {
                     Undo.RecordObject(main, "Clear Stack");
                     colors?.ClearArray();
+                    EditorUtility.SetDirty(main);
                 }
             }
         }
@@ -625,6 +759,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         mainObject = main != null ? new SerializedObject(main) : null;
         boardRadius = mainObject?.FindProperty("boardRadius");
         startingBoardStacks = mainObject?.FindProperty("startingBoardStacks");
+        trayStacks = mainObject?.FindProperty("trayStacks");
         tutorialTargetCell = mainObject?.FindProperty("tutorialTargetCell");
 
         BoardController controller = main != null ? main.FindSceneComponent<BoardController>() : null;
@@ -635,6 +770,137 @@ public class HexGridShapeEditorWindow : EditorWindow
         boardShape = generatorObject?.FindProperty("boardShape");
         customBaseShape = generatorObject?.FindProperty("customBaseShape");
         orientation = generatorObject?.FindProperty("orientation");
+        ClampSelectedTrayStackIndex();
+    }
+
+    private void DrawTrayStackEditor()
+    {
+        EditorGUILayout.Space(6f);
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            EditorGUILayout.LabelField("Tray Start Stacks", EditorStyles.boldLabel);
+            if (trayStacks == null)
+            {
+                EditorGUILayout.HelpBox("Main.trayStacks was not found.", MessageType.Warning);
+                return;
+            }
+
+            if (trayStacks.arraySize == 0)
+            {
+                EditorGUILayout.HelpBox("Tray has no start stacks. Add one or generate defaults.", MessageType.None);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Add First Stack"))
+                    {
+                        Undo.RecordObject(main, "Add Tray Stack");
+                        selectedTrayStackIndex = AddTrayStack();
+                        EditorUtility.SetDirty(main);
+                    }
+                    if (GUILayout.Button("Generate Defaults"))
+                    {
+                        Undo.RecordObject(main, "Generate Tray Stacks");
+                        GenerateTrayStacks();
+                        selectedTrayStackIndex = trayStacks.arraySize > 0 ? 0 : -1;
+                        EditorUtility.SetDirty(main);
+                    }
+                }
+                return;
+            }
+
+            ClampSelectedTrayStackIndex();
+            DrawTrayStackCards();
+
+            SerializedProperty colors = GetSelectedTrayStackColors();
+            if (colors == null)
+            {
+                EditorGUILayout.HelpBox("Selected tray stack has no colorsBottomToTop property.", MessageType.Warning);
+                return;
+            }
+
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("Selected Tray Stack " + selectedTrayStackIndex, EditorStyles.boldLabel);
+            DrawStackPreview(colors);
+            EditorGUILayout.PropertyField(colors, new GUIContent("Colors Bottom To Top"), true);
+
+            DrawColorPalette(colors, "Add Tray Stack Color");
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Remove Top"))
+                {
+                    Undo.RecordObject(main, "Remove Tray Stack Color");
+                    RemoveTopColor(colors);
+                    EditorUtility.SetDirty(main);
+                }
+                if (GUILayout.Button("Clear Stack"))
+                {
+                    Undo.RecordObject(main, "Clear Tray Stack");
+                    colors?.ClearArray();
+                    EditorUtility.SetDirty(main);
+                }
+                if (GUILayout.Button("Duplicate Stack"))
+                {
+                    Undo.RecordObject(main, "Duplicate Tray Stack");
+                    DuplicateSelectedTrayStack(colors);
+                    EditorUtility.SetDirty(main);
+                }
+            }
+        }
+    }
+
+    private void DrawTrayStackCards()
+    {
+        float availableWidth = Mathf.Max(260f, position.width - 54f);
+        int columns = Mathf.Clamp(Mathf.FloorToInt(availableWidth / 220f), 1, 4);
+        float cardWidth = Mathf.Floor((availableWidth - (columns - 1) * 6f) / columns);
+
+        for (int rowStart = 0; rowStart < trayStacks.arraySize; rowStart += columns)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    int index = rowStart + column;
+                    if (index < trayStacks.arraySize)
+                    {
+                        DrawTrayStackCard(index, cardWidth);
+                    }
+                    else
+                    {
+                        GUILayout.Space(cardWidth);
+                    }
+                }
+            }
+        }
+    }
+
+    private void DrawTrayStackCard(int index, float width)
+    {
+        SerializedProperty colors = GetTrayStackColorsProperty(trayStacks.GetArrayElementAtIndex(index));
+        int colorCount = colors != null ? colors.arraySize : 0;
+        Rect rect = GUILayoutUtility.GetRect(width, TrayCardHeight, GUILayout.Width(width), GUILayout.Height(TrayCardHeight));
+
+        if (Event.current.type == EventType.Repaint)
+        {
+            EditorStyles.helpBox.Draw(rect, GUIContent.none, false, false, false, false);
+            if (selectedTrayStackIndex == index)
+            {
+                DrawRectOutline(rect, SelectedCellColor, 2f);
+            }
+        }
+
+        if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
+        {
+            selectedTrayStackIndex = index;
+            GUI.FocusControl(null);
+            Event.current.Use();
+            Repaint();
+        }
+
+        Rect titleRect = new Rect(rect.x + 10f, rect.y + 6f, rect.width - 20f, 18f);
+        GUI.Label(titleRect, "Tray " + index + "  |  " + colorCount + " colors", EditorStyles.boldLabel);
+        Rect previewRect = new Rect(rect.x + 10f, rect.y + 30f, rect.width - 20f, StackChipSize);
+        DrawStackPreview(previewRect, colors, StackChipSize);
     }
 
     private void ApplyShapeBrush(Vector2Int coordinate, bool isActive)
@@ -785,6 +1051,191 @@ public class HexGridShapeEditorWindow : EditorWindow
         }
     }
 
+    private void DrawColorPalette(SerializedProperty colors, string undoLabel)
+    {
+        if (colors == null)
+        {
+            EditorGUILayout.HelpBox("Stack color list is missing.", MessageType.Warning);
+            return;
+        }
+
+        EditorGUILayout.LabelField("Add Color On Top");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            foreach (HexColor color in System.Enum.GetValues(typeof(HexColor)))
+            {
+                Color previousColor = GUI.backgroundColor;
+                GUI.backgroundColor = GetHexColorPreview(color);
+                if (GUILayout.Button(new GUIContent(color.ToString(), "Add " + color + " to the top of this stack."), GUILayout.Height(26f)))
+                {
+                    Undo.RecordObject(main, undoLabel);
+                    AddColorToStack(colors, color);
+                    EditorUtility.SetDirty(main);
+                }
+                GUI.backgroundColor = previousColor;
+            }
+        }
+    }
+
+    private void DrawStackPreview(SerializedProperty colors)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.LabelField("Bottom -> Top", GUILayout.Width(92f));
+            Rect rect = GUILayoutUtility.GetRect(10f, StackChipSize, GUILayout.ExpandWidth(true), GUILayout.Height(StackChipSize));
+            DrawStackPreview(rect, colors, StackChipSize);
+        }
+    }
+
+    private static void DrawStackPreview(Rect rect, SerializedProperty colors, float chipSize)
+    {
+        if (colors == null || colors.arraySize == 0)
+        {
+            GUI.Label(rect, "empty", EditorStyles.miniLabel);
+            return;
+        }
+
+        float step = chipSize + 4f;
+        int maxVisible = Mathf.Max(1, Mathf.FloorToInt((rect.width - 34f) / step));
+        int visibleCount = Mathf.Min(colors.arraySize, maxVisible);
+        for (int i = 0; i < visibleCount; i++)
+        {
+            HexColor color = (HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex;
+            Rect chipRect = new Rect(rect.x + i * step, rect.y, chipSize, chipSize);
+            DrawColorChip(chipRect, color, i == colors.arraySize - 1);
+        }
+
+        if (visibleCount < colors.arraySize)
+        {
+            Rect moreRect = new Rect(rect.x + visibleCount * step, rect.y, 34f, chipSize);
+            GUI.Label(moreRect, "+" + (colors.arraySize - visibleCount), EditorStyles.miniBoldLabel);
+        }
+    }
+
+    private static void DrawColorChip(Rect rect, HexColor color, bool isTop)
+    {
+        Color preview = GetHexColorPreview(color);
+        EditorGUI.DrawRect(rect, preview);
+        DrawRectOutline(rect, Color.black, 1f);
+
+        GUIStyle labelStyle = new GUIStyle(EditorStyles.miniBoldLabel);
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+        labelStyle.normal.textColor = GetReadableTextColor(preview);
+        GUI.Label(rect, isTop ? "T" : color.ToString()[0].ToString(), labelStyle);
+    }
+
+    private static void DrawRectOutline(Rect rect, Color color, float thickness)
+    {
+        EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, thickness), color);
+        EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - thickness, rect.width, thickness), color);
+        EditorGUI.DrawRect(new Rect(rect.x, rect.y, thickness, rect.height), color);
+        EditorGUI.DrawRect(new Rect(rect.xMax - thickness, rect.y, thickness, rect.height), color);
+    }
+
+    private static Color GetReadableTextColor(Color background)
+    {
+        float luminance = background.r * 0.299f + background.g * 0.587f + background.b * 0.114f;
+        return luminance > 0.58f ? Color.black : Color.white;
+    }
+
+    private bool HasSelectedTrayStack()
+    {
+        return trayStacks != null && selectedTrayStackIndex >= 0 && selectedTrayStackIndex < trayStacks.arraySize;
+    }
+
+    private SerializedProperty GetSelectedTrayStackColors()
+    {
+        if (!HasSelectedTrayStack())
+        {
+            return null;
+        }
+
+        return GetTrayStackColorsProperty(trayStacks.GetArrayElementAtIndex(selectedTrayStackIndex));
+    }
+
+    private void MoveSelectedTrayStack(int direction)
+    {
+        if (!HasSelectedTrayStack())
+        {
+            return;
+        }
+
+        int nextIndex = Mathf.Clamp(selectedTrayStackIndex + direction, 0, trayStacks.arraySize - 1);
+        if (nextIndex == selectedTrayStackIndex)
+        {
+            return;
+        }
+
+        trayStacks.MoveArrayElement(selectedTrayStackIndex, nextIndex);
+        selectedTrayStackIndex = nextIndex;
+    }
+
+    private void ClampSelectedTrayStackIndex()
+    {
+        if (trayStacks == null || trayStacks.arraySize == 0)
+        {
+            selectedTrayStackIndex = -1;
+            return;
+        }
+
+        selectedTrayStackIndex = Mathf.Clamp(selectedTrayStackIndex, 0, trayStacks.arraySize - 1);
+    }
+
+    private int AddTrayStack()
+    {
+        trayStacks.InsertArrayElementAtIndex(trayStacks.arraySize);
+        int index = trayStacks.arraySize - 1;
+        SerializedProperty item = trayStacks.GetArrayElementAtIndex(index);
+        SerializedProperty colors = GetTrayStackColorsProperty(item);
+        colors?.ClearArray();
+        AddColorToStack(colors, HexColor.Red);
+        return index;
+    }
+
+    private void RemoveSelectedTrayStack()
+    {
+        if (!HasSelectedTrayStack())
+        {
+            return;
+        }
+
+        trayStacks.DeleteArrayElementAtIndex(selectedTrayStackIndex);
+        ClampSelectedTrayStackIndex();
+    }
+
+    private void DuplicateSelectedTrayStack(SerializedProperty sourceColors)
+    {
+        if (sourceColors == null)
+        {
+            return;
+        }
+
+        List<HexColor> colors = new List<HexColor>();
+        for (int i = 0; i < sourceColors.arraySize; i++)
+        {
+            colors.Add((HexColor)sourceColors.GetArrayElementAtIndex(i).enumValueIndex);
+        }
+
+        trayStacks.InsertArrayElementAtIndex(selectedTrayStackIndex + 1);
+        selectedTrayStackIndex++;
+        SetColors(GetTrayStackColorsProperty(trayStacks.GetArrayElementAtIndex(selectedTrayStackIndex)), colors);
+    }
+
+    private void GenerateTrayStacks()
+    {
+        trayStacks.ClearArray();
+        AddGeneratedTrayStack(HexColor.Blue, HexColor.Red);
+        AddGeneratedTrayStack(HexColor.Yellow, HexColor.Blue);
+        AddGeneratedTrayStack(HexColor.Purple, HexColor.Green);
+    }
+
+    private void AddGeneratedTrayStack(params HexColor[] colors)
+    {
+        trayStacks.InsertArrayElementAtIndex(trayStacks.arraySize);
+        SerializedProperty item = trayStacks.GetArrayElementAtIndex(trayStacks.arraySize - 1);
+        SetColors(GetTrayStackColorsProperty(item), colors);
+    }
+
     private void RemoveStartStack(Vector2Int coordinate)
     {
         int index = FindStartStackIndex(coordinate);
@@ -798,6 +1249,11 @@ public class HexGridShapeEditorWindow : EditorWindow
     {
         SerializedProperty stack = boardStack.FindPropertyRelative("stack");
         return stack != null ? stack.FindPropertyRelative("colorsBottomToTop") : null;
+    }
+
+    private static SerializedProperty GetTrayStackColorsProperty(SerializedProperty trayStack)
+    {
+        return trayStack != null ? trayStack.FindPropertyRelative("colorsBottomToTop") : null;
     }
 
     private static void AddColorToStack(SerializedProperty colors, HexColor color)
@@ -816,6 +1272,21 @@ public class HexGridShapeEditorWindow : EditorWindow
         if (colors != null && colors.arraySize > 0)
         {
             colors.DeleteArrayElementAtIndex(colors.arraySize - 1);
+        }
+    }
+
+    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<HexColor> colors)
+    {
+        if (colorsProperty == null)
+        {
+            return;
+        }
+
+        colorsProperty.ClearArray();
+        for (int i = 0; i < colors.Count; i++)
+        {
+            colorsProperty.InsertArrayElementAtIndex(i);
+            colorsProperty.GetArrayElementAtIndex(i).enumValueIndex = (int)colors[i];
         }
     }
 

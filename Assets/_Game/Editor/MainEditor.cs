@@ -31,6 +31,7 @@ public class MainEditor : Editor
     private SerializedProperty lightEulerAngles;
     private SerializedProperty lightIntensity;
     private SerializedProperty ambientLight;
+    private SerializedProperty cellHighlight;
 
     private Vector2Int selectedCell;
     private bool hasSelectedCell;
@@ -39,6 +40,7 @@ public class MainEditor : Editor
     private bool showLevel = true;
     private bool showCamera = false;
     private bool showLighting = false;
+    private bool showHighlight = true;
     private bool showRawLists = true;
 
     private void OnEnable()
@@ -61,6 +63,7 @@ public class MainEditor : Editor
         lightEulerAngles = serializedObject.FindProperty("lightEulerAngles");
         lightIntensity = serializedObject.FindProperty("lightIntensity");
         ambientLight = serializedObject.FindProperty("ambientLight");
+        cellHighlight = serializedObject.FindProperty("cellHighlight");
     }
 
     public override void OnInspectorGUI()
@@ -72,6 +75,7 @@ public class MainEditor : Editor
         DrawAssetsSection();
         DrawControllersSection();
         DrawLevelSection();
+        DrawHighlightSection();
         DrawCameraSection();
         DrawLightingSection();
 
@@ -253,6 +257,32 @@ public class MainEditor : Editor
         EditorGUILayout.PropertyField(cameraPosition);
         EditorGUILayout.PropertyField(cameraEulerAngles);
         EditorGUILayout.PropertyField(orthographicSize);
+        EditorGUILayout.Space(4f);
+    }
+
+    private void DrawHighlightSection()
+    {
+        showHighlight = EditorGUILayout.Foldout(showHighlight, "Cell Highlight", true);
+        if (!showHighlight)
+        {
+            return;
+        }
+
+        SerializedProperty useMaterialTint = cellHighlight.FindPropertyRelative("useMaterialTint");
+        SerializedProperty useOutline = cellHighlight.FindPropertyRelative("useOutline");
+        SerializedProperty validColor = cellHighlight.FindPropertyRelative("validColor");
+        SerializedProperty outlineMaterial = cellHighlight.FindPropertyRelative("outlineMaterial");
+        SerializedProperty outlineLineWidth = cellHighlight.FindPropertyRelative("outlineLineWidth");
+        SerializedProperty outlineVerticalOffset = cellHighlight.FindPropertyRelative("outlineVerticalOffset");
+        SerializedProperty outlineRadiusMultiplier = cellHighlight.FindPropertyRelative("outlineRadiusMultiplier");
+
+        EditorGUILayout.PropertyField(useMaterialTint);
+        EditorGUILayout.PropertyField(useOutline);
+        EditorGUILayout.PropertyField(validColor, new GUIContent("Highlight Color"));
+        EditorGUILayout.PropertyField(outlineMaterial);
+        EditorGUILayout.PropertyField(outlineLineWidth);
+        EditorGUILayout.PropertyField(outlineVerticalOffset);
+        EditorGUILayout.PropertyField(outlineRadiusMultiplier);
         EditorGUILayout.Space(4f);
     }
 

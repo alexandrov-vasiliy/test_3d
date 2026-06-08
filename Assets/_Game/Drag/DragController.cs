@@ -110,7 +110,7 @@ public class DragController : MonoBehaviour
         {
             tray.RemoveStack(stack);
             board.PlaceStack(targetCell, stack.Stack);
-            board.PlaceStackView(targetCell, stack);
+            board.PlaceStackView(targetCell, stack, true);
             StackPlaced?.Invoke(stack, targetCell);
         }
         else
