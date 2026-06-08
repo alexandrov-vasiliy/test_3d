@@ -8,11 +8,18 @@ public class StackTrayController : MonoBehaviour
 
     private readonly List<HexStackView> stackViews = new List<HexStackView>();
     private readonly Dictionary<HexStackView, Vector3> homePositions = new Dictionary<HexStackView, Vector3>();
+    private BoardController board;
 
     public int RemainingStacks => stackViews.Count;
     public IReadOnlyList<HexStackView> StackViews => stackViews;
 
-    public void Initialize(List<HexStack> stacks, BoardController board)
+    [Inject]
+    private void Construct(BoardController board)
+    {
+        this.board = board;
+    }
+
+    public void Initialize(List<HexStack> stacks)
     {
         Clear();
         float startX = (stacks.Count - 1) * spacing * -0.5f;

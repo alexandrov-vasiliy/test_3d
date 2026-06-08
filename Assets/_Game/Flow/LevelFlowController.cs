@@ -3,17 +3,20 @@ using UnityEngine;
 
 public class LevelFlowController : MonoBehaviour
 {
-    [SerializeField] private BoardController board;
-    [SerializeField] private StackTrayController tray;
-    [SerializeField] private DragController drag;
-    [SerializeField] private MergeSystem mergeSystem;
-    [SerializeField] private TutorialHandController tutorial;
-    [SerializeField] private PackshotController packshot;
+    private BoardController board;
+    private StackTrayController tray;
+    private DragController drag;
+    private MergeSystem mergeSystem;
+    private TutorialHandController tutorial;
+    private PackshotController packshot;
 
     public LevelFlowState State { get; private set; } = LevelFlowState.Initializing;
 
-    public void Initialize(BoardController board, StackTrayController tray, DragController drag, MergeSystem mergeSystem, TutorialHandController tutorial, PackshotController packshot)
+    [Inject]
+    private void Construct(BoardController board, StackTrayController tray, DragController drag, MergeSystem mergeSystem, TutorialHandController tutorial, PackshotController packshot)
     {
+        UnsubscribeFromDrag();
+
         this.board = board;
         this.tray = tray;
         this.drag = drag;
@@ -21,12 +24,23 @@ public class LevelFlowController : MonoBehaviour
         this.tutorial = tutorial;
         this.packshot = packshot;
 
-        drag.DragStarted += OnDragStarted;
-        drag.DragFailed += OnDragFailed;
-        drag.StackPlaced += OnStackPlaced;
+        if (drag != null)
+        {
+            drag.DragStarted += OnDragStarted;
+            drag.DragFailed += OnDragFailed;
+            drag.StackPlaced += OnStackPlaced;
+        }
+    }
 
+    public void StartLevelFlow()
+    {
         SetState(LevelFlowState.Initializing);
         StartLevel();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeFromDrag();
     }
 
     private void StartLevel()
@@ -87,5 +101,17 @@ public class LevelFlowController : MonoBehaviour
     private void SetState(LevelFlowState state)
     {
         State = state;
+    }
+
+    private void UnsubscribeFromDrag()
+    {
+        if (drag == null)
+        {
+            return;
+        }
+
+        drag.DragStarted -= OnDragStarted;
+        drag.DragFailed -= OnDragFailed;
+        drag.StackPlaced -= OnStackPlaced;
     }
 }

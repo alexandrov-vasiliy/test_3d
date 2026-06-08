@@ -15,11 +15,11 @@ public class MergeAnimator : MonoBehaviour
     [SerializeField] private float landingTiltDegrees = 18f;
     [SerializeField] private float disappearStepDelay = 0.035f;
     [SerializeField] private GameObject disappearEffectPrefab;
-    [SerializeField] private HexColorConfig colorConfig;
-    [SerializeField] private SoundPlayer soundPlayer;
     [SerializeField] private Transform effectParent;
     [SerializeField] private float disappearEffectLifetime = 2f;
 
+    private GameAssets assets;
+    private SoundPlayer soundPlayer;
     private int animationStep;
 
     public float BaseMoveDuration { get => baseMoveDuration; set => baseMoveDuration = Mathf.Max(0.01f, value); }
@@ -32,13 +32,11 @@ public class MergeAnimator : MonoBehaviour
         animationStep = 0;
     }
 
-    public void Initialize(HexColorConfig colorConfig, SoundPlayer soundPlayer = null)
+    [Inject]
+    private void Construct(GameAssets assets, SoundPlayer soundPlayer)
     {
-        this.colorConfig = colorConfig;
-        if (soundPlayer != null)
-        {
-            this.soundPlayer = soundPlayer;
-        }
+        this.assets = assets;
+        this.soundPlayer = soundPlayer;
     }
 
     public IEnumerator AnimateMove(HexStackView from, HexStackView to, int count)
@@ -139,6 +137,7 @@ public class MergeAnimator : MonoBehaviour
         Transform parent = effectParent != null ? effectParent : transform;
         Transform prefabTransform = disappearEffectPrefab.transform;
         GameObject effect = Instantiate(disappearEffectPrefab, position + prefabTransform.localPosition, prefabTransform.localRotation, parent);
+        HexColorConfig colorConfig = assets != null ? assets.HexColorConfig : null;
         ApplyEffectColor(effect, colorConfig != null ? colorConfig.GetColor(color) : HexColorConfig.GetFallbackColor(color));
         ParticleSystem[] particleSystems = effect.GetComponentsInChildren<ParticleSystem>(true);
         foreach (ParticleSystem particleSystem in particleSystems)

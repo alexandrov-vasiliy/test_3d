@@ -5,12 +5,12 @@ using UnityEngine.InputSystem;
 
 public class DragController : MonoBehaviour
 {
-    [SerializeField] private Camera inputCamera;
-    [SerializeField] private BoardController board;
-    [SerializeField] private StackTrayController tray;
     [SerializeField] private float returnDuration = 0.2f;
     [SerializeField] private float dragHeight = 1.15f;
 
+    private Camera inputCamera;
+    private BoardController board;
+    private StackTrayController tray;
     private bool inputEnabled = true;
     private HexStackView draggedStack;
     private Vector3 draggedHome;
@@ -22,7 +22,8 @@ public class DragController : MonoBehaviour
 
     public bool IsDragging => draggedStack != null;
 
-    public void Initialize(Camera inputCamera, BoardController board, StackTrayController tray)
+    [Inject]
+    private void Construct(Camera inputCamera, BoardController board, StackTrayController tray)
     {
         this.inputCamera = inputCamera;
         this.board = board;

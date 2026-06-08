@@ -4,14 +4,16 @@ using UnityEngine;
 
 public class MergeSystem : MonoBehaviour
 {
-    [SerializeField] private BoardController board;
-    [SerializeField] private MergeAnimator animator;
     [SerializeField] private int clearMatchCount = 10;
     [SerializeField] private int maxChainSteps = 128;
 
+    private BoardController board;
+    private MergeAnimator animator;
+
     public bool IsRunning { get; private set; }
 
-    public void Initialize(BoardController board, MergeAnimator animator)
+    [Inject]
+    private void Construct(BoardController board, MergeAnimator animator)
     {
         this.board = board;
         this.animator = animator;

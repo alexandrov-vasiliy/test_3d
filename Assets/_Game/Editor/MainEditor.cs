@@ -17,15 +17,6 @@ public class MainEditor : Editor
     private SerializedProperty hexPiecePrefab;
     private SerializedProperty hexColorConfig;
     private SerializedProperty gameCamera;
-    private SerializedProperty runtimeRoot;
-    private SerializedProperty boardController;
-    private SerializedProperty stackTrayController;
-    private SerializedProperty dragController;
-    private SerializedProperty mergeAnimator;
-    private SerializedProperty mergeSystem;
-    private SerializedProperty tutorialHandController;
-    private SerializedProperty packshotController;
-    private SerializedProperty levelFlowController;
     private SerializedProperty boardRadius;
     private SerializedProperty boardPosition;
     private SerializedProperty trayPosition;
@@ -56,15 +47,6 @@ public class MainEditor : Editor
         hexPiecePrefab = serializedObject.FindProperty("hexPiecePrefab");
         hexColorConfig = serializedObject.FindProperty("hexColorConfig");
         gameCamera = serializedObject.FindProperty("gameCamera");
-        runtimeRoot = serializedObject.FindProperty("runtimeRoot");
-        boardController = serializedObject.FindProperty("boardController");
-        stackTrayController = serializedObject.FindProperty("stackTrayController");
-        dragController = serializedObject.FindProperty("dragController");
-        mergeAnimator = serializedObject.FindProperty("mergeAnimator");
-        mergeSystem = serializedObject.FindProperty("mergeSystem");
-        tutorialHandController = serializedObject.FindProperty("tutorialHandController");
-        packshotController = serializedObject.FindProperty("packshotController");
-        levelFlowController = serializedObject.FindProperty("levelFlowController");
         boardRadius = serializedObject.FindProperty("boardRadius");
         boardPosition = serializedObject.FindProperty("boardPosition");
         trayPosition = serializedObject.FindProperty("trayPosition");
@@ -184,16 +166,26 @@ public class MainEditor : Editor
             return;
         }
 
-        EditorGUILayout.PropertyField(runtimeRoot);
-        EditorGUILayout.PropertyField(boardController);
-        EditorGUILayout.PropertyField(stackTrayController);
-        EditorGUILayout.PropertyField(dragController);
-        EditorGUILayout.PropertyField(mergeAnimator);
-        EditorGUILayout.PropertyField(mergeSystem);
-        EditorGUILayout.PropertyField(tutorialHandController);
-        EditorGUILayout.PropertyField(packshotController);
-        EditorGUILayout.PropertyField(levelFlowController);
+        Main main = (Main)target;
+        EditorGUILayout.HelpBox("Runtime controllers are resolved by Main and injected through the local DI container. They are intentionally not assigned through the Inspector.", MessageType.None);
+        DrawControllerStatus("BoardController", main.FindSceneComponent<BoardController>());
+        DrawControllerStatus("StackTrayController", main.FindSceneComponent<StackTrayController>());
+        DrawControllerStatus("DragController", main.FindSceneComponent<DragController>());
+        DrawControllerStatus("MergeAnimator", main.FindSceneComponent<MergeAnimator>());
+        DrawControllerStatus("MergeSystem", main.FindSceneComponent<MergeSystem>());
+        DrawControllerStatus("SoundPlayer", main.FindSceneComponent<SoundPlayer>());
+        DrawControllerStatus("TutorialHandController", main.FindSceneComponent<TutorialHandController>());
+        DrawControllerStatus("PackshotController", main.FindSceneComponent<PackshotController>());
+        DrawControllerStatus("LevelFlowController", main.FindSceneComponent<LevelFlowController>());
         EditorGUILayout.Space(4f);
+    }
+
+    private static void DrawControllerStatus(string label, Component component)
+    {
+        using (new EditorGUI.DisabledScope(true))
+        {
+            EditorGUILayout.ObjectField(label, component, typeof(Component), true);
+        }
     }
 
     private void DrawLevelSection()
@@ -323,7 +315,7 @@ public class MainEditor : Editor
         Vector3 trayOrigin = trayPosition.vector3Value;
         int count = Mathf.Max(0, trayStacks.arraySize);
         float spacing = 1.75f;
-        StackTrayController tray = stackTrayController.objectReferenceValue as StackTrayController;
+        StackTrayController tray = ((Main)target).FindSceneComponent<StackTrayController>();
         if (tray != null)
         {
             SerializedObject trayObject = new SerializedObject(tray);
@@ -482,7 +474,7 @@ public class MainEditor : Editor
 
     private HexGridGenerator GetSceneGridGenerator()
     {
-        BoardController board = boardController.objectReferenceValue as BoardController;
+        BoardController board = ((Main)target).FindSceneComponent<BoardController>();
         return board != null ? board.GetComponent<HexGridGenerator>() : null;
     }
 

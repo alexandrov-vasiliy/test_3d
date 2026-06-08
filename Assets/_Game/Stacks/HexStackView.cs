@@ -4,20 +4,18 @@ using UnityEngine;
 public class HexStackView : MonoBehaviour
 {
     [SerializeField] private float heightOffset = 0.16f;
-    [SerializeField] private GameObject piecePrefab;
-    [SerializeField] private HexColorConfig colorConfig;
 
     private readonly List<HexPieceView> pieceViews = new List<HexPieceView>();
+    private GameAssets assets;
 
     public HexStack Stack { get; private set; }
     public float HeightOffset => heightOffset;
     public int VisualCount => pieceViews.Count;
 
-    public void Initialize(HexStack stack, HexColorConfig colorConfig, GameObject piecePrefab)
+    public void Initialize(HexStack stack, GameAssets assets)
     {
         Stack = stack;
-        this.colorConfig = colorConfig;
-        this.piecePrefab = piecePrefab;
+        this.assets = assets;
         Rebuild();
     }
 
@@ -122,9 +120,9 @@ public class HexStackView : MonoBehaviour
     private HexPieceView CreatePieceView(HexColor color)
     {
         GameObject instance;
-        if (piecePrefab != null)
+        if (assets != null && assets.HexPiecePrefab != null)
         {
-            instance = Instantiate(piecePrefab);
+            instance = Instantiate(assets.HexPiecePrefab);
         }
         else
         {
@@ -141,7 +139,7 @@ public class HexStackView : MonoBehaviour
         {
             view = instance.AddComponent<HexPieceView>();
         }
-        view.Initialize(color, colorConfig);
+        view.Initialize(color, assets != null ? assets.HexColorConfig : null);
         return view;
     }
 }

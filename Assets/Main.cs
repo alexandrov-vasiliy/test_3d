@@ -14,18 +14,6 @@ public class Main : MonoBehaviour
     [SerializeField] private HexColorConfig hexColorConfig;
     [SerializeField] private Camera gameCamera;
 
-    [Header("Scene Controllers")]
-    [SerializeField] private Transform runtimeRoot;
-    [SerializeField] private BoardController boardController;
-    [SerializeField] private StackTrayController stackTrayController;
-    [SerializeField] private DragController dragController;
-    [SerializeField] private MergeAnimator mergeAnimator;
-    [SerializeField] private MergeSystem mergeSystem;
-    [SerializeField] private SoundPlayer soundPlayer;
-    [SerializeField] private TutorialHandController tutorialHandController;
-    [SerializeField] private PackshotController packshotController;
-    [SerializeField] private LevelFlowController levelFlowController;
-
     [Header("Level")]
     [SerializeField] private int boardRadius = 2;
     [SerializeField] private Vector3 boardPosition = Vector3.zero;
@@ -46,7 +34,18 @@ public class Main : MonoBehaviour
     [SerializeField] private float lightIntensity = 1.25f;
     [SerializeField] private Color ambientLight = new Color(0.36f, 0.39f, 0.43f);
 
-    private static bool sceneBuilt;
+    private bool sceneBuilt;
+    private readonly DiContainer container = new DiContainer();
+    private Transform runtimeRoot;
+    private BoardController boardController;
+    private StackTrayController stackTrayController;
+    private DragController dragController;
+    private MergeAnimator mergeAnimator;
+    private MergeSystem mergeSystem;
+    private SoundPlayer soundPlayer;
+    private TutorialHandController tutorialHandController;
+    private PackshotController packshotController;
+    private LevelFlowController levelFlowController;
 
     private void Reset()
     {
@@ -92,42 +91,55 @@ public class Main : MonoBehaviour
         EnsureLevelLists();
         Camera camera = SetupCamera();
         SetupLighting();
-        Sprite handSprite = LoadTutorialHandSprite();
-        GameObject resolvedCellPrefab = ResolveHexCellPrefab();
-        GameObject resolvedPiecePrefab = ResolveHexPiecePrefab();
+        GameAssets assets = new GameAssets(ResolveHexCellPrefab(), ResolveHexPiecePrefab(), hexColorConfig, LoadTutorialHandSprite());
         Transform root = EnsureRuntimeRoot();
 
-        BoardController board = ResolveSceneComponent(ref boardController, "BoardController");
+        BoardController board = ResolveSceneComponent<BoardController>("BoardController");
         board.transform.SetParent(root, false);
         board.transform.position = boardPosition;
-        board.Initialize(boardRadius, resolvedCellPrefab, resolvedPiecePrefab, hexColorConfig, camera);
+        boardController = board;
 
-        PlaceStartingBoardStacks(board);
-
-        StackTrayController tray = ResolveSceneComponent(ref stackTrayController, "StackTrayController");
+        StackTrayController tray = ResolveSceneComponent<StackTrayController>("StackTrayController");
         tray.transform.SetParent(root, false);
         tray.transform.position = trayPosition;
-        tray.Initialize(CreateTrayStacks(), board);
+        stackTrayController = tray;
 
-        DragController drag = ResolveSceneComponent(ref dragController, "DragController");
+        DragController drag = ResolveSceneComponent<DragController>("DragController");
         drag.transform.SetParent(root, false);
-        drag.Initialize(camera, board, tray);
+        dragController = drag;
 
-        SoundPlayer sounds = ResolveSceneComponent(ref soundPlayer, "SoundPlayer");
+        SoundPlayer sounds = ResolveSceneComponent<SoundPlayer>("SoundPlayer");
         sounds.transform.SetParent(root, false);
-        sounds.Initialize(drag);
+        soundPlayer = sounds;
 
-        MergeAnimator animator = ResolveSceneComponent(ref mergeAnimator, "MergeAnimator");
+        MergeAnimator animator = ResolveSceneComponent<MergeAnimator>("MergeAnimator");
         animator.transform.SetParent(root, false);
-        animator.Initialize(hexColorConfig, sounds);
+        mergeAnimator = animator;
 
-        MergeSystem merger = ResolveSceneComponent(ref mergeSystem, "MergeSystem");
+        MergeSystem merger = ResolveSceneComponent<MergeSystem>("MergeSystem");
         merger.transform.SetParent(root, false);
-        merger.Initialize(board, animator);
+        mergeSystem = merger;
 
-        TutorialHandController tutorial = ResolveSceneComponent(ref tutorialHandController, "TutorialHandController");
+        TutorialHandController tutorial = ResolveSceneComponent<TutorialHandController>("TutorialHandController");
         tutorial.transform.SetParent(root, false);
-        tutorial.Initialize(handSprite, camera);
+        tutorialHandController = tutorial;
+
+        PackshotController packshot = ResolveSceneComponent<PackshotController>("PackshotController");
+        packshot.transform.SetParent(root, false);
+        packshotController = packshot;
+
+        LevelFlowController flow = ResolveSceneComponent<LevelFlowController>("LevelFlowController");
+        flow.transform.SetParent(root, false);
+        levelFlowController = flow;
+
+        RegisterRuntimeDependencies(camera, assets);
+        InjectRuntimeDependencies();
+
+        board.Initialize(boardRadius);
+        PlaceStartingBoardStacks(board);
+
+        tray.Initialize(CreateTrayStacks());
+
         HexStackView firstTrayStack = tray.StackViews.Count > 0 ? tray.StackViews[0] : null;
         HexCell targetHexCell = board.GetCell(tutorialTargetCell);
         if (targetHexCell == null)
@@ -137,13 +149,9 @@ public class Main : MonoBehaviour
         HexCellView targetCell = board.GetCellView(targetHexCell);
         tutorial.SetTargets(firstTrayStack, targetCell);
 
-        PackshotController packshot = ResolveSceneComponent(ref packshotController, "PackshotController");
-        packshot.transform.SetParent(root, false);
         packshot.Initialize();
 
-        LevelFlowController flow = ResolveSceneComponent(ref levelFlowController, "LevelFlowController");
-        flow.transform.SetParent(root, false);
-        flow.Initialize(board, tray, drag, merger, tutorial, packshot);
+        flow.StartLevelFlow();
     }
 
     private Camera SetupCamera()
@@ -207,23 +215,58 @@ public class Main : MonoBehaviour
         return runtimeRoot;
     }
 
-    private T ResolveSceneComponent<T>(ref T component, string objectName) where T : Component
+    private void RegisterRuntimeDependencies(Camera camera, GameAssets assets)
     {
-        if (component != null)
+        container.RegisterInstance(assets);
+        container.RegisterInstance(camera);
+        container.RegisterInstance(boardController);
+        container.RegisterInstance(stackTrayController);
+        container.RegisterInstance(dragController);
+        container.RegisterInstance(mergeAnimator);
+        container.RegisterInstance(mergeSystem);
+        container.RegisterInstance(soundPlayer);
+        container.RegisterInstance(tutorialHandController);
+        container.RegisterInstance(packshotController);
+        container.RegisterInstance(levelFlowController);
+    }
+
+    private void InjectRuntimeDependencies()
+    {
+        container.Inject(boardController);
+        container.Inject(stackTrayController);
+        container.Inject(dragController);
+        container.Inject(soundPlayer);
+        container.Inject(mergeAnimator);
+        container.Inject(mergeSystem);
+        container.Inject(tutorialHandController);
+        container.Inject(levelFlowController);
+    }
+
+    public T FindSceneComponent<T>() where T : Component
+    {
+        if (runtimeRoot == null)
         {
-            return component;
+            GameObject existingRoot = GameObject.Find("_Game_Runtime");
+            if (existingRoot != null)
+            {
+                runtimeRoot = existingRoot.transform;
+            }
         }
 
-        T existing = FindFirstObjectByType<T>();
+        T existing = runtimeRoot != null ? runtimeRoot.GetComponentInChildren<T>(true) : null;
+        return existing != null ? existing : FindFirstObjectByType<T>();
+    }
+
+    private T ResolveSceneComponent<T>(string objectName) where T : Component
+    {
+        T existing = FindSceneComponent<T>();
         if (existing != null)
         {
-            component = existing;
-            return component;
+            return existing;
         }
 
         GameObject objectInstance = new GameObject(objectName);
-        component = objectInstance.AddComponent<T>();
-        return component;
+        return objectInstance.AddComponent<T>();
     }
 
 #if UNITY_EDITOR

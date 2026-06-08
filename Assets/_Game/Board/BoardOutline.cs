@@ -9,7 +9,6 @@ public class BoardOutline : MonoBehaviour
         MeshUnderlay
     }
 
-    [SerializeField] private HexGridGenerator gridGenerator;
     [SerializeField] private OutlineRenderMode renderMode = OutlineRenderMode.LineRenderer;
     [SerializeField] private LineRenderer linePrefab;
     [SerializeField] private Transform lineParent;
@@ -27,6 +26,7 @@ public class BoardOutline : MonoBehaviour
 
     private readonly List<LineRenderer> segments = new List<LineRenderer>();
     private readonly List<Material> ownedMaterials = new List<Material>();
+    private HexGridGenerator gridGenerator;
     private GameObject meshObject;
     private Mesh generatedMesh;
 

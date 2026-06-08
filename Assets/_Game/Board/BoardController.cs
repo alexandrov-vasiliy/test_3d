@@ -3,27 +3,27 @@ using UnityEngine;
 
 public class BoardController : MonoBehaviour
 {
-    [SerializeField] private HexGridGenerator gridGenerator;
-    [SerializeField] private GameObject cellPrefab;
-    [SerializeField] private GameObject piecePrefab;
-    [SerializeField] private HexColorConfig colorConfig;
-    [SerializeField] private Camera inputCamera;
     [SerializeField] private float pointerCellRadius = 0.85f;
-    [SerializeField] private BoardOutline boardOutline;
 
     private readonly Dictionary<Vector2Int, HexCell> cells = new Dictionary<Vector2Int, HexCell>();
     private readonly Dictionary<HexCell, HexCellView> views = new Dictionary<HexCell, HexCellView>();
     private readonly Dictionary<Vector2Int, HexCellView> viewsByCoordinate = new Dictionary<Vector2Int, HexCellView>();
+    private HexGridGenerator gridGenerator;
+    private BoardOutline boardOutline;
+    private GameAssets assets;
+    private Camera inputCamera;
 
     public IEnumerable<HexCell> Cells => cells.Values;
 
-    public void Initialize(int radius, GameObject cellPrefab, GameObject piecePrefab, HexColorConfig colorConfig, Camera inputCamera)
+    [Inject]
+    private void Construct(GameAssets assets, Camera inputCamera)
     {
-        this.cellPrefab = cellPrefab;
-        this.piecePrefab = piecePrefab;
-        this.colorConfig = colorConfig;
+        this.assets = assets;
         this.inputCamera = inputCamera;
+    }
 
+    public void Initialize(int radius)
+    {
         if (gridGenerator == null)
         {
             gridGenerator = GetComponent<HexGridGenerator>();
@@ -51,7 +51,7 @@ public class BoardController : MonoBehaviour
             HexCell cell = new HexCell(coordinate);
             cells.Add(coordinate, cell);
 
-            GameObject cellObject = cellPrefab != null ? Instantiate(cellPrefab) : new GameObject("MissingCellPrefab");
+            GameObject cellObject = assets != null && assets.HexCellPrefab != null ? Instantiate(assets.HexCellPrefab) : new GameObject("MissingCellPrefab");
             cellObject.name = "Cell_" + coordinate.x + "_" + coordinate.y;
             cellObject.transform.SetParent(transform, false);
             cellObject.transform.localPosition = gridGenerator.CoordinateToWorld(coordinate);
@@ -207,7 +207,7 @@ public class BoardController : MonoBehaviour
         stackObject.transform.SetParent(parent, true);
         stackObject.transform.position = position;
         HexStackView view = stackObject.AddComponent<HexStackView>();
-        view.Initialize(stack, colorConfig, piecePrefab);
+        view.Initialize(stack, assets);
         return view;
     }
 

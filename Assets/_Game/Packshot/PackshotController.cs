@@ -71,8 +71,17 @@ public class PackshotController : MonoBehaviour
             canvas = gameObject.AddComponent<Canvas>();
         }
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        gameObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        gameObject.AddComponent<GraphicRaycaster>();
+        CanvasScaler scaler = gameObject.GetComponent<CanvasScaler>();
+        if (scaler == null)
+        {
+            scaler = gameObject.AddComponent<CanvasScaler>();
+        }
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+
+        if (gameObject.GetComponent<GraphicRaycaster>() == null)
+        {
+            gameObject.AddComponent<GraphicRaycaster>();
+        }
 
         canvasGroup = gameObject.GetComponent<CanvasGroup>();
         if (canvasGroup == null)

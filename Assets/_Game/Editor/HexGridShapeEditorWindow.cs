@@ -31,7 +31,6 @@ public class HexGridShapeEditorWindow : EditorWindow
     private Main main;
     private SerializedObject mainObject;
     private SerializedProperty boardRadius;
-    private SerializedProperty boardController;
     private SerializedProperty startingBoardStacks;
     private SerializedProperty tutorialTargetCell;
 
@@ -625,11 +624,10 @@ public class HexGridShapeEditorWindow : EditorWindow
 
         mainObject = main != null ? new SerializedObject(main) : null;
         boardRadius = mainObject?.FindProperty("boardRadius");
-        boardController = mainObject?.FindProperty("boardController");
         startingBoardStacks = mainObject?.FindProperty("startingBoardStacks");
         tutorialTargetCell = mainObject?.FindProperty("tutorialTargetCell");
 
-        BoardController controller = boardController != null ? boardController.objectReferenceValue as BoardController : null;
+        BoardController controller = main != null ? main.FindSceneComponent<BoardController>() : null;
         generator = controller != null ? controller.GetComponent<HexGridGenerator>() : null;
         generatorObject = generator != null ? new SerializedObject(generator) : null;
         radius = generatorObject?.FindProperty("radius");

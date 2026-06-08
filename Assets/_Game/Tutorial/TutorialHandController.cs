@@ -8,12 +8,12 @@ public class TutorialHandController : MonoBehaviour
     [SerializeField] private float handMoveDuration = 1.1f;
     [SerializeField] private Vector2 handSize = new Vector2(95f, 112f);
     [SerializeField] private Vector2 screenOffset = new Vector2(36f, -34f);
-    [SerializeField] private HexStackView tutorialTargetStack;
-    [SerializeField] private HexCellView tutorialTargetCell;
-    [SerializeField] private Camera worldCamera;
     [SerializeField] private Canvas canvas;
     [SerializeField] private Image handImage;
 
+    private HexStackView tutorialTargetStack;
+    private HexCellView tutorialTargetCell;
+    private Camera worldCamera;
     private RectTransform handRect;
     private Sequence sequence;
     private bool completed;
@@ -23,11 +23,12 @@ public class TutorialHandController : MonoBehaviour
     public float InactivityDelayBeforeTutorialRestart { get => inactivityDelayBeforeTutorialRestart; set => inactivityDelayBeforeTutorialRestart = Mathf.Max(0f, value); }
     public float HandMoveDuration { get => handMoveDuration; set => handMoveDuration = Mathf.Max(0.05f, value); }
 
-    public void Initialize(Sprite handSprite, Camera camera)
+    [Inject]
+    private void Construct(GameAssets assets, Camera camera)
     {
         worldCamera = camera != null ? camera : Camera.main;
         EnsureOverlayCanvas();
-        EnsureHandImage(handSprite);
+        EnsureHandImage(assets != null ? assets.TutorialHandSprite : null);
         Hide();
     }
 

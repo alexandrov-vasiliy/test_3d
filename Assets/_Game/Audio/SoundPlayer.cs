@@ -3,9 +3,6 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class SoundPlayer : MonoBehaviour
 {
-    [Header("Sources")]
-    [SerializeField] private AudioSource audioSource;
-
     [Header("Clips")]
     [SerializeField] private AudioClip stackPickupClip;
     [SerializeField] private AudioClip elementFlyToStackClip;
@@ -19,6 +16,7 @@ public class SoundPlayer : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float elementDisappearVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float allElementsDisappearCompleteVolume = 1f;
 
+    private AudioSource audioSource;
     private DragController subscribedDrag;
 
     private void Awake()
@@ -31,7 +29,8 @@ public class SoundPlayer : MonoBehaviour
         UnsubscribeFromDrag();
     }
 
-    public void Initialize(DragController drag)
+    [Inject]
+    private void Construct(DragController drag)
     {
         EnsureAudioSource();
 
