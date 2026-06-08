@@ -341,6 +341,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvasGroup: {fileID: 8496978691969849930}
-  titleText: {fileID: 0}
   ctaButton: {fileID: 4747964330415894845}
   fadeDuration: 0.35

@@ -1,207 +1,195 @@
 using System;
+using _Game.Board;
+using _Game.Stacks;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-public class DragController : MonoBehaviour
+namespace _Game.Drag
 {
-    [SerializeField] private float returnDuration = 0.2f;
-    [SerializeField] private float dragHeight = 1.15f;
-
-    private Camera inputCamera;
-    private BoardController board;
-    private StackTrayController tray;
-    private bool inputEnabled = true;
-    private HexStackView draggedStack;
-    private Vector3 draggedHome;
-    private HexCell highlightedCell;
-
-    public event Action<HexStackView> DragStarted;
-    public event Action<HexStackView> DragFailed;
-    public event Action<HexStackView, HexCell> StackPlaced;
-
-    public bool IsDragging => draggedStack != null;
-
-    [Inject]
-    private void Construct(Camera inputCamera, BoardController board, StackTrayController tray)
+    public class DragController : MonoBehaviour
     {
-        this.inputCamera = inputCamera;
-        this.board = board;
-        this.tray = tray;
-    }
+        [SerializeField] private float returnDuration = 0.2f;
+        [SerializeField] private float dragHeight = 1.15f;
 
-    public void SetInputEnabled(bool enabled)
-    {
-        inputEnabled = enabled;
-        if (!enabled && draggedStack == null)
-        {
-            board.ClearHighlights();
-        }
-    }
+        private Camera inputCamera;
+        private BoardController board;
+        private StackTrayController tray;
+        private bool inputEnabled = true;
+        private HexStackView draggedStack;
+        private Vector3 draggedHome;
+        private HexCell highlightedCell;
 
-    private void Update()
-    {
-        if (!inputEnabled || board == null || tray == null)
-        {
-            return;
-        }
+        public event Action<HexStackView> DragStarted;
+        public event Action<HexStackView> DragFailed;
+        public event Action<HexStackView, HexCell> StackPlaced;
 
-        if (TryGetPointerDown(out Vector2 downPosition))
+        public bool IsDragging => draggedStack != null;
+
+        public void Initialize(Camera inputCamera, BoardController board, StackTrayController tray)
         {
-            TryBeginDrag(downPosition);
+            this.inputCamera = inputCamera;
+            this.board = board;
+            this.tray = tray;
         }
 
-        if (draggedStack == null)
+        public void SetInputEnabled(bool enabled)
         {
-            return;
-        }
-
-        if (TryGetPointerPosition(out Vector2 position))
-        {
-            UpdateDrag(position);
-        }
-
-        if (TryGetPointerUp(out Vector2 upPosition))
-        {
-            EndDrag(upPosition);
-        }
-    }
-
-    private void TryBeginDrag(Vector2 screenPosition)
-    {
-        HexStackView stack = tray.GetStackUnderPointer(screenPosition, inputCamera);
-        if (stack == null)
-        {
-            return;
-        }
-
-        draggedStack = stack;
-        draggedHome = tray.GetHomePosition(stack);
-        draggedStack.transform.DOKill();
-        draggedStack.transform.SetParent(transform, true);
-        DragStarted?.Invoke(stack);
-        UpdateDrag(screenPosition);
-    }
-
-    private void UpdateDrag(Vector2 screenPosition)
-    {
-        Camera cam = inputCamera != null ? inputCamera : Camera.main;
-        if (TryGetWorldPointOnPlane(cam, screenPosition, dragHeight, out Vector3 world))
-        {
-            draggedStack.transform.position = world;
-        }
-
-        highlightedCell = board.GetCellUnderPointer(screenPosition);
-        bool valid = board.IsCellEmpty(highlightedCell);
-        board.HighlightCell(highlightedCell, highlightedCell != null, valid);
-    }
-
-    private void EndDrag(Vector2 screenPosition)
-    {
-        HexCell targetCell = board.GetCellUnderPointer(screenPosition);
-        bool valid = board.IsCellEmpty(targetCell);
-        board.ClearHighlights();
-
-        HexStackView stack = draggedStack;
-        draggedStack = null;
-        highlightedCell = null;
-
-        if (valid)
-        {
-            tray.RemoveStack(stack);
-            board.PlaceStack(targetCell, stack.Stack);
-            board.PlaceStackView(targetCell, stack, true);
-            StackPlaced?.Invoke(stack, targetCell);
-        }
-        else
-        {
-            stack.transform.DOMove(draggedHome, returnDuration).SetEase(Ease.OutQuad).OnComplete(() =>
+            inputEnabled = enabled;
+            if (!enabled && draggedStack == null)
             {
-                if (tray != null)
+                board.ClearHighlights();
+            }
+        }
+
+        private void Update()
+        {
+            if (!inputEnabled || board == null || tray == null)
+            {
+                return;
+            }
+
+            if (TryGetPointerDown(out Vector2 downPosition))
+            {
+                TryBeginDrag(downPosition);
+            }
+
+            if (draggedStack == null)
+            {
+                return;
+            }
+
+            if (TryGetPointerPosition(out Vector2 position))
+            {
+                UpdateDrag(position);
+            }
+
+            if (TryGetPointerUp(out Vector2 upPosition))
+            {
+                EndDrag(upPosition);
+            }
+        }
+
+        private void TryBeginDrag(Vector2 screenPosition)
+        {
+            HexStackView stack = tray.GetStackUnderPointer(screenPosition, inputCamera);
+            if (stack == null)
+            {
+                return;
+            }
+
+            draggedStack = stack;
+            draggedHome = tray.GetHomePosition(stack);
+            draggedStack.transform.DOKill();
+            draggedStack.transform.SetParent(transform, true);
+            DragStarted?.Invoke(stack);
+            UpdateDrag(screenPosition);
+        }
+
+        private void UpdateDrag(Vector2 screenPosition)
+        {
+            Camera cam = inputCamera != null ? inputCamera : Camera.main;
+            if (TryGetWorldPointOnPlane(cam, screenPosition, dragHeight, out Vector3 world))
+            {
+                draggedStack.transform.position = world;
+            }
+
+            highlightedCell = board.GetCellUnderPointer(screenPosition);
+            bool valid = board.IsCellEmpty(highlightedCell);
+            board.HighlightCell(highlightedCell, highlightedCell != null, valid);
+        }
+
+        private void EndDrag(Vector2 screenPosition)
+        {
+            HexCell targetCell = board.GetCellUnderPointer(screenPosition);
+            bool valid = board.IsCellEmpty(targetCell);
+            board.ClearHighlights();
+
+            HexStackView stack = draggedStack;
+            draggedStack = null;
+            highlightedCell = null;
+
+            if (valid)
+            {
+                tray.RemoveStack(stack);
+                board.PlaceStack(targetCell, stack.Stack);
+                board.PlaceStackView(targetCell, stack, true);
+                StackPlaced?.Invoke(stack, targetCell);
+            }
+            else
+            {
+                stack.transform.DOMove(draggedHome, returnDuration).SetEase(Ease.OutQuad).OnComplete(() =>
                 {
-                    stack.transform.SetParent(tray.transform, true);
-                }
-            });
-            DragFailed?.Invoke(stack);
-        }
-    }
-
-    private bool TryGetPointerDown(out Vector2 position)
-    {
-        Touchscreen touchScreen = Touchscreen.current;
-        if (touchScreen != null && touchScreen.primaryTouch.press.wasPressedThisFrame)
-        {
-            position = touchScreen.primaryTouch.position.ReadValue();
-            return true;
+                    if (tray != null)
+                    {
+                        stack.transform.SetParent(tray.transform, true);
+                    }
+                });
+                DragFailed?.Invoke(stack);
+            }
         }
 
-        Mouse mouse = Mouse.current;
-        if (mouse != null)
+        private bool TryGetPointerDown(out Vector2 position)
         {
-            position = mouse.position.ReadValue();
-            return mouse.leftButton.wasPressedThisFrame;
+            if (Input.touchCount > 0)
+            {
+                Touch touch = Input.GetTouch(0);
+                position = touch.position;
+                return touch.phase == TouchPhase.Began;
+            }
+
+            position = Input.mousePosition;
+            return Input.GetMouseButtonDown(0);
         }
 
-        position = default;
-        return false;
-    }
-
-    private bool TryGetPointerPosition(out Vector2 position)
-    {
-        Touchscreen touchScreen = Touchscreen.current;
-        if (touchScreen != null && touchScreen.primaryTouch.press.isPressed)
+        private bool TryGetPointerPosition(out Vector2 position)
         {
-            position = touchScreen.primaryTouch.position.ReadValue();
-            return true;
-        }
+            if (Input.touchCount > 0)
+            {
+                Touch touch = Input.GetTouch(0);
+                position = touch.position;
+                return touch.phase != TouchPhase.Ended && touch.phase != TouchPhase.Canceled;
+            }
 
-        Mouse mouse = Mouse.current;
-        if (mouse != null && mouse.leftButton.isPressed)
-        {
-            position = mouse.position.ReadValue();
-            return true;
-        }
+            if (Input.GetMouseButton(0))
+            {
+                position = Input.mousePosition;
+                return true;
+            }
 
-        position = default;
-        return false;
-    }
-
-    private bool TryGetPointerUp(out Vector2 position)
-    {
-        Touchscreen touchScreen = Touchscreen.current;
-        if (touchScreen != null && touchScreen.primaryTouch.press.wasReleasedThisFrame)
-        {
-            position = touchScreen.primaryTouch.position.ReadValue();
-            return true;
-        }
-
-        Mouse mouse = Mouse.current;
-        if (mouse != null)
-        {
-            position = mouse.position.ReadValue();
-            return mouse.leftButton.wasReleasedThisFrame;
-        }
-
-        position = default;
-        return false;
-    }
-
-    private static bool TryGetWorldPointOnPlane(Camera cam, Vector2 screenPosition, float y, out Vector3 world)
-    {
-        world = default;
-        if (cam == null)
-        {
+            position = default;
             return false;
         }
 
-        Ray ray = cam.ScreenPointToRay(screenPosition);
-        Plane plane = new Plane(Vector3.up, new Vector3(0f, y, 0f));
-        if (!plane.Raycast(ray, out float distance))
+        private bool TryGetPointerUp(out Vector2 position)
         {
-            return false;
+            if (Input.touchCount > 0)
+            {
+                Touch touch = Input.GetTouch(0);
+                position = touch.position;
+                return touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled;
+            }
+
+            position = Input.mousePosition;
+            return Input.GetMouseButtonUp(0);
         }
 
-        world = ray.GetPoint(distance);
-        return true;
+        private static bool TryGetWorldPointOnPlane(Camera cam, Vector2 screenPosition, float y, out Vector3 world)
+        {
+            world = default;
+            if (cam == null)
+            {
+                return false;
+            }
+
+            Ray ray = cam.ScreenPointToRay(screenPosition);
+            Plane plane = new Plane(Vector3.up, new Vector3(0f, y, 0f));
+            if (!plane.Raycast(ray, out float distance))
+            {
+                return false;
+            }
+
+            world = ray.GetPoint(distance);
+            return true;
+        }
     }
 }

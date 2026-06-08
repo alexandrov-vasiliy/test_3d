@@ -1,4 +1,14 @@
 using System.Collections.Generic;
+using _Game.Audio;
+using _Game.Board;
+using _Game.Configs;
+using _Game.DI;
+using _Game.Drag;
+using _Game.Flow;
+using _Game.Merge;
+using _Game.Packshot;
+using _Game.Stacks;
+using _Game.Tutorial;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -28,17 +38,10 @@ public class Main : MonoBehaviour
     [SerializeField] private Vector3 cameraEulerAngles = new Vector3(55f, 0f, 0f);
     [SerializeField] private float orthographicSize = 6.2f;
 
-    [Header("Lighting Defaults")]
-    [SerializeField] private bool configureLightingOnStart = true;
-    [SerializeField] private Vector3 lightEulerAngles = new Vector3(55f, -35f, 0f);
-    [SerializeField] private float lightIntensity = 1.25f;
-    [SerializeField] private Color ambientLight = new Color(0.36f, 0.39f, 0.43f);
-
     [Header("Valid Cell Highlight")]
     [SerializeField] private HexCellHighlightSettings cellHighlight = new HexCellHighlightSettings();
 
     private bool sceneBuilt;
-    private readonly DiContainer container = new DiContainer();
     private Transform runtimeRoot;
     private BoardController boardController;
     private StackTrayController stackTrayController;
@@ -93,7 +96,6 @@ public class Main : MonoBehaviour
     {
         EnsureLevelLists();
         Camera camera = SetupCamera();
-        SetupLighting();
         GameAssets assets = new GameAssets(ResolveHexCellPrefab(), ResolveHexPiecePrefab(), hexColorConfig, LoadTutorialHandSprite());
         Transform root = EnsureRuntimeRoot();
 
@@ -135,8 +137,7 @@ public class Main : MonoBehaviour
         flow.transform.SetParent(root, false);
         levelFlowController = flow;
 
-        RegisterRuntimeDependencies(camera, assets);
-        InjectRuntimeDependencies();
+        InitializeRuntimeDependencies(camera, assets);
 
         board.Initialize(boardRadius);
         PlaceStartingBoardStacks(board);
@@ -179,26 +180,6 @@ public class Main : MonoBehaviour
         return camera;
     }
 
-    private void SetupLighting()
-    {
-        if (!configureLightingOnStart)
-        {
-            return;
-        }
-
-        Light existingLight = FindFirstObjectByType<Light>();
-        if (existingLight == null)
-        {
-            GameObject lightObject = new GameObject("Directional Light");
-            existingLight = lightObject.AddComponent<Light>();
-            existingLight.type = LightType.Directional;
-        }
-
-        existingLight.transform.rotation = Quaternion.Euler(lightEulerAngles);
-        existingLight.intensity = lightIntensity;
-        RenderSettings.ambientLight = ambientLight;
-    }
-
     private Transform EnsureRuntimeRoot()
     {
         if (runtimeRoot != null)
@@ -218,38 +199,21 @@ public class Main : MonoBehaviour
         return runtimeRoot;
     }
 
-    private void RegisterRuntimeDependencies(Camera camera, GameAssets assets)
+    private void InitializeRuntimeDependencies(Camera camera, GameAssets assets)
     {
         if (cellHighlight == null)
         {
             cellHighlight = new HexCellHighlightSettings();
         }
 
-        container.RegisterInstance(container);
-        container.RegisterInstance(assets);
-        container.RegisterInstance(camera);
-        container.RegisterInstance(cellHighlight);
-        container.RegisterInstance(boardController);
-        container.RegisterInstance(stackTrayController);
-        container.RegisterInstance(dragController);
-        container.RegisterInstance(mergeAnimator);
-        container.RegisterInstance(mergeSystem);
-        container.RegisterInstance(soundPlayer);
-        container.RegisterInstance(tutorialHandController);
-        container.RegisterInstance(packshotController);
-        container.RegisterInstance(levelFlowController);
-    }
-
-    private void InjectRuntimeDependencies()
-    {
-        container.Inject(boardController);
-        container.Inject(stackTrayController);
-        container.Inject(dragController);
-        container.Inject(soundPlayer);
-        container.Inject(mergeAnimator);
-        container.Inject(mergeSystem);
-        container.Inject(tutorialHandController);
-        container.Inject(levelFlowController);
+        boardController.InitializeDependencies(assets, camera, cellHighlight, soundPlayer);
+        stackTrayController.SetBoard(boardController);
+        dragController.Initialize(camera, boardController, stackTrayController);
+        soundPlayer.Initialize(dragController);
+        mergeAnimator.Initialize(assets, soundPlayer);
+        mergeSystem.Initialize(boardController, mergeAnimator);
+        tutorialHandController.Initialize(assets, camera);
+        levelFlowController.Initialize(boardController, stackTrayController, dragController, mergeSystem, tutorialHandController, packshotController);
     }
 
     public T FindSceneComponent<T>() where T : Component
@@ -264,7 +228,7 @@ public class Main : MonoBehaviour
         }
 
         T existing = runtimeRoot != null ? runtimeRoot.GetComponentInChildren<T>(true) : null;
-        return existing != null ? existing : FindFirstObjectByType<T>();
+        return existing != null ? existing : FindObjectOfType<T>();
     }
 
     private T ResolveSceneComponent<T>(string objectName) where T : Component

@@ -1,37 +1,63 @@
+using _Game.Configs;
 using UnityEngine;
 
-public class HexPieceView : MonoBehaviour
+namespace _Game.Stacks
 {
-    public HexColor Color { get; private set; }
-
-    public void Initialize(HexColor color, HexColorConfig colorConfig)
+    public class HexPieceView : MonoBehaviour
     {
-        Color = color;
-        Color unityColor = colorConfig != null ? colorConfig.GetColor(color) : HexColorConfig.GetFallbackColor(color);
-        Material configuredMaterial = colorConfig != null ? colorConfig.GetMaterial(color) : null;
+        public HexColor Color { get; private set; }
 
-        MeshRenderer[] renderers = GetComponentsInChildren<MeshRenderer>(true);
-        foreach (MeshRenderer renderer in renderers)
+        public void Initialize(HexColor color, HexColorConfig colorConfig)
         {
-            if (renderer == null)
+            Color = color;
+            Color unityColor = colorConfig != null ? colorConfig.GetColor(color) : HexColorConfig.GetFallbackColor(color);
+            Material configuredMaterial = colorConfig != null ? colorConfig.GetMaterial(color) : null;
+
+            MeshRenderer[] renderers = GetComponentsInChildren<MeshRenderer>(true);
+            foreach (MeshRenderer renderer in renderers)
             {
-                continue;
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                Material material = configuredMaterial != null ? new Material(configuredMaterial) : CreateRuntimeMaterial();
+                ApplyMaterialColor(material, unityColor);
+                if (material != null)
+                {
+                    renderer.material = material;
+                }
+            }
+        }
+
+        private static Material CreateRuntimeMaterial()
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+            {
+                shader = Shader.Find("Standard");
             }
 
-            renderer.material = configuredMaterial != null ? new Material(configuredMaterial) : CreateRuntimeMaterial(unityColor);
+            return shader != null ? new Material(shader) : null;
         }
-    }
 
-    private static Material CreateRuntimeMaterial(Color color)
-    {
-        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-        if (shader == null)
+        private static void ApplyMaterialColor(Material material, Color color)
         {
-            shader = Shader.Find("Standard");
-        }
+            if (material == null)
+            {
+                return;
+            }
 
-        Material material = new Material(shader);
-        material.color = color;
-        return material;
+            material.color = color;
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", color);
+            }
+
+            if (material.HasProperty("_Color"))
+            {
+                material.SetColor("_Color", color);
+            }
+        }
     }
 }

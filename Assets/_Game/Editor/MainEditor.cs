@@ -1,4 +1,12 @@
 using System.Collections.Generic;
+using _Game.Audio;
+using _Game.Board;
+using _Game.Drag;
+using _Game.Flow;
+using _Game.Merge;
+using _Game.Packshot;
+using _Game.Stacks;
+using _Game.Tutorial;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,10 +35,6 @@ public class MainEditor : Editor
     private SerializedProperty cameraPosition;
     private SerializedProperty cameraEulerAngles;
     private SerializedProperty orthographicSize;
-    private SerializedProperty configureLightingOnStart;
-    private SerializedProperty lightEulerAngles;
-    private SerializedProperty lightIntensity;
-    private SerializedProperty ambientLight;
     private SerializedProperty cellHighlight;
 
     private Vector2Int selectedCell;
@@ -39,7 +43,6 @@ public class MainEditor : Editor
     private bool showControllers = true;
     private bool showLevel = true;
     private bool showCamera = false;
-    private bool showLighting = false;
     private bool showHighlight = true;
     private bool showRawLists = true;
 
@@ -59,10 +62,6 @@ public class MainEditor : Editor
         cameraPosition = serializedObject.FindProperty("cameraPosition");
         cameraEulerAngles = serializedObject.FindProperty("cameraEulerAngles");
         orthographicSize = serializedObject.FindProperty("orthographicSize");
-        configureLightingOnStart = serializedObject.FindProperty("configureLightingOnStart");
-        lightEulerAngles = serializedObject.FindProperty("lightEulerAngles");
-        lightIntensity = serializedObject.FindProperty("lightIntensity");
-        ambientLight = serializedObject.FindProperty("ambientLight");
         cellHighlight = serializedObject.FindProperty("cellHighlight");
     }
 
@@ -77,7 +76,6 @@ public class MainEditor : Editor
         DrawLevelSection();
         DrawHighlightSection();
         DrawCameraSection();
-        DrawLightingSection();
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -284,20 +282,6 @@ public class MainEditor : Editor
         EditorGUILayout.PropertyField(outlineVerticalOffset);
         EditorGUILayout.PropertyField(outlineRadiusMultiplier);
         EditorGUILayout.Space(4f);
-    }
-
-    private void DrawLightingSection()
-    {
-        showLighting = EditorGUILayout.Foldout(showLighting, "Lighting Defaults", true);
-        if (!showLighting)
-        {
-            return;
-        }
-
-        EditorGUILayout.PropertyField(configureLightingOnStart);
-        EditorGUILayout.PropertyField(lightEulerAngles);
-        EditorGUILayout.PropertyField(lightIntensity);
-        EditorGUILayout.PropertyField(ambientLight);
     }
 
     private void DrawBoardSceneGui()
