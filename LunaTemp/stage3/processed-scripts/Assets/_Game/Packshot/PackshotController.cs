@@ -7,7 +7,7 @@ namespace _Game.Packshot
     [RequireComponent(typeof(CanvasGroup))]
     public class PackshotController : MonoBehaviour
     {
-        [SerializeField] private CanvasGroup canvasGroup; 
+        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private Button ctaButton;
         [SerializeField] private float fadeDuration = 0.35f;
 
@@ -44,7 +44,6 @@ namespace _Game.Packshot
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
-            gameObject.SetActive(false);
         }
     }
 }

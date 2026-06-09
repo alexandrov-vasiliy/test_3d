@@ -23,6 +23,7 @@ namespace _Game.Merge
         [SerializeField] private GameObject disappearEffectPrefab;
         [SerializeField] private Transform effectParent;
         [SerializeField] private float disappearEffectLifetime = 2f;
+        [SerializeField] private float disappearEffectSurfaceOffset = 0f;
 
         private GameAssets assets;
         private SoundPlayer soundPlayer;
@@ -96,8 +97,8 @@ namespace _Game.Merge
 
             float duration = GetDuration(baseDisappearDuration);
             float stepDelay = disappearStepDelay / CurrentSpeedMultiplier();
-            Vector3 effectPosition = stackView.transform.position;
             List<HexPieceView> pieces = stackView.DetachTopVisualHexes(count);
+            Vector3 effectPosition = GetDisappearEffectPosition(stackView);
             Sequence sequence = DOTween.Sequence();
 
             foreach (HexPieceView piece in pieces)
@@ -130,8 +131,19 @@ namespace _Game.Merge
 		
             AdvanceSpeed();
             yield return sequence.WaitForCompletion(true);
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(1f);// Effect delay
 
+        }
+
+        private Vector3 GetDisappearEffectPosition(HexStackView stackView)
+        {
+            if (stackView == null)
+            {
+                return transform.position;
+            }
+
+            Vector3 position = stackView.VisualCount > 0 ? stackView.GetTopPosition() : stackView.transform.position;
+            return position + Vector3.up * disappearEffectSurfaceOffset;
         }
 
         private void SpawnDisappearEffect(Vector3 position, HexColor color)

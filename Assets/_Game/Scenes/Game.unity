@@ -451,8 +451,8 @@ MonoBehaviour:
   handMoveDuration: 1.1
   handSize: {x: 95, y: 112}
   screenOffset: {x: 36, y: -34}
-  canvas: {fileID: 0}
-  handImage: {fileID: 0}
+  canvas: {fileID: 864383668}
+  handImage: {fileID: 864383669}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -620,6 +620,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!224 &864383667 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 580957544096572243, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
+  m_PrefabInstance: {fileID: 7241359773759505496}
+  m_PrefabAsset: {fileID: 0}
+--- !u!223 &864383668 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 2889039226148325107, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
+  m_PrefabInstance: {fileID: 7241359773759505496}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &864383669 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6000000000000000014, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
+  m_PrefabInstance: {fileID: 7241359773759505496}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1154938136
 GameObject:
   m_ObjectHideFlags: 0
@@ -656,7 +677,7 @@ MonoBehaviour:
   boardRadius: 3
   boardPosition: {x: 0, y: 0, z: 4.14}
   trayPosition: {x: 0, y: 0, z: -5.36}
-  tutorialTargetCell: {x: 0, y: 0}
+  tutorialTargetCell: {x: 0, y: -1}
   startingBoardStacks:
   - coordinate: {x: -1, y: 0}
     stack:
@@ -664,9 +685,6 @@ MonoBehaviour:
   - coordinate: {x: -1, y: -1}
     stack:
       colorsBottomToTop: 02000000020000000200000002000000020000000000000000000000000000000000000000000000
-  - coordinate: {x: 0, y: -1}
-    stack:
-      colorsBottomToTop: 03000000030000000300000003000000030000000200000002000000020000000200000002000000
   - coordinate: {x: 1, y: -1}
     stack:
       colorsBottomToTop: 04000000040000000400000004000000040000000300000003000000030000000300000003000000
@@ -676,6 +694,9 @@ MonoBehaviour:
   - coordinate: {x: 0, y: 1}
     stack:
       colorsBottomToTop: 0100000001000000010000000500000005000000050000000500000005000000
+  - coordinate: {x: 0, y: 0}
+    stack:
+      colorsBottomToTop: 03000000030000000300000003000000030000000200000002000000020000000200000002000000
   trayStacks:
   - colorsBottomToTop: 0000000000000000000000000000000000000000
   - colorsBottomToTop: 0300000001000000
@@ -684,10 +705,6 @@ MonoBehaviour:
   cameraPosition: {x: 0, y: 10, z: -8.5}
   cameraEulerAngles: {x: 55, y: 0, z: 0}
   orthographicSize: 10
-  configureLightingOnStart: 0
-  lightEulerAngles: {x: 55, y: -35, z: 0}
-  lightIntensity: 1.25
-  ambientLight: {r: 0.36, g: 0.39, b: 0.43, a: 1}
   cellHighlight:
     useMaterialTint: 1
     useOutline: 1
@@ -740,6 +757,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 864383667}
+  - {fileID: 2000000002}
   - {fileID: 100466915}
   - {fileID: 1860906308}
   - {fileID: 324156633}
@@ -795,6 +814,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeSystem
   clearMatchCount: 10
   maxChainSteps: 512
+  debugMergeLogs: 1
 --- !u!1 &1522616674
 GameObject:
   m_ObjectHideFlags: 0
@@ -1060,7 +1080,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1264714267}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2000000003
 MonoBehaviour:
@@ -1321,7 +1341,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 1264714267}
     m_Modifications:
     - target: {fileID: 580957544096572243, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
       propertyPath: m_Pivot.x
@@ -1415,9 +1435,17 @@ PrefabInstance:
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
       objectReference: {fileID: 0}
+    - target: {fileID: 6000000000000000014, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7425271006092366890, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
+      propertyPath: m_ScreenMatchMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7425271006092366890, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
       propertyPath: m_MatchWidthOrHeight
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 7729809012156593347, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
       propertyPath: m_Name
@@ -1439,7 +1467,5 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1154938138}
-  - {fileID: 2000000002}
-  - {fileID: 7241359773759505496}
   - {fileID: 1264714267}
   - {fileID: 1522616678}

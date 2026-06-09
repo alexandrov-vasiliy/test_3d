@@ -89,6 +89,7 @@
                 "resources"
             ],
             "excludes": [
+                "Assets/TextMesh Pro/Sprites/EmojiOne.png",
                 "**/Editor/",
                 "**/FacebookSDK/",
                 "**/googleads**/",
@@ -124,8 +125,7 @@
                 "Stubs/AppsFlyer",
                 "Stubs/IronSource",
                 "Stubs/Vungle",
-                "Stubs/MoreMountains.NiceVibrations",
-                "Assets/TextMesh Pro/Sprites/EmojiOne.png"
+                "Stubs/MoreMountains.NiceVibrations"
             ],
             "includes": [
                 "Assets/HexAssets/",
@@ -213,63 +213,33 @@
                 "Assets/HexAssets/hex.png",
                 "Assets/HexAssets/tutorial hand.png",
                 "Assets/HexAssets/tutorial_hand_custom.png",
+                "Assets/Plugins/",
+                "Assets/Plugins/Demigiant/",
+                "Assets/Plugins/Demigiant/DOTween/",
+                "Assets/Plugins/Demigiant/DOTween/Modules/",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleAudio.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleEPOOutline.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModulePhysics.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModulePhysics2D.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleSprite.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleUI.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleUnityVersion.cs",
+                "Assets/Plugins/Demigiant/DOTween/Modules/DOTweenModuleUtils.cs",
+                "Assets/Plugins/Demigiant/DOTween/DOTween.XML",
+                "Assets/Plugins/Demigiant/DOTween/DOTween.dll",
+                "Assets/Plugins/Demigiant/DOTween/DOTween.dll.mdb",
+                "Assets/Plugins/Demigiant/DOTween/readme.txt",
                 "Assets/Resources/",
                 "Assets/Resources/DOTweenSettings.asset",
                 "Assets/Resources/TutorialHand.png",
                 "Assets/TextMesh Pro/Resources/TMP Settings.asset",
-                "Assets/_Game/",
-                "Assets/_Game/Audio/",
-                "Assets/_Game/Audio/SoundPlayer.cs",
-                "Assets/_Game/Board/",
-                "Assets/_Game/Board/BoardController.cs",
-                "Assets/_Game/Board/BoardOutline.cs",
-                "Assets/_Game/Board/HexCell.cs",
-                "Assets/_Game/Board/HexCellView.cs",
-                "Assets/_Game/Board/HexGridGenerator.cs",
-                "Assets/_Game/Configs/",
-                "Assets/_Game/Configs/HexColorConfig.asset",
-                "Assets/_Game/Configs/HexColorConfig.cs",
-                "Assets/_Game/Configs/LevelConfig.cs",
-                "Assets/_Game/DI/",
-                "Assets/_Game/DI/DiContainer.cs",
-                "Assets/_Game/DI/GameAssets.cs",
-                "Assets/_Game/DI/InjectAttribute.cs",
-                "Assets/_Game/Drag/",
-                "Assets/_Game/Drag/DragController.cs",
-                "Assets/_Game/Flow/",
-                "Assets/_Game/Flow/LevelFlowController.cs",
-                "Assets/_Game/Flow/LevelFlowState.cs",
-                "Assets/_Game/Materials/",
-                "Assets/_Game/Materials/M_Background.mat",
-                "Assets/_Game/Materials/M_HexCell.mat",
-                "Assets/_Game/Materials/M_HexPiece.mat",
-                "Assets/_Game/Materials/M_HightlightOutline.mat",
-                "Assets/_Game/Materials/M_UnderLay.mat",
-                "Assets/_Game/Merge/",
-                "Assets/_Game/Merge/MergeAnimator.cs",
-                "Assets/_Game/Merge/MergeSystem.cs",
-                "Assets/_Game/Packshot/",
-                "Assets/_Game/Packshot/PackshotController.cs",
-                "Assets/_Game/Prefabs/",
-                "Assets/_Game/Prefabs/HexCell.prefab",
-                "Assets/_Game/Prefabs/HexPiece.prefab",
-                "Assets/_Game/Prefabs/PackshotCanvas.prefab",
-                "Assets/_Game/Scenes/",
-                "Assets/_Game/Scenes/Game.unity",
-                "Assets/_Game/Stacks/",
-                "Assets/_Game/Stacks/HexColor.cs",
-                "Assets/_Game/Stacks/HexPiece.cs",
-                "Assets/_Game/Stacks/HexPieceView.cs",
-                "Assets/_Game/Stacks/HexStack.cs",
-                "Assets/_Game/Stacks/HexStackView.cs",
-                "Assets/_Game/Stacks/StackTrayController.cs",
-                "Assets/_Game/Tutorial/",
-                "Assets/_Game/Tutorial/TutorialHandController.cs",
                 "Assets/_HexTest/",
                 "Assets/_HexTest/Hex.mat",
                 "Assets/_HexTest/HexFx.prefab",
                 "Assets/_HexTest/hex.png",
-                "Assets/Main.cs"
+                "Assets/Main.cs",
+                "Assets/_Game/DI/DiContainer.cs",
+                "Assets/_Game/DI/InjectAttribute.cs"
             ]
         },
         "scenes": [
@@ -1928,10 +1898,6 @@
             },
             {
                 "name": "UnityEngine.RaycastHit2D",
-                "excluded": true
-            },
-            {
-                "name": "UnityEngine.RectTransformUtility",
                 "excluded": true
             },
             {
@@ -21032,11 +20998,11 @@
                     },
                     {
                         "name": "anchoredPosition#get",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "anchoredPosition#set",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "sizeDelta#get",
@@ -26044,7 +26010,7 @@
                     },
                     {
                         "name": "OnTransformParentChanged",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "OnEnable",
@@ -26362,7 +26328,7 @@
                     },
                     {
                         "name": "OnTransformParentChanged",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "ParentMaskStateChanged",
@@ -29338,7 +29304,7 @@
                     },
                     {
                         "name": "$clone",
-                        "excluded": true
+                        "excluded": false
                     }
                 ]
             },
@@ -36367,10 +36333,6 @@
                         "excluded": false
                     },
                     {
-                        "name": "WorldToScreenPosition",
-                        "excluded": false
-                    },
-                    {
                         "name": "EnsureOverlayCanvas",
                         "excluded": false
                     },
@@ -36380,6 +36342,10 @@
                     },
                     {
                         "name": "SetVisualVisible",
+                        "excluded": false
+                    },
+                    {
+                        "name": "WorldToCanvasAnchoredPosition",
                         "excluded": false
                     }
                 ]
@@ -37352,7 +37318,7 @@
                 "instanceMethods": [
                     {
                         "name": "Reset",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "SetFrom$1",
@@ -37364,7 +37330,7 @@
                     },
                     {
                         "name": "ConvertToStartValue",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "SetRelativeEndValue",
@@ -37372,7 +37338,7 @@
                     },
                     {
                         "name": "SetChangeValue",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "GetSpeedBasedDuration",
@@ -37380,7 +37346,7 @@
                     },
                     {
                         "name": "EvaluateAndApply",
-                        "excluded": true
+                        "excluded": false
                     }
                 ]
             },
@@ -38088,7 +38054,7 @@
                     },
                     {
                         "name": "DOAnchorPos",
-                        "excluded": true
+                        "excluded": false
                     },
                     {
                         "name": "DOAnchorPosX",
@@ -38205,6 +38171,68 @@
                         "excluded": true
                     }
                 ]
+            },
+            {
+                "className": "UnityEngine.RectTransformUtility",
+                "staticMethods": [],
+                "instanceMethods": [
+                    {
+                        "name": "init",
+                        "excluded": false
+                    },
+                    {
+                        "name": "WorldToScreenPoint",
+                        "excluded": true
+                    },
+                    {
+                        "name": "FlipLayoutOnAxis",
+                        "excluded": true
+                    },
+                    {
+                        "name": "FlipLayoutAxes",
+                        "excluded": true
+                    },
+                    {
+                        "name": "GetTransposed",
+                        "excluded": true
+                    },
+                    {
+                        "name": "RectangleContainsScreenPoint$1",
+                        "excluded": true
+                    },
+                    {
+                        "name": "RectangleContainsScreenPoint",
+                        "excluded": true
+                    },
+                    {
+                        "name": "PointInRectangle",
+                        "excluded": true
+                    },
+                    {
+                        "name": "ScreenPointToLocalPointInRectangle",
+                        "excluded": false
+                    },
+                    {
+                        "name": "ScreenPointToWorldPointInRectangle",
+                        "excluded": false
+                    },
+                    {
+                        "name": "ScreenPointToRay",
+                        "excluded": false
+                    },
+                    {
+                        "name": "PixelAdjustPoint",
+                        "excluded": true
+                    },
+                    {
+                        "name": "PixelAdjustRect",
+                        "excluded": true
+                    },
+                    {
+                        "name": "ctor",
+                        "excluded": true
+                    }
+                ]
             }
         ],
         "stubberDataList": [],
@@ -38272,6 +38300,16 @@
                         "script": "",
                         "ext": "",
                         "name": "Assets/Free UI Click Sound Effects Pack/"
+                    },
+                    {
+                        "maxWidth": 512,
+                        "maxHeight": 512,
+                        "format": "png32",
+                        "compression": "quantSize",
+                        "quality": 65,
+                        "script": "",
+                        "ext": "",
+                        "name": "Assets/Resources/TutorialHand.png"
                     }
                 ]
             },

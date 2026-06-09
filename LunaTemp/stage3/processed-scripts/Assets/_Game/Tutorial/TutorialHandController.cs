@@ -96,19 +96,19 @@ namespace _Game.Tutorial
         private void PlayLoop()
         {
             sequence?.Kill();
-            Vector2 from = WorldToScreenPosition(tutorialTargetStack.transform.position) + screenOffset;
-            Vector2 to = WorldToScreenPosition(tutorialTargetCell.transform.position) + screenOffset;
-            handRect.position = from;
+            Vector2 from = WorldToCanvasAnchoredPosition(tutorialTargetStack.transform.position) + screenOffset;
+            Vector2 to = WorldToCanvasAnchoredPosition(tutorialTargetCell.transform.position) + screenOffset;
+            handRect.anchoredPosition = from;
 
             sequence = DOTween.Sequence();
-            sequence.Append(handRect.DOMove(to, handMoveDuration).SetEase(Ease.InOutSine));
+            sequence.Append(handRect.DOAnchorPos(to, handMoveDuration).SetEase(Ease.InOutSine));
             sequence.AppendInterval(0.35f);
-            sequence.Append(handRect.DOMove(from, 0.25f).SetEase(Ease.OutSine));
+            sequence.Append(handRect.DOAnchorPos(from, 0.25f).SetEase(Ease.OutSine));
             sequence.AppendInterval(0.25f);
             sequence.SetLoops(-1, LoopType.Restart);
         }
 
-        private Vector2 WorldToScreenPosition([Bridge.Ref] Vector3 worldPosition)
+        private Vector2 WorldToCanvasAnchoredPosition([Bridge.Ref] Vector3 worldPosition)
         {
             Camera camera = worldCamera != null ? worldCamera : Camera.main;
             if (camera == null)
@@ -117,41 +117,60 @@ namespace _Game.Tutorial
             }
 
             Vector3 screenPosition = camera.WorldToScreenPoint(worldPosition);
-            return new Vector2(screenPosition.x, screenPosition.y);
+            float scaleFactor = canvas != null ? canvas.scaleFactor : 1f;
+            if (scaleFactor <= 0f)
+            {
+                scaleFactor = 1f;
+            }
+
+            return new Vector2(screenPosition.x / scaleFactor, screenPosition.y / scaleFactor);
         }
 
         private void EnsureOverlayCanvas()
         {
-            canvas = GetComponent<Canvas>();
+
             if (canvas == null)
             {
-                canvas = gameObject.AddComponent<Canvas>();
+                GameObject canvasObject = GameObject.Find("PackshotCanvas");
+                if (canvasObject != null)
+                {
+                    canvas = canvasObject.GetComponent<Canvas>();
+                }
             }
 
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 5000;
-            canvas.overrideSorting = true;
-
-            CanvasScaler scaler = GetComponent<CanvasScaler>();
-            if (scaler == null)
+            if (canvas == null)
             {
-                scaler = gameObject.AddComponent<CanvasScaler>();
+                Debug.LogWarning("Tutorial hand requires a scene Canvas reference.");
+                return;
             }
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
+
+            if (canvas.GetComponent<RectTransform>() == null)
+            {
+                Debug.LogWarning("Tutorial hand canvas requires a RectTransform.");
+            }
         }
 
         private void EnsureHandImage(Sprite handSprite)
         {
             if (handImage == null)
             {
-                GameObject handObject = new GameObject("TutorialHandImage");
-                handObject.transform.SetParent(transform, false);
-                handImage = handObject.AddComponent<Image>();
+                Transform handTransform = canvas != null ? canvas.transform.Find("TutorialHandImage") : null;
+                if (handTransform != null)
+                {
+                    handImage = handTransform.GetComponent<Image>();
+                }
             }
 
-            handImage.sprite = handSprite;
+            if (handImage == null)
+            {
+                Debug.LogWarning("Tutorial hand requires a scene Image reference.");
+                return;
+            }
+
+            if (handSprite != null)
+            {
+                handImage.sprite = handSprite;
+            }
             handImage.raycastTarget = false;
             handImage.preserveAspect = true;
             handRect = handImage.GetComponent<RectTransform>();
@@ -162,11 +181,6 @@ namespace _Game.Tutorial
 
         private void SetVisualVisible(bool visible)
         {
-            if (canvas != null)
-            {
-                canvas.enabled = visible;
-            }
-
             if (handImage != null)
             {
                 handImage.enabled = visible;
