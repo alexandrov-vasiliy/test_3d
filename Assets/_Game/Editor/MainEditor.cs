@@ -7,9 +7,13 @@ using _Game.Merge;
 using _Game.Packshot;
 using _Game.Stacks;
 using _Game.Tutorial;
+using _Game.UI;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Provides scene and inspector tooling for the Main composition root; level authoring details belong to LevelConfig assets.
+/// </summary>
 [CustomEditor(typeof(Main))]
 public class MainEditor : Editor
 {
@@ -25,6 +29,13 @@ public class MainEditor : Editor
     private SerializedProperty hexPiecePrefab;
     private SerializedProperty hexColorConfig;
     private SerializedProperty gameCamera;
+    private SerializedProperty levelDatabase;
+    private SerializedProperty fallbackLevelConfig;
+    private SerializedProperty levelHudView;
+    private SerializedProperty goalsPanelView;
+    private SerializedProperty winScreenView;
+    private SerializedProperty loseScreenView;
+    private SerializedProperty levelTransitionView;
     private SerializedProperty boardRadius;
     private SerializedProperty boardPosition;
     private SerializedProperty trayPosition;
@@ -52,6 +63,13 @@ public class MainEditor : Editor
         hexPiecePrefab = serializedObject.FindProperty("hexPiecePrefab");
         hexColorConfig = serializedObject.FindProperty("hexColorConfig");
         gameCamera = serializedObject.FindProperty("gameCamera");
+        levelDatabase = serializedObject.FindProperty("levelDatabase");
+        fallbackLevelConfig = serializedObject.FindProperty("fallbackLevelConfig");
+        levelHudView = serializedObject.FindProperty("levelHudView");
+        goalsPanelView = serializedObject.FindProperty("goalsPanelView");
+        winScreenView = serializedObject.FindProperty("winScreenView");
+        loseScreenView = serializedObject.FindProperty("loseScreenView");
+        levelTransitionView = serializedObject.FindProperty("levelTransitionView");
         boardRadius = serializedObject.FindProperty("boardRadius");
         boardPosition = serializedObject.FindProperty("boardPosition");
         trayPosition = serializedObject.FindProperty("trayPosition");
@@ -72,6 +90,8 @@ public class MainEditor : Editor
         DrawToolbar();
         DrawSelectedCellPanel();
         DrawAssetsSection();
+        DrawLevelSourcesSection();
+        DrawUiSection();
         DrawControllersSection();
         DrawLevelSection();
         DrawHighlightSection();
@@ -160,6 +180,33 @@ public class MainEditor : Editor
         EditorGUILayout.Space(4f);
     }
 
+    private void DrawLevelSourcesSection()
+    {
+        EditorGUILayout.LabelField("Level Sources", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(levelDatabase);
+        EditorGUILayout.PropertyField(fallbackLevelConfig);
+        if (levelDatabase.objectReferenceValue == null && fallbackLevelConfig.objectReferenceValue == null)
+        {
+            EditorGUILayout.HelpBox("No LevelDatabase or fallback LevelConfig is assigned. Runtime will build a temporary level from Legacy Fallback Level fields.", MessageType.Info);
+        }
+        EditorGUILayout.Space(4f);
+    }
+
+    private void DrawUiSection()
+    {
+        EditorGUILayout.LabelField("Injected UI Views", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(levelHudView);
+        EditorGUILayout.PropertyField(goalsPanelView);
+        EditorGUILayout.PropertyField(winScreenView);
+        EditorGUILayout.PropertyField(loseScreenView);
+        EditorGUILayout.PropertyField(levelTransitionView);
+        if (winScreenView.objectReferenceValue == null || loseScreenView.objectReferenceValue == null)
+        {
+            EditorGUILayout.HelpBox("Win/Lose screens are optional references, but full-game result buttons require scene or prefab UI view instances assigned here.", MessageType.Warning);
+        }
+        EditorGUILayout.Space(4f);
+    }
+
     private void DrawControllersSection()
     {
         showControllers = EditorGUILayout.Foldout(showControllers, "Scene Controllers", true);
@@ -179,6 +226,10 @@ public class MainEditor : Editor
         DrawControllerStatus("TutorialHandController", main.FindSceneComponent<TutorialHandController>());
         DrawControllerStatus("PackshotController", main.FindSceneComponent<PackshotController>());
         DrawControllerStatus("LevelFlowController", main.FindSceneComponent<LevelFlowController>());
+        DrawControllerStatus("LevelHudView", main.FindSceneComponent<LevelHudView>());
+        DrawControllerStatus("GoalsPanelView", main.FindSceneComponent<GoalsPanelView>());
+        DrawControllerStatus("WinScreenView", main.FindSceneComponent<WinScreenView>());
+        DrawControllerStatus("LoseScreenView", main.FindSceneComponent<LoseScreenView>());
         EditorGUILayout.Space(4f);
     }
 
@@ -192,11 +243,13 @@ public class MainEditor : Editor
 
     private void DrawLevelSection()
     {
-        showLevel = EditorGUILayout.Foldout(showLevel, "Level Layout", true);
+        showLevel = EditorGUILayout.Foldout(showLevel, "Legacy Fallback Level Layout", true);
         if (!showLevel)
         {
             return;
         }
+
+        EditorGUILayout.HelpBox("These fields are a compatibility fallback. Author full-game levels in LevelConfig assets and assign them through LevelDatabase.", MessageType.None);
 
         EditorGUILayout.PropertyField(boardRadius);
         EditorGUILayout.PropertyField(boardPosition);

@@ -5,15 +5,21 @@ using _Game.Configs;
 using _Game.DI;
 using _Game.Drag;
 using _Game.Flow;
+using _Game.Goals;
+using _Game.Levels;
 using _Game.Merge;
 using _Game.Packshot;
 using _Game.Stacks;
 using _Game.Tutorial;
+using _Game.UI;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+/// <summary>
+/// Wires scene controllers, assets, UI views, and runtime services; level content is loaded from LevelConfig data instead of being owned here.
+/// </summary>
 public class Main : MonoBehaviour
 {
     private const string TutorialHandResource = "TutorialHand";
@@ -24,7 +30,18 @@ public class Main : MonoBehaviour
     [SerializeField] private HexColorConfig hexColorConfig;
     [SerializeField] private Camera gameCamera;
 
-    [Header("Level")]
+    [Header("Levels")]
+    [SerializeField] private LevelDatabase levelDatabase;
+    [SerializeField] private LevelConfig fallbackLevelConfig;
+
+    [Header("UI Views")]
+    [SerializeField] private LevelHudView levelHudView;
+    [SerializeField] private GoalsPanelView goalsPanelView;
+    [SerializeField] private WinScreenView winScreenView;
+    [SerializeField] private LoseScreenView loseScreenView;
+    [SerializeField] private LevelTransitionView levelTransitionView;
+
+    [Header("Legacy Fallback Level")]
     [SerializeField] private int boardRadius = 2;
     [SerializeField] private Vector3 boardPosition = Vector3.zero;
     [SerializeField] private Vector3 trayPosition = new Vector3(0f, 0f, -5.25f);
@@ -52,6 +69,13 @@ public class Main : MonoBehaviour
     private TutorialHandController tutorialHandController;
     private PackshotController packshotController;
     private LevelFlowController levelFlowController;
+    private HandGenerator handGenerator;
+    private HandController handController;
+    private GoalTracker goalTracker;
+    private MoveAvailabilityService moveAvailabilityService;
+    private LevelProgressService levelProgressService;
+    private LevelLoader levelLoader;
+    private LevelConfig runtimeFallbackLevelConfig;
 
     private void Reset()
     {
@@ -66,7 +90,7 @@ public class Main : MonoBehaviour
         }
 
         sceneBuilt = true;
-        BuildPrototypeScene();
+        BuildGameScene();
     }
 
 #if UNITY_EDITOR
@@ -92,7 +116,7 @@ public class Main : MonoBehaviour
     }
 #endif
 
-    private void BuildPrototypeScene()
+    private void BuildGameScene()
     {
         EnsureLevelLists();
         Camera camera = SetupCamera();
@@ -137,24 +161,9 @@ public class Main : MonoBehaviour
         flow.transform.SetParent(root, false);
         levelFlowController = flow;
 
-        InitializeRuntimeDependencies(camera, assets);
-
-        board.Initialize(boardRadius);
-        PlaceStartingBoardStacks(board);
-
-        tray.Initialize(CreateTrayStacks());
-
-        HexStackView firstTrayStack = tray.StackViews.Count > 0 ? tray.StackViews[0] : null;
-        HexCell targetHexCell = board.GetCell(tutorialTargetCell);
-        if (targetHexCell == null)
-        {
-            Debug.LogWarning("Tutorial target cell " + tutorialTargetCell + " is outside the generated board for radius " + boardRadius + ".");
-        }
-        HexCellView targetCell = board.GetCellView(targetHexCell);
-        tutorial.SetTargets(firstTrayStack, targetCell);
+        InitializeRuntimeDependencies(camera, assets, ResolveFallbackLevelConfig(board));
 
         packshot.Initialize();
-
         flow.StartLevelFlow();
     }
 
@@ -199,7 +208,7 @@ public class Main : MonoBehaviour
         return runtimeRoot;
     }
 
-    private void InitializeRuntimeDependencies(Camera camera, GameAssets assets)
+    private void InitializeRuntimeDependencies(Camera camera, GameAssets assets, LevelConfig fallbackLevel)
     {
         if (cellHighlight == null)
         {
@@ -213,7 +222,33 @@ public class Main : MonoBehaviour
         mergeAnimator.Initialize(assets, soundPlayer);
         mergeSystem.Initialize(boardController, mergeAnimator);
         tutorialHandController.Initialize(assets, camera);
-        levelFlowController.Initialize(boardController, stackTrayController, dragController, mergeSystem, tutorialHandController, packshotController);
+
+        handGenerator = new HandGenerator();
+        handController = new HandController(stackTrayController, handGenerator);
+        goalTracker = new GoalTracker();
+        moveAvailabilityService = new MoveAvailabilityService();
+        levelProgressService = new LevelProgressService();
+        levelLoader = new LevelLoader(boardController, handController, handGenerator, goalTracker, tutorialHandController, levelHudView, goalsPanelView);
+
+        levelFlowController.Initialize(
+            boardController,
+            stackTrayController,
+            dragController,
+            mergeSystem,
+            tutorialHandController,
+            packshotController,
+            levelLoader,
+            levelProgressService,
+            levelDatabase,
+            fallbackLevel,
+            handController,
+            goalTracker,
+            moveAvailabilityService,
+            levelHudView,
+            goalsPanelView,
+            winScreenView,
+            loseScreenView,
+            levelTransitionView);
     }
 
     public T FindSceneComponent<T>() where T : Component
@@ -298,45 +333,40 @@ public class Main : MonoBehaviour
         return sprite;
     }
 
-    private void PlaceStartingBoardStacks(BoardController board)
+    private LevelConfig ResolveFallbackLevelConfig(BoardController board)
     {
-        foreach (LevelConfig.BoardStackDefinition definition in startingBoardStacks)
+        if (fallbackLevelConfig != null)
         {
-            if (definition == null || definition.stack == null)
-            {
-                continue;
-            }
-
-            Place(board, definition.coordinate, definition.stack.CreateStack());
-        }
-    }
-
-    private static void Place(BoardController board, Vector2Int coordinate, HexStack stack)
-    {
-        HexCell cell = board.GetCell(coordinate);
-        if (cell == null || stack == null)
-        {
-            return;
+            return fallbackLevelConfig;
         }
 
-        board.PlaceStack(cell, stack);
-        HexCellView cellView = board.GetCellView(cell);
-        HexStackView stackView = board.CreateStackView(stack, cellView.transform, cellView.transform.position);
-        stackView.name = "BoardStack_" + coordinate.x + "_" + coordinate.y;
-        board.PlaceStackView(cell, stackView);
-    }
-
-    private List<HexStack> CreateTrayStacks()
-    {
-        List<HexStack> stacks = new List<HexStack>();
-        foreach (LevelConfig.StackDefinition definition in trayStacks)
+        if (runtimeFallbackLevelConfig != null)
         {
-            if (definition != null)
-            {
-                stacks.Add(definition.CreateStack());
-            }
+            return runtimeFallbackLevelConfig;
         }
-        return stacks;
+
+        runtimeFallbackLevelConfig = ScriptableObject.CreateInstance<LevelConfig>();
+        runtimeFallbackLevelConfig.name = "RuntimeFallbackLevelConfig";
+        runtimeFallbackLevelConfig.levelId = "legacy_fallback";
+        runtimeFallbackLevelConfig.levelNumber = 1;
+        runtimeFallbackLevelConfig.displayName = "Level 1";
+        runtimeFallbackLevelConfig.boardRadius = boardRadius;
+        runtimeFallbackLevelConfig.tutorialTargetCell = tutorialTargetCell;
+        runtimeFallbackLevelConfig.startingBoardStacks = CloneBoardStacks(startingBoardStacks);
+        runtimeFallbackLevelConfig.initialHandStacks = CloneStacks(trayStacks);
+        runtimeFallbackLevelConfig.trayStacks = CloneStacks(trayStacks);
+        runtimeFallbackLevelConfig.goals.Add(CreateGoal(HexColor.Red, 10));
+
+        HexGridGenerator generator = board != null ? board.GetComponent<HexGridGenerator>() : null;
+        if (generator != null)
+        {
+            runtimeFallbackLevelConfig.boardShape = generator.Shape;
+            runtimeFallbackLevelConfig.customBaseShape = generator.CustomBaseShape;
+            runtimeFallbackLevelConfig.orientation = generator.Orientation;
+            runtimeFallbackLevelConfig.customCoordinates = new List<Vector2Int>(generator.CustomCoordinates);
+        }
+
+        return runtimeFallbackLevelConfig;
     }
 
     private void EnsureDefaultLevelData()
@@ -371,6 +401,73 @@ public class Main : MonoBehaviour
         {
             trayStacks = new List<LevelConfig.StackDefinition>();
         }
+    }
+
+    private static List<LevelConfig.BoardStackDefinition> CloneBoardStacks(List<LevelConfig.BoardStackDefinition> source)
+    {
+        List<LevelConfig.BoardStackDefinition> result = new List<LevelConfig.BoardStackDefinition>();
+        if (source == null)
+        {
+            return result;
+        }
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            LevelConfig.BoardStackDefinition definition = source[i];
+            if (definition == null)
+            {
+                continue;
+            }
+
+            result.Add(new LevelConfig.BoardStackDefinition
+            {
+                coordinate = definition.coordinate,
+                stack = CloneStack(definition.stack)
+            });
+        }
+
+        return result;
+    }
+
+    private static List<LevelConfig.StackDefinition> CloneStacks(List<LevelConfig.StackDefinition> source)
+    {
+        List<LevelConfig.StackDefinition> result = new List<LevelConfig.StackDefinition>();
+        if (source == null)
+        {
+            return result;
+        }
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            LevelConfig.StackDefinition definition = source[i];
+            if (definition != null)
+            {
+                result.Add(CloneStack(definition));
+            }
+        }
+
+        return result;
+    }
+
+    private static LevelConfig.StackDefinition CloneStack(LevelConfig.StackDefinition source)
+    {
+        LevelConfig.StackDefinition clone = new LevelConfig.StackDefinition();
+        if (source != null && source.colorsBottomToTop != null)
+        {
+            clone.colorsBottomToTop.AddRange(source.colorsBottomToTop);
+        }
+
+        return clone;
+    }
+
+    private static LevelConfig.GoalDefinition CreateGoal(HexColor color, int requiredCount)
+    {
+        return new LevelConfig.GoalDefinition
+        {
+            type = LevelGoalType.ClearPieces,
+            color = color,
+            requiredCount = requiredCount
+        };
     }
 
     private static LevelConfig.BoardStackDefinition CreateBoardStack(Vector2Int coordinate, params HexColor[] colors)

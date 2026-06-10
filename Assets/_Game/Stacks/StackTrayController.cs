@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace _Game.Stacks
 {
+    /// <summary>
+    /// Owns the visible draggable hand slots in the scene; hand generation decides what stacks appear here.
+    /// </summary>
     public class StackTrayController : MonoBehaviour
     {
         [SerializeField] private float spacing = 1.75f;
@@ -71,7 +74,7 @@ namespace _Game.Stacks
             homePositions.Remove(view);
         }
 
-        private void Clear()
+        public void Clear()
         {
             for (int i = stackViews.Count - 1; i >= 0; i--)
             {

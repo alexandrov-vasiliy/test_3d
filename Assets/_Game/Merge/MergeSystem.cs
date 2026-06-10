@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using _Game.Board;
@@ -6,20 +7,24 @@ using UnityEngine;
 
 namespace _Game.Merge
 {
+    /// <summary>
+    /// Resolves merge chains and publishes gameplay results; visuals, timing, VFX, and sounds stay delegated to MergeAnimator.
+    /// </summary>
     public class MergeSystem : MonoBehaviour
     {
         [SerializeField] private int clearMatchCount = 10;
         [SerializeField] private int maxChainSteps = 512;
-        [SerializeField] private bool debugMergeLogs = true;
 
         private BoardController board;
         private MergeAnimator animator;
-        private HexCell activeMergeCell;
         private HexCell lastMoveSourceCell;
         private HexCell lastMoveTargetCell;
         private const bool PreferPlacedCellAsMergeTarget = true;
 
         public bool IsRunning { get; private set; }
+        public event Action<HexColor, int> PiecesCleared;
+        public event Action MergeStarted;
+        public event Action MergeFinished;
 
         public void Initialize(BoardController board, MergeAnimator animator)
         {
@@ -31,26 +36,22 @@ namespace _Game.Merge
         {
             if (board == null || activeCell == null || activeCell.IsEmpty || IsRunning)
             {
-                LogMerge("Run skipped. board=" + (board != null) + " active=" + CellLabel(activeCell) + " isRunning=" + IsRunning);
                 yield break;
             }
 
             IsRunning = true;
-            activeMergeCell = activeCell;
+            MergeStarted?.Invoke();
             animator?.ResetSpeed();
-            LogMerge("Run started. active=" + CellLabel(activeCell) + " stack=" + StackLabel(activeCell));
 
             List<HexCell> pendingCells = new List<HexCell>();
             List<HexCell> queuedCells = new List<HexCell>();
             EnqueueCellAndNeighbours(activeCell, pendingCells, queuedCells);
 
             int guard = 0;
-            bool stoppedByGuard = false;
             while (true)
             {
                 if (guard >= maxChainSteps)
                 {
-                    stoppedByGuard = true;
                     break;
                 }
 
@@ -61,21 +62,14 @@ namespace _Game.Merge
                 }
 
                 guard++;
-                LogMerge("Step " + guard + " target=" + CellLabel(currentCell) + " stack=" + StackLabel(currentCell));
                 yield return StartCoroutine(ProcessMergeStep(currentCell));
 
                 EnqueueCellAndNeighbours(lastMoveTargetCell, pendingCells, queuedCells);
                 EnqueueCellAndNeighbours(lastMoveSourceCell, pendingCells, queuedCells);
             }
 
-            if (stoppedByGuard)
-            {
-                Debug.LogWarning("Merge chain stopped by maxChainSteps guard.");
-            }
-
-            LogMerge("Run finished. active=" + CellLabel(activeCell) + " activeStack=" + StackLabel(activeCell) + " steps=" + guard);
-            activeMergeCell = null;
             IsRunning = false;
+            MergeFinished?.Invoke();
         }
 
         private IEnumerator ProcessMergeStep(HexCell targetCell)
@@ -91,14 +85,12 @@ namespace _Game.Merge
             yield return StartCoroutine(ResolveClears(targetCell));
             if (targetCell.IsEmpty)
             {
-                LogMerge("Step stopped because target was cleared. target=" + CellLabel(targetCell));
                 yield break;
             }
 
             HexCell matchingNeighbour = FindMatchingNeighbour(targetCell);
             if (matchingNeighbour == null)
             {
-                LogMerge("No matching neighbour for target=" + CellLabel(targetCell) + " top=" + targetCell.stack.TopColor);
                 yield break;
             }
 
@@ -111,7 +103,6 @@ namespace _Game.Merge
 
             HexStackView fromView = board.GetStackView(matchingNeighbour);
             HexStackView toView = board.GetStackView(targetCell);
-            LogMerge("Move " + movedPieces.Count + " piece(s): from=" + CellLabel(matchingNeighbour) + " stack=" + StackLabel(matchingNeighbour) + " to=" + CellLabel(targetCell) + " stack=" + StackLabel(targetCell) + " direction=" + DirectionLabel(matchingNeighbour, targetCell) + " fromView=" + (fromView != null) + " toView=" + (toView != null));
             if (animator != null)
             {
                 yield return StartCoroutine(animator.AnimateMove(fromView, toView, movedPieces.Count));
@@ -124,7 +115,6 @@ namespace _Game.Merge
 
             if (matchingNeighbour.IsEmpty)
             {
-                LogMerge("Source became empty after move. clearing=" + CellLabel(matchingNeighbour));
                 ClearCellAndDestroyStackView(matchingNeighbour, fromView);
             }
 
@@ -136,26 +126,24 @@ namespace _Game.Merge
             while (CanClearTop(cell))
             {
                 HexColor clearedColor = cell.stack.TopColor;
-                LogMerge("Clear top " + clearMatchCount + " piece(s): cell=" + CellLabel(cell) + " color=" + clearedColor + " before=" + StackLabel(cell));
-                cell.stack.RemoveTopPieces(clearMatchCount);
+                int clearedCount = cell.stack.CountTopSameColor();
+                cell.stack.RemoveTopPieces(clearedCount);
+                PiecesCleared?.Invoke(clearedColor, clearedCount);
                 HexStackView stackView = board.GetStackView(cell);
                 if (animator != null)
                 {
-                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearMatchCount, clearedColor));
+                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearedCount, clearedColor));
                 }
                 else
                 {
-                    stackView?.RemoveTopVisualHexes(clearMatchCount);
+                    stackView?.RemoveTopVisualHexes(clearedCount);
                 }
 
                 if (cell.IsEmpty)
                 {
-                    LogMerge("Cell became empty after clear. clearing=" + CellLabel(cell));
                     ClearCellAndDestroyStackView(cell, stackView);
                     yield break;
                 }
-
-                LogMerge("Clear finished. cell=" + CellLabel(cell) + " after=" + StackLabel(cell));
             }
         }
 
@@ -163,30 +151,16 @@ namespace _Game.Merge
         {
             if (PreferPlacedCellAsMergeTarget && IsMergeCandidate(activeCell))
             {
-                LogMerge("Selected placed cell as merge target: " + CellLabel(activeCell));
                 return activeCell;
-            }
-
-            if (PreferPlacedCellAsMergeTarget)
-            {
-                LogMerge("Placed cell is not a merge target now: " + CellLabel(activeCell) + " stack=" + StackLabel(activeCell));
             }
 
             HexCell queuedCandidate = DequeueNextMergeCandidate(pendingCells, queuedCells);
             if (queuedCandidate != null)
             {
-                LogMerge("Selected queued merge target: " + CellLabel(queuedCandidate));
                 return queuedCandidate;
             }
 
-            HexCell fallbackCandidate = FindAnyMergeCandidate();
-            if (fallbackCandidate == null)
-            {
-                LogMerge("No merge candidate found after queue/global scan.");
-                DumpBoardState();
-            }
-
-            return fallbackCandidate;
+            return FindAnyMergeCandidate();
         }
 
         private HexCell FindAnyMergeCandidate()
@@ -196,7 +170,6 @@ namespace _Game.Merge
             {
                 if (CanClearTop(cell))
                 {
-                    LogMerge("Selected stable clear candidate: " + CellLabel(cell));
                     return cell;
                 }
             }
@@ -205,7 +178,6 @@ namespace _Game.Merge
             {
                 if (FindMatchingNeighbour(cell) != null)
                 {
-                    LogMerge("Selected stable merge candidate: " + CellLabel(cell));
                     return cell;
                 }
             }
@@ -235,8 +207,6 @@ namespace _Game.Merge
                 {
                     return cell;
                 }
-
-                LogMerge("Queued cell is not a candidate: " + CellLabel(cell) + " stack=" + StackLabel(cell));
             }
 
             return null;
@@ -266,7 +236,6 @@ namespace _Game.Merge
 
             pendingCells.Add(cell);
             queuedCells.Add(cell);
-            LogMerge("Queued cell: " + CellLabel(cell) + " stack=" + StackLabel(cell));
         }
 
         private static void RemoveCell(List<HexCell> cells, HexCell removedCell)
@@ -285,7 +254,6 @@ namespace _Game.Merge
             board.ClearCell(cell);
             if (stackView != null)
             {
-                LogMerge("Destroy stack view: cell=" + CellLabel(cell));
                 Destroy(stackView.gameObject);
             }
         }
@@ -468,69 +436,9 @@ namespace _Game.Merge
             return yCompare != 0 ? yCompare : a.coordinate.x.CompareTo(b.coordinate.x);
         }
 
-        private string CellLabel(HexCell cell)
-        {
-            if (cell == null)
-            {
-                return "null";
-            }
-
-            string activeSuffix = cell == activeMergeCell ? " active" : string.Empty;
-            return "(" + cell.coordinate.x + "," + cell.coordinate.y + ")" + activeSuffix;
-        }
-
-        private static string StackLabel(HexCell cell)
-        {
-            if (cell == null)
-            {
-                return "null";
-            }
-            if (cell.IsEmpty)
-            {
-                return "empty";
-            }
-
-            return "count=" + cell.stack.Count + " top=" + cell.stack.TopColor + " topCount=" + cell.stack.CountTopSameColor();
-        }
-
         private static bool ColorsMatch(HexColor a, HexColor b)
         {
             return (int)a == (int)b;
-        }
-
-        private void DumpBoardState()
-        {
-            List<HexCell> cells = GetCellsInStableOrder();
-            for (int i = 0; i < cells.Count; i++)
-            {
-                HexCell cell = cells[i];
-                if (cell == null || cell.IsEmpty)
-                {
-                    continue;
-                }
-
-                HexCell matchingNeighbour = FindMatchingNeighbour(cell);
-                LogMerge("Board cell: " + CellLabel(cell) + " stack=" + StackLabel(cell) + " matching=" + CellLabel(matchingNeighbour));
-            }
-        }
-
-        private static string DirectionLabel(HexCell from, HexCell to)
-        {
-            if (from == null || to == null)
-            {
-                return "unknown";
-            }
-
-            Vector2Int delta = to.coordinate - from.coordinate;
-            return "(" + delta.x + "," + delta.y + ")";
-        }
-
-        private void LogMerge(string message)
-        {
-            if (debugMergeLogs)
-            {
-                Debug.Log("[Merge] " + message);
-            }
         }
     }
 }

@@ -131,7 +131,7 @@ namespace _Game.Merge
 		
             AdvanceSpeed();
             yield return sequence.WaitForCompletion(true);
-            yield return new WaitForSeconds(1f);// Effect delay
+            yield return new WaitForSeconds(0.1f);// Effect delay
 
         }
 

@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using _Game.Audio;
+using _Game.Configs;
 using _Game.DI;
 using _Game.Stacks;
 using UnityEngine;
 
 namespace _Game.Board
 {
+    /// <summary>
+    /// Owns runtime board cells and their views; level loading and gameplay rules use it for placement, lookup, and board-state queries.
+    /// </summary>
     public class BoardController : MonoBehaviour
     {
         [SerializeField] private float pointerCellRadius = 0.85f;
@@ -47,16 +51,29 @@ namespace _Game.Board
 
         public void Initialize(int radius)
         {
-            if (gridGenerator == null)
-            {
-                gridGenerator = GetComponent<HexGridGenerator>();
-            }
-            if (gridGenerator == null)
-            {
-                gridGenerator = gameObject.AddComponent<HexGridGenerator>();
-            }
+            EnsureGridGenerator();
             EnsureBoardOutline();
             gridGenerator.Radius = radius;
+
+            BuildGrid();
+        }
+
+        public void Initialize(LevelConfig levelConfig)
+        {
+            EnsureGridGenerator();
+            EnsureBoardOutline();
+
+            if (levelConfig == null)
+            {
+                BuildGrid();
+                return;
+            }
+
+            gridGenerator.Radius = levelConfig.boardRadius;
+            gridGenerator.Shape = levelConfig.boardShape;
+            gridGenerator.CustomBaseShape = levelConfig.customBaseShape;
+            gridGenerator.Orientation = levelConfig.orientation;
+            gridGenerator.SetCustomCoordinates(levelConfig.customCoordinates ?? new List<Vector2Int>());
 
             BuildGrid();
         }
@@ -96,15 +113,8 @@ namespace _Game.Board
 
         public HexCell GetCell(Vector2Int coordinate)
         {
-            foreach (HexCell cell in cells.Values)
-            {
-                if (cell != null && cell.coordinate.x == coordinate.x && cell.coordinate.y == coordinate.y)
-                {
-                    return cell;
-                }
-            }
-
-            return null;
+            cells.TryGetValue(coordinate, out HexCell cell);
+            return cell;
         }
 
         public List<HexCell> GetNeighbours(HexCell cell)
@@ -130,6 +140,24 @@ namespace _Game.Board
         public bool IsCellEmpty(HexCell cell)
         {
             return cell != null && cell.IsEmpty;
+        }
+
+        public bool HasEmptyCell()
+        {
+            foreach (HexCell cell in cells.Values)
+            {
+                if (IsCellEmpty(cell))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool HasLegalPlacement(HexStack stack)
+        {
+            return stack != null && !stack.IsEmpty && HasEmptyCell();
         }
 
         public void PlaceStack(HexCell cell, HexStack stack)
@@ -268,6 +296,18 @@ namespace _Game.Board
             if (boardOutline == null)
             {
                 boardOutline = gameObject.AddComponent<BoardOutline>();
+            }
+        }
+
+        private void EnsureGridGenerator()
+        {
+            if (gridGenerator == null)
+            {
+                gridGenerator = GetComponent<HexGridGenerator>();
+            }
+            if (gridGenerator == null)
+            {
+                gridGenerator = gameObject.AddComponent<HexGridGenerator>();
             }
         }
 
