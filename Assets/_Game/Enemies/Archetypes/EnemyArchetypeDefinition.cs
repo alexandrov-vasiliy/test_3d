@@ -1,20 +1,23 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Defines reusable enemy composition data stored on scene or prefab components; runtime state, view lifecycle, and behavior execution stay outside this data class.
+    /// Defines reusable enemy composition data stored as serialized tags; runtime state, view lifecycle, and behavior execution stay outside this data class.
     /// </summary>
     [Serializable]
     public class EnemyArchetypeDefinition
     {
         [SerializeField] private string enemyId = "basic";
         [SerializeField] private string displayName = "Basic Enemy";
-        [SerializeReference] private List<EnemyComponent> components = new List<EnemyComponent>
+        [SerializeReference, FormerlySerializedAs("components")] private List<EnemyTag> tags = new List<EnemyTag>
         {
+            new EnemyIdentity("basic", "Basic Enemy"),
             new EnemyHealth(1),
+            new EnemyDefence(),
             new EnemyVisualReference()
         };
 
@@ -32,56 +35,57 @@ namespace _Game.Enemies
         {
             this.enemyId = enemyId;
             this.displayName = displayName;
-            components = new List<EnemyComponent>();
+            tags = new List<EnemyTag>();
         }
 
-        public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? EffectiveId : displayName;
-        public IReadOnlyList<EnemyComponent> Components => components;
-        public int BaseHealth => TryGetComponent(out EnemyHealth health) ? health.MaxHealth : Mathf.Max(1, baseHealth);
-        public GameObject Prefab => TryGetComponent(out EnemyVisualReference visual) && visual.Prefab != null ? visual.Prefab : prefab;
-        public Vector3 PositionOffset => TryGetComponent(out EnemyVisualReference visual) ? visual.PositionOffset : positionOffset;
-        public GameObject DefaultHitVfx => TryGetComponent(out EnemyVisualReference visual) && visual.DefaultHitVfx != null ? visual.DefaultHitVfx : defaultHitVfx;
-        public GameObject DefaultDeathVfx => TryGetComponent(out EnemyVisualReference visual) && visual.DefaultDeathVfx != null ? visual.DefaultDeathVfx : defaultDeathVfx;
-        public string EffectiveId => string.IsNullOrWhiteSpace(enemyId) ? "basic" : enemyId;
+        public string DisplayName => TryGetTag(out EnemyIdentity identity) ? identity.DisplayName : string.IsNullOrWhiteSpace(displayName) ? EffectiveId : displayName;
+        public IReadOnlyList<EnemyTag> Tags => tags;
+        public int BaseHealth => TryGetTag(out EnemyHealth health) ? health.MaxHealth : Mathf.Max(1, baseHealth);
+        public int StartingDefence => TryGetTag(out EnemyDefence defence) ? defence.StartingDefence : 0;
+        public GameObject Prefab => TryGetTag(out EnemyVisualReference visual) && visual.Prefab != null ? visual.Prefab : prefab;
+        public Vector3 PositionOffset => TryGetTag(out EnemyVisualReference visual) ? visual.PositionOffset : positionOffset;
+        public GameObject DefaultHitVfx => TryGetTag(out EnemyVisualReference visual) && visual.DefaultHitVfx != null ? visual.DefaultHitVfx : defaultHitVfx;
+        public GameObject DefaultDeathVfx => TryGetTag(out EnemyVisualReference visual) && visual.DefaultDeathVfx != null ? visual.DefaultDeathVfx : defaultDeathVfx;
+        public string EffectiveId => TryGetTag(out EnemyIdentity identity) ? identity.EnemyId : string.IsNullOrWhiteSpace(enemyId) ? "basic" : enemyId;
 
-        public bool TryGetComponent<TComponent>(out TComponent component)
-            where TComponent : EnemyComponent
+        public bool TryGetTag<TTag>(out TTag tag)
+            where TTag : EnemyTag
         {
-            if (components != null)
+            if (tags != null)
             {
-                for (int i = 0; i < components.Count; i++)
+                for (int i = 0; i < tags.Count; i++)
                 {
-                    if (components[i] is TComponent typedComponent)
+                    if (tags[i] is TTag typedTag)
                     {
-                        component = typedComponent;
+                        tag = typedTag;
                         return true;
                     }
                 }
             }
 
-            component = null;
+            tag = null;
             return false;
         }
 
-        protected void AddComponentIfMissing<TComponent>(TComponent component)
-            where TComponent : EnemyComponent
+        protected void AddTagIfMissing<TTag>(TTag tag)
+            where TTag : EnemyTag
         {
-            if (component == null)
+            if (tag == null)
             {
                 return;
             }
 
-            if (components == null)
+            if (tags == null)
             {
-                components = new List<EnemyComponent>();
+                tags = new List<EnemyTag>();
             }
 
-            if (TryGetComponent<TComponent>(out _))
+            if (TryGetTag<TTag>(out _))
             {
                 return;
             }
 
-            components.Add(component);
+            tags.Add(tag);
         }
     }
 }

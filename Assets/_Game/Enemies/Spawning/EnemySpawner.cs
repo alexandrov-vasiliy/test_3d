@@ -1,13 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using _Game.Board;
 using _Game.Configs;
+using _Game.Player;
 using UnityEngine;
 
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Spawns level-authored enemies from catalog composition data and reports defeat events without owning victory logic.
+    /// Spawns level-authored enemies from catalog composition data, runs their intent phase, and reports defeat events without owning victory logic.
     /// </summary>
     public sealed class EnemySpawner : MonoBehaviour
     {
@@ -15,6 +17,7 @@ namespace _Game.Enemies
         [SerializeField] private Transform enemiesRoot;
         [SerializeField] private string defaultEnemyId = "basic";
         [SerializeField] private Vector3 placeholderScale = new Vector3(0.72f, 0.72f, 0.72f);
+        [SerializeField] private float intentExecutionDelay = 0.35f;
 
         private readonly List<EnemyController> spawnedEnemies = new List<EnemyController>();
         private readonly EnemyRegistry registry = new EnemyRegistry();
@@ -67,6 +70,33 @@ namespace _Game.Enemies
             spawnedEnemies.Clear();
             registry.Clear();
             TotalSpawnedEnemies = 0;
+        }
+
+        public IEnumerator ExecuteActiveIntents(PlayerHealth playerHealth)
+        {
+            if (playerHealth == null)
+            {
+                yield break;
+            }
+
+            for (int i = 0; i < spawnedEnemies.Count; i++)
+            {
+                EnemyController enemy = spawnedEnemies[i];
+                if (enemy == null || !enemy.IsAlive)
+                {
+                    continue;
+                }
+
+                if (enemy.ExecuteActiveIntent(playerHealth))
+                {
+                    yield return new WaitForSeconds(Mathf.Max(0f, intentExecutionDelay));
+                }
+
+                if (!playerHealth.IsAlive)
+                {
+                    yield break;
+                }
+            }
         }
 
         private void OnDestroy()
@@ -125,7 +155,7 @@ namespace _Game.Enemies
             }
 
             int health = definition.healthOverride > 0 ? definition.healthOverride : archetype.BaseHealth;
-            controller.Initialize(new EnemyRuntime(enemyId, definition.coordinate, health));
+            controller.Initialize(new EnemyRuntime(BuildRuntimeTags(archetype, enemyId, definition.coordinate, health)));
             if (!registry.TryRegister(controller))
             {
                 DestroyEnemyObject(enemyObject);
@@ -135,6 +165,25 @@ namespace _Game.Enemies
             controller.Defeated += OnEnemyDefeated;
             spawnedEnemies.Add(controller);
             TotalSpawnedEnemies++;
+        }
+
+        private static List<EnemyTag> BuildRuntimeTags(EnemyArchetypeDefinition archetype, string enemyId, Vector2Int coordinate, int health)
+        {
+            List<EnemyTag> tags = new List<EnemyTag>
+            {
+                new EnemyIdentity(enemyId, archetype != null ? archetype.DisplayName : enemyId),
+                new EnemyBoardPosition(coordinate),
+                new EnemyHealth(health),
+                new EnemyDefence(archetype != null ? archetype.StartingDefence : 0),
+                new EnemyActiveIntent()
+            };
+
+            if (archetype != null && archetype.TryGetTag(out EnemyIntentLoop intentLoop))
+            {
+                tags.Add(intentLoop);
+            }
+
+            return tags;
         }
 
         private Transform EnsureEnemiesRoot()

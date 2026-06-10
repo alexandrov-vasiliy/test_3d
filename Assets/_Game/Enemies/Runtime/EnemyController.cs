@@ -1,10 +1,11 @@
 using System;
+using _Game.Player;
 using UnityEngine;
 
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Owns the runtime state and presentation lifecycle of one enemy instance; victory and goal tracking stay outside this component.
+    /// Owns runtime combat state, active intent progression, and presentation lifecycle for one enemy; victory and goal tracking stay outside this controller.
     /// </summary>
     public sealed class EnemyController : MonoBehaviour
     {
@@ -16,11 +17,17 @@ namespace _Game.Enemies
         public string EnemyId => Runtime != null ? Runtime.EnemyId : string.Empty;
         public Vector2Int Coordinate => Runtime != null ? Runtime.Coordinate : default;
         public bool IsAlive => Runtime != null && Runtime.IsAlive;
+        public int Defence => Runtime != null ? Runtime.Defence : 0;
+        public EnemyIntent ActiveIntent => TryGetIntentLoop(out EnemyIntentLoop loop, out EnemyActiveIntent activeIntent) ? loop.Intents[activeIntent.ActiveIndex % loop.Intents.Count] : null;
 
         public void Initialize(EnemyRuntime runtime)
         {
             Runtime = runtime;
             defeatPublished = false;
+            if (Runtime != null && Runtime.TryGetTag(out EnemyActiveIntent activeIntent))
+            {
+                activeIntent.Reset();
+            }
             SetPresentationVisible(true);
         }
 
@@ -40,6 +47,30 @@ namespace _Game.Enemies
             return defeated;
         }
 
+        public void AddDefence(int amount)
+        {
+            Runtime?.AddDefence(amount);
+        }
+
+        public bool ExecuteActiveIntent(PlayerHealth playerHealth)
+        {
+            if (!IsAlive)
+            {
+                return false;
+            }
+
+            EnemyIntent intent = ActiveIntent;
+            if (intent == null)
+            {
+                AdvanceIntent();
+                return false;
+            }
+
+            intent.Execute(this, playerHealth);
+            AdvanceIntent();
+            return true;
+        }
+
         public void Defeat()
         {
             if (Runtime == null || !Runtime.IsAlive)
@@ -47,8 +78,29 @@ namespace _Game.Enemies
                 return;
             }
 
-            Runtime.ApplyDamage(Runtime.CurrentHealth);
+            Runtime.ApplyDamage(Runtime.CurrentHealth + Runtime.Defence);
             PublishDefeated();
+        }
+
+        private void AdvanceIntent()
+        {
+            if (!TryGetIntentLoop(out EnemyIntentLoop loop, out EnemyActiveIntent activeIntent))
+            {
+                return;
+            }
+
+            activeIntent.Advance(loop.Intents.Count);
+        }
+
+        private bool TryGetIntentLoop(out EnemyIntentLoop loop, out EnemyActiveIntent activeIntent)
+        {
+            loop = null;
+            activeIntent = null;
+            return Runtime != null
+                && Runtime.TryGetTag(out loop)
+                && Runtime.TryGetTag(out activeIntent)
+                && loop.Intents != null
+                && loop.Intents.Count > 0;
         }
 
         private void PublishDefeated()

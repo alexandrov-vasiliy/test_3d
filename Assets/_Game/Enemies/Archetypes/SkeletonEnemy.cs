@@ -11,9 +11,11 @@ namespace _Game.Enemies
         public SkeletonEnemy()
             : base("skeleton", "Skeleton")
         {
-            AddComponentIfMissing(new EnemyHealth(3));
-            AddComponentIfMissing(new EnemyIntentLoop(new EnemyIntentAttack(), new EnemyIntentDefence()));
-            AddComponentIfMissing(new EnemyVisualReference());
+            AddTagIfMissing(new EnemyIdentity("skeleton", "Skeleton"));
+            AddTagIfMissing(new EnemyHealth(3));
+            AddTagIfMissing(new EnemyDefence());
+            AddTagIfMissing(new EnemyIntentLoop(new EnemyIntentAttack(1), new EnemyIntentDefence(1)));
+            AddTagIfMissing(new EnemyVisualReference());
         }
     }
 }

@@ -10,6 +10,7 @@ using _Game.Goals;
 using _Game.Levels;
 using _Game.Merge;
 using _Game.Packshot;
+using _Game.Player;
 using _Game.Stacks;
 using _Game.Tutorial;
 using _Game.UI;
@@ -37,6 +38,7 @@ public class Main : MonoBehaviour
 
     [Header("UI Views")]
     [SerializeField] private LevelHudView levelHudView;
+    [SerializeField] private HealthView healthView;
     [SerializeField] private GoalsPanelView goalsPanelView;
     [SerializeField] private WinScreenView winScreenView;
     [SerializeField] private LoseScreenView loseScreenView;
@@ -69,6 +71,7 @@ public class Main : MonoBehaviour
     private SoundPlayer soundPlayer;
     private EnemyCatalog enemyCatalog;
     private EnemySpawner enemySpawner;
+    private PlayerHealth playerHealth;
     private TutorialHandController tutorialHandController;
     private PackshotController packshotController;
     private LevelFlowController levelFlowController;
@@ -113,6 +116,7 @@ public class Main : MonoBehaviour
         soundPlayer = EnsureSceneComponent<SoundPlayer>("SoundPlayer");
         enemyCatalog = EnsureSceneComponent<EnemyCatalog>("EnemyCatalog");
         enemySpawner = EnsureSceneComponent<EnemySpawner>("EnemySpawner");
+        playerHealth = EnsureSceneComponent<PlayerHealth>("PlayerHealth");
         tutorialHandController = EnsureSceneComponent<TutorialHandController>("TutorialHandController");
         packshotController = EnsureSceneComponent<PackshotController>("PackshotController");
         levelFlowController = EnsureSceneComponent<LevelFlowController>("LevelFlowController");
@@ -153,6 +157,10 @@ public class Main : MonoBehaviour
         EnemySpawner spawner = ResolveSceneComponent<EnemySpawner>("EnemySpawner");
         spawner.transform.SetParent(root, false);
         enemySpawner = spawner;
+
+        PlayerHealth health = ResolveSceneComponent<PlayerHealth>("PlayerHealth");
+        health.transform.SetParent(root, false);
+        playerHealth = health;
 
         MergeAnimator animator = ResolveSceneComponent<MergeAnimator>("MergeAnimator");
         animator.transform.SetParent(root, false);
@@ -237,6 +245,7 @@ public class Main : MonoBehaviour
         mergeAnimator.Initialize(assets, soundPlayer);
         mergeSystem.Initialize(boardController, mergeAnimator);
         tutorialHandController.Initialize(assets, camera);
+        healthView?.Bind(playerHealth);
 
         handGenerator = new HandGenerator();
         handController = new HandController(stackTrayController, handGenerator);
@@ -260,6 +269,7 @@ public class Main : MonoBehaviour
             handController,
             goalTracker,
             moveAvailabilityService,
+            playerHealth,
             levelHudView,
             goalsPanelView,
             winScreenView,

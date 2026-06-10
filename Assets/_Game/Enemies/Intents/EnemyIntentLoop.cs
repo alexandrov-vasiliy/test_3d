@@ -8,7 +8,7 @@ namespace _Game.Enemies
     /// Stores an ordered loop of enemy intent tags; it is configuration data and does not advance turns by itself.
     /// </summary>
     [Serializable]
-    public sealed class EnemyIntentLoop : EnemyComponent
+    public sealed class EnemyIntentLoop : EnemyTag
     {
         [SerializeReference] private List<EnemyIntent> intents = new List<EnemyIntent>();
 

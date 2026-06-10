@@ -7,6 +7,7 @@ using _Game.Goals;
 using _Game.Levels;
 using _Game.Merge;
 using _Game.Packshot;
+using _Game.Player;
 using _Game.Stacks;
 using _Game.Tutorial;
 using _Game.UI;
@@ -15,7 +16,7 @@ using UnityEngine;
 namespace _Game.Flow
 {
     /// <summary>
-    /// Orchestrates full-game level state: input gating, queued merge completion, hand refill, win/lose screens, and level reloads.
+    /// Orchestrates full-game level state: input gating, queued merge completion, enemy intent turns, hand refill, player-death loss handling, win/lose screens, and level reloads.
     /// </summary>
     public class LevelFlowController : MonoBehaviour
     {
@@ -33,6 +34,7 @@ namespace _Game.Flow
         private HandController hand;
         private GoalTracker goalTracker;
         private MoveAvailabilityService moveAvailability;
+        private PlayerHealth playerHealth;
         private LevelHudView hudView;
         private GoalsPanelView goalsView;
         private WinScreenView winScreen;
@@ -59,6 +61,7 @@ namespace _Game.Flow
             HandController hand,
             GoalTracker goalTracker,
             MoveAvailabilityService moveAvailability,
+            PlayerHealth playerHealth,
             LevelHudView hudView,
             GoalsPanelView goalsView,
             WinScreenView winScreen,
@@ -81,6 +84,7 @@ namespace _Game.Flow
             this.hand = hand;
             this.goalTracker = goalTracker;
             this.moveAvailability = moveAvailability;
+            this.playerHealth = playerHealth;
             this.hudView = hudView;
             this.goalsView = goalsView;
             this.winScreen = winScreen;
@@ -125,6 +129,11 @@ namespace _Game.Flow
                 enemySpawner.EnemyDefeated += OnEnemyDefeated;
             }
 
+            if (playerHealth != null)
+            {
+                playerHealth.Died += OnPlayerDied;
+            }
+
             if (winScreen != null)
             {
                 winScreen.NextLevelRequested += OnNextLevelRequested;
@@ -160,6 +169,11 @@ namespace _Game.Flow
                 enemySpawner.EnemyDefeated -= OnEnemyDefeated;
             }
 
+            if (playerHealth != null)
+            {
+                playerHealth.Died -= OnPlayerDied;
+            }
+
             if (winScreen != null)
             {
                 winScreen.NextLevelRequested -= OnNextLevelRequested;
@@ -183,6 +197,7 @@ namespace _Game.Flow
 
             currentLevel = ResolveCurrentLevel();
             movesUsed = 0;
+            playerHealth?.ResetHealth();
             if (currentLevel == null || levelLoader == null || !levelLoader.LoadLevel(currentLevel))
             {
                 Debug.LogWarning("Unable to load current level. Check LevelDatabase or fallback LevelConfig assignment.");
@@ -289,6 +304,17 @@ namespace _Game.Flow
             if (hand != null && hand.IsHandEmpty)
             {
                 SetInput(false);
+                SetState(LevelFlowState.ResolvingEnemyIntents);
+                if (enemySpawner != null)
+                {
+                    yield return StartCoroutine(enemySpawner.ExecuteActiveIntents(playerHealth));
+                }
+
+                if (State == LevelFlowState.Lose || (playerHealth != null && !playerHealth.IsAlive))
+                {
+                    yield break;
+                }
+
                 SetState(LevelFlowState.RefillingHand);
                 if (!hand.RefillHand())
                 {
@@ -360,6 +386,16 @@ namespace _Game.Flow
         private void OnEnemyDefeated(EnemyController enemy)
         {
             goalTracker?.OnEnemyDefeated();
+        }
+
+        private void OnPlayerDied()
+        {
+            if (State == LevelFlowState.Win || State == LevelFlowState.Lose)
+            {
+                return;
+            }
+
+            ShowLose();
         }
 
         private void ShowLose()

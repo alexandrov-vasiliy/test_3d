@@ -6,6 +6,7 @@ using _Game.Enemies;
 using _Game.Flow;
 using _Game.Merge;
 using _Game.Packshot;
+using _Game.Player;
 using _Game.Stacks;
 using _Game.Tutorial;
 using _Game.UI;
@@ -33,6 +34,7 @@ public class MainEditor : Editor
     private SerializedProperty levelDatabase;
     private SerializedProperty fallbackLevelConfig;
     private SerializedProperty levelHudView;
+    private SerializedProperty healthView;
     private SerializedProperty goalsPanelView;
     private SerializedProperty winScreenView;
     private SerializedProperty loseScreenView;
@@ -67,6 +69,7 @@ public class MainEditor : Editor
         levelDatabase = serializedObject.FindProperty("levelDatabase");
         fallbackLevelConfig = serializedObject.FindProperty("fallbackLevelConfig");
         levelHudView = serializedObject.FindProperty("levelHudView");
+        healthView = serializedObject.FindProperty("healthView");
         goalsPanelView = serializedObject.FindProperty("goalsPanelView");
         winScreenView = serializedObject.FindProperty("winScreenView");
         loseScreenView = serializedObject.FindProperty("loseScreenView");
@@ -197,6 +200,7 @@ public class MainEditor : Editor
     {
         EditorGUILayout.LabelField("Injected UI Views", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(levelHudView);
+        EditorGUILayout.PropertyField(healthView);
         EditorGUILayout.PropertyField(goalsPanelView);
         EditorGUILayout.PropertyField(winScreenView);
         EditorGUILayout.PropertyField(loseScreenView);
@@ -226,10 +230,12 @@ public class MainEditor : Editor
         DrawControllerStatus("SoundPlayer", main.FindSceneComponent<SoundPlayer>());
         DrawControllerStatus("EnemyCatalog", main.FindSceneComponent<EnemyCatalog>());
         DrawControllerStatus("EnemySpawner", main.FindSceneComponent<EnemySpawner>());
+        DrawControllerStatus("PlayerHealth", main.FindSceneComponent<PlayerHealth>());
         DrawControllerStatus("TutorialHandController", main.FindSceneComponent<TutorialHandController>());
         DrawControllerStatus("PackshotController", main.FindSceneComponent<PackshotController>());
         DrawControllerStatus("LevelFlowController", main.FindSceneComponent<LevelFlowController>());
         DrawControllerStatus("LevelHudView", main.FindSceneComponent<LevelHudView>());
+        DrawControllerStatus("HealthView", main.FindSceneComponent<HealthView>());
         DrawControllerStatus("GoalsPanelView", main.FindSceneComponent<GoalsPanelView>());
         DrawControllerStatus("WinScreenView", main.FindSceneComponent<WinScreenView>());
         DrawControllerStatus("LoseScreenView", main.FindSceneComponent<LoseScreenView>());

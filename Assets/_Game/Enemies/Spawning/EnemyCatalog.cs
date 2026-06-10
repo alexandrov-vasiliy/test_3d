@@ -4,7 +4,7 @@ using UnityEngine;
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Stores available enemy archetypes as ECS-like serialized component bundles so level loading can resolve enemy ids without ScriptableObjects.
+    /// Stores available enemy archetypes as ECS-like serialized tag bundles so level loading can resolve enemy ids without ScriptableObjects.
     /// </summary>
     public sealed class EnemyCatalog : MonoBehaviour
     {
