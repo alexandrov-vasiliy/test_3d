@@ -674,6 +674,14 @@ MonoBehaviour:
   hexPiecePrefab: {fileID: 470351971931230265, guid: 171da1ebb3f9347658ae96a14226dfa0, type: 3}
   hexColorConfig: {fileID: 11400000, guid: d50cd5388d85c4ea2ba84720b3378116, type: 2}
   gameCamera: {fileID: 330585545}
+  levelDatabase: {fileID: 0}
+  fallbackLevelConfig: {fileID: 0}
+  levelHudView: {fileID: 0}
+  healthView: {fileID: 0}
+  goalsPanelView: {fileID: 0}
+  winScreenView: {fileID: 0}
+  loseScreenView: {fileID: 0}
+  levelTransitionView: {fileID: 0}
   boardRadius: 3
   boardPosition: {x: 0, y: 0, z: 4.14}
   trayPosition: {x: 0, y: 0, z: -5.36}
@@ -814,7 +822,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeSystem
   clearMatchCount: 10
   maxChainSteps: 512
-  debugMergeLogs: 1
 --- !u!1 &1522616674
 GameObject:
   m_ObjectHideFlags: 0
@@ -954,6 +961,7 @@ MonoBehaviour:
   disappearEffectPrefab: {fileID: 3679156881242454140, guid: 2bfe977f15d03b849821fd22e4606618, type: 3}
   effectParent: {fileID: 0}
   disappearEffectLifetime: 2
+  disappearEffectSurfaceOffset: 0
 --- !u!224 &1796970478 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5384257244548589294, guid: 9a1efb70341ca40a681b99e59d747759, type: 3}
@@ -1262,7 +1270,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:

@@ -147,7 +147,7 @@ namespace _Game.Enemies
             GameObject enemyObject = CreateEnemyObject(archetype, enemyId);
             enemyObject.transform.SetParent(EnsureEnemiesRoot(), true);
             enemyObject.transform.position = cellView.transform.position + archetype.PositionOffset;
-
+            enemyObject.transform.eulerAngles = new Vector3(0f, 180f, 0f);
             EnemyController controller = enemyObject.GetComponent<EnemyController>();
             if (controller == null)
             {
@@ -204,6 +204,7 @@ namespace _Game.Enemies
             if (archetype != null && archetype.Prefab != null)
             {
                 GameObject instance = Instantiate(archetype.Prefab);
+                
                 instance.name = "Enemy_" + enemyId;
                 return instance;
             }
