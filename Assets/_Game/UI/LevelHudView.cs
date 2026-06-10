@@ -1,5 +1,5 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace _Game.UI
 {
@@ -9,7 +9,7 @@ namespace _Game.UI
     public class LevelHudView : MonoBehaviour
     {
         [SerializeField] private GameObject root;
-        [SerializeField] private Text levelText;
+        [SerializeField] private TMP_Text levelText;
 
         public void SetVisible(bool visible)
         {

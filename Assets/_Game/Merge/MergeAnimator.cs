@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace _Game.Merge
 {
+    /// <summary>
+    /// Owns merge presentation only: piece movement, disappear animation, VFX, timing, and sounds; gameplay resolution stays in MergeSystem.
+    /// </summary>
     public class MergeAnimator : MonoBehaviour
     {
         [SerializeField] private float baseMoveDuration = 0.35f;

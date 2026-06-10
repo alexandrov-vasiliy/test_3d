@@ -11,18 +11,21 @@ namespace _Game.Goals
     public sealed class GoalTracker
     {
         /// <summary>
-        /// Stores mutable progress for one active goal instance; it is owned by GoalTracker and shown by HUD views.
+        /// Stores mutable progress for one active goal instance, including runtime-required counts supplied by level services.
         /// </summary>
         public sealed class GoalProgress
         {
-            public GoalProgress(LevelConfig.GoalDefinition definition)
+            public GoalProgress(LevelConfig.GoalDefinition definition, int runtimeRequiredCount = -1)
             {
                 Definition = definition;
+                RequiredCount = runtimeRequiredCount >= 0
+                    ? runtimeRequiredCount
+                    : Math.Max(0, definition != null ? definition.requiredCount : 0);
             }
 
             public LevelConfig.GoalDefinition Definition { get; }
             public int CurrentCount { get; private set; }
-            public int RequiredCount => Definition != null ? Math.Max(0, Definition.requiredCount) : 0;
+            public int RequiredCount { get; }
             public bool IsComplete => CurrentCount >= RequiredCount;
 
             public void AddProgress(int count)
@@ -59,7 +62,7 @@ namespace _Game.Goals
             }
         }
 
-        public void Initialize(LevelConfig levelConfig)
+        public void Initialize(LevelConfig levelConfig, int totalEnemyCount = 0)
         {
             goals.Clear();
             if (levelConfig != null && levelConfig.goals != null)
@@ -67,10 +70,12 @@ namespace _Game.Goals
                 for (int i = 0; i < levelConfig.goals.Count; i++)
                 {
                     LevelConfig.GoalDefinition goal = levelConfig.goals[i];
-                    if (goal != null && goal.requiredCount > 0)
+                    if (goal == null || !ShouldActivateGoal(goal, totalEnemyCount, out int runtimeRequiredCount))
                     {
-                        goals.Add(new GoalProgress(goal));
+                        continue;
                     }
+
+                    goals.Add(new GoalProgress(goal, runtimeRequiredCount));
                 }
             }
 
@@ -102,6 +107,56 @@ namespace _Game.Goals
             {
                 Completed?.Invoke();
             }
+        }
+
+        public void OnEnemyDefeated()
+        {
+            bool changed = false;
+            for (int i = 0; i < goals.Count; i++)
+            {
+                GoalProgress goal = goals[i];
+                if (goal.Definition == null || goal.IsComplete)
+                {
+                    continue;
+                }
+
+                if (goal.Definition.type != LevelGoalType.DefeatAllEnemies &&
+                    goal.Definition.type != LevelGoalType.DefeatEnemies)
+                {
+                    continue;
+                }
+
+                goal.AddProgress(1);
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return;
+            }
+
+            GoalsChanged?.Invoke();
+            if (IsComplete)
+            {
+                Completed?.Invoke();
+            }
+        }
+
+        private static bool ShouldActivateGoal(LevelConfig.GoalDefinition goal, int totalEnemyCount, out int runtimeRequiredCount)
+        {
+            runtimeRequiredCount = -1;
+            if (goal == null)
+            {
+                return false;
+            }
+
+            if (goal.type == LevelGoalType.DefeatAllEnemies)
+            {
+                runtimeRequiredCount = Math.Max(0, totalEnemyCount);
+                return true;
+            }
+
+            return goal.requiredCount > 0;
         }
     }
 }

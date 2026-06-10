@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace _Game.Drag
 {
+    /// <summary>
+    /// Handles pointer dragging from the hand tray onto valid board cells; board services decide placement legality.
+    /// </summary>
     public class DragController : MonoBehaviour
     {
         [SerializeField] private float returnDuration = 0.2f;
@@ -94,14 +97,14 @@ namespace _Game.Drag
             }
 
             highlightedCell = board.GetCellUnderPointer(screenPosition);
-            bool valid = board.IsCellEmpty(highlightedCell);
+            bool valid = board.IsCellAvailableForPlacement(highlightedCell);
             board.HighlightCell(highlightedCell, highlightedCell != null, valid);
         }
 
         private void EndDrag(Vector2 screenPosition)
         {
             HexCell targetCell = board.GetCellUnderPointer(screenPosition);
-            bool valid = board.IsCellEmpty(targetCell);
+            bool valid = board.IsCellAvailableForPlacement(targetCell);
             board.ClearHighlights();
 
             HexStackView stack = draggedStack;

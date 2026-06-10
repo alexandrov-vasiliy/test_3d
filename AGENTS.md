@@ -34,6 +34,7 @@ public class MergeSystem : MonoBehaviour
 - Do not create gameplay UI hierarchy in runtime code.
 - UI must exist as scene objects or prefab instances and be assigned through the composition root.
 - Runtime code may show, hide, bind, or update injected UI views, but must not instantiate canvases, buttons, panels, or goal widgets unless the user explicitly changes this rule.
+- UI text components must use TextMeshPro `TMP_Text`, not legacy `UnityEngine.UI.Text`.
 
 ## Merge Boundary
 

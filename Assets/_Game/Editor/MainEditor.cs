@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using _Game.Audio;
 using _Game.Board;
 using _Game.Drag;
+using _Game.Enemies;
 using _Game.Flow;
 using _Game.Merge;
 using _Game.Packshot;
@@ -223,6 +224,8 @@ public class MainEditor : Editor
         DrawControllerStatus("MergeAnimator", main.FindSceneComponent<MergeAnimator>());
         DrawControllerStatus("MergeSystem", main.FindSceneComponent<MergeSystem>());
         DrawControllerStatus("SoundPlayer", main.FindSceneComponent<SoundPlayer>());
+        DrawControllerStatus("EnemyCatalog", main.FindSceneComponent<EnemyCatalog>());
+        DrawControllerStatus("EnemySpawner", main.FindSceneComponent<EnemySpawner>());
         DrawControllerStatus("TutorialHandController", main.FindSceneComponent<TutorialHandController>());
         DrawControllerStatus("PackshotController", main.FindSceneComponent<PackshotController>());
         DrawControllerStatus("LevelFlowController", main.FindSceneComponent<LevelFlowController>());

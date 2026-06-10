@@ -2,6 +2,7 @@ using System.Collections;
 using _Game.Board;
 using _Game.Configs;
 using _Game.Drag;
+using _Game.Enemies;
 using _Game.Goals;
 using _Game.Levels;
 using _Game.Merge;
@@ -14,7 +15,7 @@ using UnityEngine;
 namespace _Game.Flow
 {
     /// <summary>
-    /// Orchestrates full-game level state: input gating, merge waiting, hand refill, win/lose screens, and level reloads.
+    /// Orchestrates full-game level state: input gating, queued merge completion, hand refill, win/lose screens, and level reloads.
     /// </summary>
     public class LevelFlowController : MonoBehaviour
     {
@@ -24,6 +25,7 @@ namespace _Game.Flow
         private MergeSystem mergeSystem;
         private TutorialHandController tutorial;
         private PackshotController packshot;
+        private EnemySpawner enemySpawner;
         private LevelLoader levelLoader;
         private LevelProgressService progressService;
         private LevelDatabase levelDatabase;
@@ -37,6 +39,7 @@ namespace _Game.Flow
         private LoseScreenView loseScreen;
         private LevelTransitionView transitionView;
         private LevelConfig currentLevel;
+        private Coroutine mergeResolutionRoutine;
         private int movesUsed;
 
         public LevelFlowState State { get; private set; } = LevelFlowState.Initializing;
@@ -48,6 +51,7 @@ namespace _Game.Flow
             MergeSystem mergeSystem,
             TutorialHandController tutorial,
             PackshotController packshot,
+            EnemySpawner enemySpawner,
             LevelLoader levelLoader,
             LevelProgressService progressService,
             LevelDatabase levelDatabase,
@@ -69,6 +73,7 @@ namespace _Game.Flow
             this.mergeSystem = mergeSystem;
             this.tutorial = tutorial;
             this.packshot = packshot;
+            this.enemySpawner = enemySpawner;
             this.levelLoader = levelLoader;
             this.progressService = progressService;
             this.levelDatabase = levelDatabase;
@@ -115,6 +120,11 @@ namespace _Game.Flow
                 goalTracker.Completed += OnGoalsCompleted;
             }
 
+            if (enemySpawner != null && goalTracker != null)
+            {
+                enemySpawner.EnemyDefeated += OnEnemyDefeated;
+            }
+
             if (winScreen != null)
             {
                 winScreen.NextLevelRequested += OnNextLevelRequested;
@@ -143,6 +153,11 @@ namespace _Game.Flow
             if (goalTracker != null)
             {
                 goalTracker.Completed -= OnGoalsCompleted;
+            }
+
+            if (enemySpawner != null && goalTracker != null)
+            {
+                enemySpawner.EnemyDefeated -= OnEnemyDefeated;
             }
 
             if (winScreen != null)
@@ -176,6 +191,12 @@ namespace _Game.Flow
                 return;
             }
 
+            if (goalTracker != null && goalTracker.IsComplete)
+            {
+                ShowWin();
+                return;
+            }
+
             tutorial?.Show();
             SetState(LevelFlowState.Playing);
             SetInput(true);
@@ -199,7 +220,7 @@ namespace _Game.Flow
 
         private void OnDragStarted(HexStackView stackView)
         {
-            if (State != LevelFlowState.Playing)
+            if (State != LevelFlowState.Playing && State != LevelFlowState.ResolvingMerge)
             {
                 return;
             }
@@ -215,36 +236,50 @@ namespace _Game.Flow
                 return;
             }
 
-            SetState(LevelFlowState.Playing);
+            SetState(IsMergeResolutionActive() ? LevelFlowState.ResolvingMerge : LevelFlowState.Playing);
             tutorial?.RestartAfterInactivity();
         }
 
         private void OnStackPlaced(HexStackView stackView, HexCell cell)
         {
-            if (State != LevelFlowState.Dragging && State != LevelFlowState.Playing)
+            if (State != LevelFlowState.Dragging && State != LevelFlowState.Playing && State != LevelFlowState.ResolvingMerge)
             {
                 return;
             }
 
-            StartCoroutine(HandleStackPlaced(cell));
-        }
-
-        private IEnumerator HandleStackPlaced(HexCell cell)
-        {
             movesUsed++;
             tutorial?.Complete();
-            SetInput(false);
             SetState(LevelFlowState.ResolvingMerge);
+            SetInput(true);
 
             if (mergeSystem != null)
             {
-                yield return StartCoroutine(mergeSystem.RunMerge(cell));
+                mergeSystem.RequestMerge(cell);
+                if (mergeResolutionRoutine == null)
+                {
+                    mergeResolutionRoutine = StartCoroutine(HandleMergeResolution(cell));
+                }
             }
             else
             {
                 Debug.LogWarning("MergeSystem is missing; placed stack will not merge.");
+                StartCoroutine(HandlePostMergeState());
+            }
+        }
+
+        private IEnumerator HandleMergeResolution(HexCell cell)
+        {
+            if (mergeSystem != null)
+            {
+                yield return StartCoroutine(mergeSystem.RunMerge(cell));
             }
 
+            mergeResolutionRoutine = null;
+            yield return StartCoroutine(HandlePostMergeState());
+        }
+
+        private IEnumerator HandlePostMergeState()
+        {
             if (goalTracker != null && goalTracker.IsComplete)
             {
                 ShowWin();
@@ -253,6 +288,7 @@ namespace _Game.Flow
 
             if (hand != null && hand.IsHandEmpty)
             {
+                SetInput(false);
                 SetState(LevelFlowState.RefillingHand);
                 if (!hand.RefillHand())
                 {
@@ -269,6 +305,11 @@ namespace _Game.Flow
 
             SetState(LevelFlowState.Playing);
             SetInput(true);
+        }
+
+        private bool IsMergeResolutionActive()
+        {
+            return mergeResolutionRoutine != null || (mergeSystem != null && mergeSystem.IsRunning);
         }
 
         private void CheckLoseBeforeInput()
@@ -314,6 +355,11 @@ namespace _Game.Flow
             }
 
             ShowWin();
+        }
+
+        private void OnEnemyDefeated(EnemyController enemy)
+        {
+            goalTracker?.OnEnemyDefeated();
         }
 
         private void ShowLose()

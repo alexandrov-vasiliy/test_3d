@@ -1,5 +1,6 @@
 using _Game.Board;
 using _Game.Configs;
+using _Game.Enemies;
 using _Game.Goals;
 using _Game.Stacks;
 using _Game.Tutorial;
@@ -9,23 +10,25 @@ using UnityEngine;
 namespace _Game.Levels
 {
     /// <summary>
-    /// Applies a LevelConfig to runtime board, hand, goals, tutorial target, and HUD views; it does not own progression decisions.
+    /// Applies a LevelConfig to board, enemies, hand, goals, tutorial target, and HUD views; it does not own progression decisions.
     /// </summary>
     public sealed class LevelLoader
     {
         private readonly BoardController board;
         private readonly HandController hand;
         private readonly HandGenerator handGenerator;
+        private readonly EnemySpawner enemySpawner;
         private readonly GoalTracker goalTracker;
         private readonly TutorialHandController tutorial;
         private readonly LevelHudView hudView;
         private readonly GoalsPanelView goalsView;
 
-        public LevelLoader(BoardController board, HandController hand, HandGenerator handGenerator, GoalTracker goalTracker, TutorialHandController tutorial, LevelHudView hudView, GoalsPanelView goalsView)
+        public LevelLoader(BoardController board, HandController hand, HandGenerator handGenerator, EnemySpawner enemySpawner, GoalTracker goalTracker, TutorialHandController tutorial, LevelHudView hudView, GoalsPanelView goalsView)
         {
             this.board = board;
             this.hand = hand;
             this.handGenerator = handGenerator;
+            this.enemySpawner = enemySpawner;
             this.goalTracker = goalTracker;
             this.tutorial = tutorial;
             this.hudView = hudView;
@@ -42,11 +45,12 @@ namespace _Game.Levels
 
             board.Initialize(levelConfig);
             PlaceStartingBoardStacks(levelConfig);
+            enemySpawner?.Spawn(levelConfig, board);
 
             handGenerator.Begin(levelConfig);
             hand.InitializeHand();
 
-            goalTracker.Initialize(levelConfig);
+            goalTracker.Initialize(levelConfig, enemySpawner != null ? enemySpawner.TotalSpawnedEnemies : 0);
             hudView?.SetLevel(levelConfig.levelNumber, string.IsNullOrEmpty(levelConfig.displayName) ? levelConfig.levelId : levelConfig.displayName);
             goalsView?.Bind(goalTracker);
 

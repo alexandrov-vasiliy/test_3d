@@ -1,5 +1,6 @@
 using System.IO;
 using _Game.UI;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -17,6 +18,7 @@ public static class FullGameUiSceneSetup
     private const string PrefabFolder = "Assets/_Game/Prefabs/UI";
     private const string CanvasName = "FullGameCanvas";
     private const string AutoRunMarkerPath = "Temp/RunFullGameUiSceneSetup.marker";
+    private const string LegacyUiTextScriptGuid = "5f7201a12d95ffc409449d95f23cf332";
 
     static FullGameUiSceneSetup()
     {
@@ -163,7 +165,7 @@ public static class FullGameUiSceneSetup
     private static GameObject CreateLevelHudPrefab()
     {
         string path = PrefabFolder + "/LevelHud.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        GameObject existing = LoadReusablePrefab(path);
         if (existing != null)
         {
             return existing;
@@ -172,7 +174,7 @@ public static class FullGameUiSceneSetup
         GameObject root = CreatePanelRoot("LevelHud", new Color(0.05f, 0.08f, 0.1f, 0.72f));
         RectTransform rootRect = root.GetComponent<RectTransform>();
         SetAnchor(rootRect, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -24f), new Vector2(320f, 88f));
-        Text levelText = CreateText("LevelText", root.transform, "Level 1", 38, TextAnchor.MiddleLeft, Color.white);
+        TextMeshProUGUI levelText = CreateText("LevelText", root.transform, "Level 1", 38, TextAnchor.MiddleLeft, Color.white);
         SetStretch(levelText.rectTransform, new Vector2(22f, 0f), new Vector2(-22f, 0f));
 
         LevelHudView view = root.AddComponent<LevelHudView>();
@@ -183,7 +185,7 @@ public static class FullGameUiSceneSetup
     private static GameObject CreateGoalsPanelPrefab()
     {
         string path = PrefabFolder + "/GoalsPanel.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        GameObject existing = LoadReusablePrefab(path);
         if (existing != null)
         {
             return existing;
@@ -192,7 +194,7 @@ public static class FullGameUiSceneSetup
         GameObject root = CreatePanelRoot("GoalsPanel", new Color(0.08f, 0.06f, 0.03f, 0.76f));
         RectTransform rootRect = root.GetComponent<RectTransform>();
         SetAnchor(rootRect, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -24f), new Vector2(360f, 150f));
-        Text goalsText = CreateText("GoalsText", root.transform, "Clear Red: 0/10", 28, TextAnchor.UpperLeft, Color.white);
+        TextMeshProUGUI goalsText = CreateText("GoalsText", root.transform, "Clear Red: 0/10", 28, TextAnchor.UpperLeft, Color.white);
         SetStretch(goalsText.rectTransform, new Vector2(22f, 16f), new Vector2(-22f, -16f));
 
         GoalsPanelView view = root.AddComponent<GoalsPanelView>();
@@ -203,7 +205,7 @@ public static class FullGameUiSceneSetup
     private static GameObject CreateWinScreenPrefab()
     {
         string path = PrefabFolder + "/WinScreen.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        GameObject existing = LoadReusablePrefab(path);
         if (existing != null)
         {
             return existing;
@@ -222,7 +224,7 @@ public static class FullGameUiSceneSetup
     private static GameObject CreateLoseScreenPrefab()
     {
         string path = PrefabFolder + "/LoseScreen.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        GameObject existing = LoadReusablePrefab(path);
         if (existing != null)
         {
             return existing;
@@ -241,14 +243,14 @@ public static class FullGameUiSceneSetup
     private static GameObject CreateTransitionPrefab()
     {
         string path = PrefabFolder + "/LevelTransition.prefab";
-        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        GameObject existing = LoadReusablePrefab(path);
         if (existing != null)
         {
             return existing;
         }
 
         GameObject root = CreateScreenRoot("LevelTransition", new Color(0.02f, 0.03f, 0.06f, 0.82f));
-        Text text = CreateText("TransitionText", root.transform, "Loading...", 54, TextAnchor.MiddleCenter, Color.white);
+        TextMeshProUGUI text = CreateText("TransitionText", root.transform, "Loading...", 54, TextAnchor.MiddleCenter, Color.white);
         SetAnchor(text.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600f, 120f));
         root.AddComponent<LevelTransitionView>();
         return SavePrefabAndDestroy(root, path);
@@ -275,24 +277,23 @@ public static class FullGameUiSceneSetup
 
     private static void CreateTextBlock(Transform parent, string title, string subtitle, Color titleColor)
     {
-        Text titleText = CreateText("Title", parent, title, 72, TextAnchor.MiddleCenter, titleColor);
+        TextMeshProUGUI titleText = CreateText("Title", parent, title, 72, TextAnchor.MiddleCenter, titleColor);
         SetAnchor(titleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 80f), new Vector2(780f, 110f));
-        Text subtitleText = CreateText("Subtitle", parent, subtitle, 34, TextAnchor.MiddleCenter, Color.white);
+        TextMeshProUGUI subtitleText = CreateText("Subtitle", parent, subtitle, 34, TextAnchor.MiddleCenter, Color.white);
         SetAnchor(subtitleText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f), new Vector2(680f, 80f));
     }
 
-    private static Text CreateText(string name, Transform parent, string value, int fontSize, TextAnchor alignment, Color color)
+    private static TextMeshProUGUI CreateText(string name, Transform parent, string value, int fontSize, TextAnchor alignment, Color color)
     {
-        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(parent, false);
-        Text text = textObject.GetComponent<Text>();
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
         text.text = value;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = fontSize;
-        text.alignment = alignment;
+        text.alignment = ConvertAlignment(alignment);
         text.color = color;
-        text.horizontalOverflow = HorizontalWrapMode.Wrap;
-        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.enableWordWrapping = true;
+        text.overflowMode = TextOverflowModes.Ellipsis;
         return text;
     }
 
@@ -309,9 +310,34 @@ public static class FullGameUiSceneSetup
         colors.pressedColor = Color.Lerp(color, Color.black, 0.18f);
         button.colors = colors;
 
-        Text labelText = CreateText("Label", buttonObject.transform, label, 36, TextAnchor.MiddleCenter, Color.white);
+        TextMeshProUGUI labelText = CreateText("Label", buttonObject.transform, label, 36, TextAnchor.MiddleCenter, Color.white);
         SetStretch(labelText.rectTransform, Vector2.zero, Vector2.zero);
         return button;
+    }
+
+    private static TextAlignmentOptions ConvertAlignment(TextAnchor alignment)
+    {
+        switch (alignment)
+        {
+            case TextAnchor.UpperLeft:
+                return TextAlignmentOptions.TopLeft;
+            case TextAnchor.UpperCenter:
+                return TextAlignmentOptions.Top;
+            case TextAnchor.UpperRight:
+                return TextAlignmentOptions.TopRight;
+            case TextAnchor.MiddleLeft:
+                return TextAlignmentOptions.Left;
+            case TextAnchor.MiddleRight:
+                return TextAlignmentOptions.Right;
+            case TextAnchor.LowerLeft:
+                return TextAlignmentOptions.BottomLeft;
+            case TextAnchor.LowerCenter:
+                return TextAlignmentOptions.Bottom;
+            case TextAnchor.LowerRight:
+                return TextAlignmentOptions.BottomRight;
+            default:
+                return TextAlignmentOptions.Center;
+        }
     }
 
     private static void SetAnchor(RectTransform rectTransform, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 size)
@@ -343,6 +369,23 @@ public static class FullGameUiSceneSetup
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
         return prefab;
+    }
+
+    private static GameObject LoadReusablePrefab(string path)
+    {
+        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (existing == null)
+        {
+            return null;
+        }
+
+        if (File.Exists(path) && File.ReadAllText(path).Contains(LegacyUiTextScriptGuid))
+        {
+            AssetDatabase.DeleteAsset(path);
+            return null;
+        }
+
+        return existing;
     }
 
     private static void EnsurePrefabFolder()

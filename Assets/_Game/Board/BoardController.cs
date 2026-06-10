@@ -2,13 +2,14 @@ using System.Collections.Generic;
 using _Game.Audio;
 using _Game.Configs;
 using _Game.DI;
+using _Game.Enemies;
 using _Game.Stacks;
 using UnityEngine;
 
 namespace _Game.Board
 {
     /// <summary>
-    /// Owns runtime board cells and their views; level loading and gameplay rules use it for placement, lookup, and board-state queries.
+    /// Owns runtime board cells and their views; placement checks also consult EnemyRegistry while enemy state stays outside the board model.
     /// </summary>
     public class BoardController : MonoBehaviour
     {
@@ -23,6 +24,7 @@ namespace _Game.Board
         private Camera inputCamera;
         private HexCellHighlightSettings cellHighlightSettings;
         private SoundPlayer soundPlayer;
+        private EnemyRegistry enemyRegistry;
 
         public IEnumerable<HexCell> Cells => cells.Values;
         public bool IsBoardEmpty
@@ -47,6 +49,11 @@ namespace _Game.Board
             this.inputCamera = inputCamera;
             this.cellHighlightSettings = cellHighlightSettings;
             this.soundPlayer = soundPlayer;
+        }
+
+        public void SetEnemyRegistry(EnemyRegistry enemyRegistry)
+        {
+            this.enemyRegistry = enemyRegistry;
         }
 
         public void Initialize(int radius)
@@ -142,6 +149,11 @@ namespace _Game.Board
             return cell != null && cell.IsEmpty;
         }
 
+        public bool IsCellAvailableForPlacement(HexCell cell)
+        {
+            return IsCellEmpty(cell) && (enemyRegistry == null || !enemyRegistry.IsOccupied(cell));
+        }
+
         public bool HasEmptyCell()
         {
             foreach (HexCell cell in cells.Values)
@@ -157,7 +169,7 @@ namespace _Game.Board
 
         public bool HasLegalPlacement(HexStack stack)
         {
-            return stack != null && !stack.IsEmpty && HasEmptyCell();
+            return stack != null && !stack.IsEmpty && HasAvailablePlacementCell();
         }
 
         public void PlaceStack(HexCell cell, HexStack stack)
@@ -328,6 +340,19 @@ namespace _Game.Board
         private static float DistanceXZ(Vector3 a, Vector3 b)
         {
             return Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+        }
+
+        private bool HasAvailablePlacementCell()
+        {
+            foreach (HexCell cell in cells.Values)
+            {
+                if (IsCellAvailableForPlacement(cell))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

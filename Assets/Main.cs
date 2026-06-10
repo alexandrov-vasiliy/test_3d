@@ -4,6 +4,7 @@ using _Game.Board;
 using _Game.Configs;
 using _Game.DI;
 using _Game.Drag;
+using _Game.Enemies;
 using _Game.Flow;
 using _Game.Goals;
 using _Game.Levels;
@@ -66,6 +67,8 @@ public class Main : MonoBehaviour
     private MergeAnimator mergeAnimator;
     private MergeSystem mergeSystem;
     private SoundPlayer soundPlayer;
+    private EnemyCatalog enemyCatalog;
+    private EnemySpawner enemySpawner;
     private TutorialHandController tutorialHandController;
     private PackshotController packshotController;
     private LevelFlowController levelFlowController;
@@ -108,6 +111,8 @@ public class Main : MonoBehaviour
         mergeAnimator = EnsureSceneComponent<MergeAnimator>("MergeAnimator");
         mergeSystem = EnsureSceneComponent<MergeSystem>("MergeSystem");
         soundPlayer = EnsureSceneComponent<SoundPlayer>("SoundPlayer");
+        enemyCatalog = EnsureSceneComponent<EnemyCatalog>("EnemyCatalog");
+        enemySpawner = EnsureSceneComponent<EnemySpawner>("EnemySpawner");
         tutorialHandController = EnsureSceneComponent<TutorialHandController>("TutorialHandController");
         packshotController = EnsureSceneComponent<PackshotController>("PackshotController");
         levelFlowController = EnsureSceneComponent<LevelFlowController>("LevelFlowController");
@@ -140,6 +145,14 @@ public class Main : MonoBehaviour
         SoundPlayer sounds = ResolveSceneComponent<SoundPlayer>("SoundPlayer");
         sounds.transform.SetParent(root, false);
         soundPlayer = sounds;
+
+        EnemyCatalog catalog = ResolveSceneComponent<EnemyCatalog>("EnemyCatalog");
+        catalog.transform.SetParent(root, false);
+        enemyCatalog = catalog;
+
+        EnemySpawner spawner = ResolveSceneComponent<EnemySpawner>("EnemySpawner");
+        spawner.transform.SetParent(root, false);
+        enemySpawner = spawner;
 
         MergeAnimator animator = ResolveSceneComponent<MergeAnimator>("MergeAnimator");
         animator.transform.SetParent(root, false);
@@ -216,6 +229,8 @@ public class Main : MonoBehaviour
         }
 
         boardController.InitializeDependencies(assets, camera, cellHighlight, soundPlayer);
+        enemySpawner.Initialize(enemyCatalog);
+        boardController.SetEnemyRegistry(enemySpawner.Registry);
         stackTrayController.SetBoard(boardController);
         dragController.Initialize(camera, boardController, stackTrayController);
         soundPlayer.Initialize(dragController);
@@ -228,7 +243,7 @@ public class Main : MonoBehaviour
         goalTracker = new GoalTracker();
         moveAvailabilityService = new MoveAvailabilityService();
         levelProgressService = new LevelProgressService();
-        levelLoader = new LevelLoader(boardController, handController, handGenerator, goalTracker, tutorialHandController, levelHudView, goalsPanelView);
+        levelLoader = new LevelLoader(boardController, handController, handGenerator, enemySpawner, goalTracker, tutorialHandController, levelHudView, goalsPanelView);
 
         levelFlowController.Initialize(
             boardController,
@@ -237,6 +252,7 @@ public class Main : MonoBehaviour
             mergeSystem,
             tutorialHandController,
             packshotController,
+            enemySpawner,
             levelLoader,
             levelProgressService,
             levelDatabase,

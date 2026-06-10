@@ -75,6 +75,17 @@ namespace _Game.Configs
         }
 
         /// <summary>
+        /// Places one enemy archetype on a board coordinate; runtime enemy behavior is provided by enemy prefab composition and spawner wiring.
+        /// </summary>
+        [System.Serializable]
+        public class EnemyDefinition
+        {
+            public string enemyId = "basic";
+            public Vector2Int coordinate;
+            public int healthOverride;
+        }
+
+        /// <summary>
         /// Stores lose-condition switches for the flow controller and move availability service.
         /// </summary>
         [System.Serializable]
@@ -99,6 +110,9 @@ namespace _Game.Configs
         [Header("Hand")]
         public List<StackDefinition> initialHandStacks = new List<StackDefinition>();
         public HandGenerationSettings handGeneration = new HandGenerationSettings();
+
+        [Header("Enemies")]
+        public List<EnemyDefinition> enemies = new List<EnemyDefinition>();
 
         [Header("Goals")]
         public List<GoalDefinition> goals = new List<GoalDefinition>();
@@ -127,12 +141,14 @@ namespace _Game.Configs
     }
 
     /// <summary>
-    /// Enumerates level goal modes; current gameplay supports cleared-piece collection and leaves room for future board goals.
+    /// Enumerates level goal modes tracked by GoalTracker; merge, board, and enemy systems only report progress events.
     /// </summary>
     public enum LevelGoalType
     {
         ClearPieces,
         ClearBoard,
-        ClearStacks
+        ClearStacks,
+        DefeatAllEnemies,
+        DefeatEnemies
     }
 }

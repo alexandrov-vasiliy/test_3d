@@ -56,6 +56,10 @@ MonoBehaviour:
     maxColorRunLength: 8
     finiteDeckMode: 0
     finiteDeckStacks: []
+  enemies:
+  - enemyId: basic
+    coordinate: {x: -1, y: 2}
+    healthOverride: 0
   goals:
   - type: 0
     color: 0

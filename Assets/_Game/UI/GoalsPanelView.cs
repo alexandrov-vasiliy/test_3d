@@ -3,7 +3,6 @@ using _Game.Configs;
 using _Game.Goals;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace _Game.UI
 {
@@ -93,6 +92,16 @@ namespace _Game.UI
             if (goal.Definition.type == LevelGoalType.ClearBoard)
             {
                 return "Clear board";
+            }
+
+            if (goal.Definition.type == LevelGoalType.DefeatAllEnemies)
+            {
+                return "Enemies";
+            }
+
+            if (goal.Definition.type == LevelGoalType.DefeatEnemies)
+            {
+                return "Defeat enemies";
             }
 
             return "Clear stacks";

@@ -88,7 +88,10 @@ public class LevelConfigEditor : Editor
         List<string> errors = new List<string>();
         HashSet<Vector2Int> boardCells = BuildBoardCells(config);
         HashSet<HexColor> availableColors = new HashSet<HexColor>();
+        HashSet<Vector2Int> startStackCells = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> enemyCells = new HashSet<Vector2Int>();
         int occupiedCells = 0;
+        bool hasDefeatAllEnemiesGoal = false;
 
         if (config.startingBoardStacks != null)
         {
@@ -107,9 +110,49 @@ public class LevelConfigEditor : Editor
                 else
                 {
                     occupiedCells++;
+                    startStackCells.Add(stack.coordinate);
                 }
 
                 AddStackColors(availableColors, stack.stack);
+            }
+        }
+
+        if (config.enemies != null)
+        {
+            for (int i = 0; i < config.enemies.Count; i++)
+            {
+                LevelConfig.EnemyDefinition enemy = config.enemies[i];
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(enemy.enemyId))
+                {
+                    errors.Add("Enemy " + i + " has empty enemyId.");
+                }
+
+                if (!boardCells.Contains(enemy.coordinate))
+                {
+                    errors.Add("Enemy is outside board shape: " + enemy.coordinate);
+                    continue;
+                }
+
+                if (startStackCells.Contains(enemy.coordinate))
+                {
+                    errors.Add("Enemy conflicts with a starting stack at: " + enemy.coordinate);
+                }
+
+                if (!enemyCells.Add(enemy.coordinate))
+                {
+                    errors.Add("Multiple enemies are placed on the same cell: " + enemy.coordinate);
+                    continue;
+                }
+
+                if (!startStackCells.Contains(enemy.coordinate))
+                {
+                    occupiedCells++;
+                }
             }
         }
 
@@ -163,7 +206,28 @@ public class LevelConfigEditor : Editor
             for (int i = 0; i < config.goals.Count; i++)
             {
                 LevelConfig.GoalDefinition goal = config.goals[i];
-                if (goal == null || goal.requiredCount <= 0)
+                if (goal == null)
+                {
+                    errors.Add("Goal " + i + " is missing.");
+                    continue;
+                }
+
+                if (goal.type == LevelGoalType.DefeatAllEnemies)
+                {
+                    hasDefeatAllEnemiesGoal = true;
+                    continue;
+                }
+
+                if (goal.type == LevelGoalType.DefeatEnemies)
+                {
+                    if (goal.requiredCount <= 0)
+                    {
+                        errors.Add("DefeatEnemies goal " + i + " has invalid required count.");
+                    }
+                    continue;
+                }
+
+                if (goal.requiredCount <= 0)
                 {
                     errors.Add("Goal " + i + " has invalid required count.");
                     continue;
@@ -174,6 +238,11 @@ public class LevelConfigEditor : Editor
                     errors.Add("Goal color is not present in board, initial hand, or generation settings: " + goal.color);
                 }
             }
+        }
+
+        if (hasDefeatAllEnemiesGoal && enemyCells.Count == 0)
+        {
+            errors.Add("DefeatAllEnemies goal has no valid enemies on the level.");
         }
 
         if (boardCells.Count > 0 && occupiedCells >= boardCells.Count)

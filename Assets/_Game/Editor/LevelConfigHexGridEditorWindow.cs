@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Provides a HexGridShape-style editor for LevelConfig assets, including board shape, starting stacks, initial hand, and goals.
+/// Provides a HexGridShape-style editor for LevelConfig assets, including board shape, starting stacks, enemy placement, initial hand, and goals.
 /// </summary>
 public class LevelConfigHexGridEditorWindow : EditorWindow
 {
@@ -14,6 +14,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     {
         Shape,
         StartStacks,
+        Enemies,
         InitialHand,
         Goals
     }
@@ -35,6 +36,8 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private static readonly Color ActiveCellColor = new Color(0.18f, 0.72f, 0.9f, 1f);
     private static readonly Color InactiveCellColor = new Color(0.3f, 0.3f, 0.3f, 1f);
     private static readonly Color StartCellColor = new Color(1f, 0.66f, 0.16f, 1f);
+    private static readonly Color EnemyCellColor = new Color(0.92f, 0.2f, 0.18f, 1f);
+    private static readonly Color ConflictCellColor = new Color(1f, 0.08f, 0.08f, 1f);
     private static readonly Color SelectedCellColor = new Color(0.35f, 1f, 0.45f, 1f);
     private static readonly Color TutorialCellColor = new Color(1f, 0.35f, 0.95f, 1f);
 
@@ -49,6 +52,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private SerializedProperty orientation;
     private SerializedProperty customCoordinates;
     private SerializedProperty startingBoardStacks;
+    private SerializedProperty enemies;
     private SerializedProperty initialHandStacks;
     private SerializedProperty handGeneration;
     private SerializedProperty goals;
@@ -63,9 +67,12 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private ShapeBrush shapeBrush;
     private bool showAdvancedSettings;
     private bool showRawStartStacks;
+    private bool showRawEnemies;
     private bool showRawHandStacks;
     private bool showRawGoals;
     private int selectedHandStackIndex = -1;
+    private int selectedEnemyIndex = -1;
+    private string enemyBrushId = "basic";
 
     [MenuItem("Tools/Hex Level Config Editor")]
     public static void Open()
@@ -140,6 +147,11 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             EditorGUILayout.Space(4f);
             EditorGUILayout.PropertyField(startingBoardStacks, true);
         }
+        if (showRawEnemies && enemies != null)
+        {
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.PropertyField(enemies, true);
+        }
         if (showRawHandStacks && initialHandStacks != null)
         {
             EditorGUILayout.Space(4f);
@@ -189,19 +201,20 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     {
         EditorGUILayout.Space(2f);
         EditorGUILayout.LabelField("Level Config Layout", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Edit the level asset directly. Shape, starts, hand, goals, and tutorial target are saved into LevelConfig, not into Main or scene objects.", MessageType.None);
+        EditorGUILayout.HelpBox("Edit the level asset directly. Shape, starts, enemies, hand, goals, and tutorial target are saved into LevelConfig, not into Main or scene objects.", MessageType.None);
         using (new EditorGUILayout.HorizontalScope())
         {
             DrawWorkflowStep("1", "Shape", "Choose active cells.", editMode == EditMode.Shape);
             DrawWorkflowStep("2", "Board Starts", "Place stacks on cells.", editMode == EditMode.StartStacks);
-            DrawWorkflowStep("3", "Initial Hand", "Build first hand.", editMode == EditMode.InitialHand);
-            DrawWorkflowStep("4", "Goals", "Set win targets.", editMode == EditMode.Goals);
+            DrawWorkflowStep("3", "Enemies", "Block cells with enemies.", editMode == EditMode.Enemies);
+            DrawWorkflowStep("4", "Initial Hand", "Build first hand.", editMode == EditMode.InitialHand);
+            DrawWorkflowStep("5", "Goals", "Set win targets.", editMode == EditMode.Goals);
         }
     }
 
     private void DrawModeTabs()
     {
-        string[] modes = { "1. Shape", "2. Board Starts", "3. Initial Hand", "4. Goals" };
+        string[] modes = { "1. Shape", "2. Board Starts", "3. Enemies", "4. Initial Hand", "5. Goals" };
         editMode = (EditMode)GUILayout.Toolbar((int)editMode, modes, GUILayout.Height(28f));
         EditorGUILayout.Space(4f);
     }
@@ -260,6 +273,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                 EditorGUILayout.PropertyField(handGeneration, true);
                 EditorGUILayout.PropertyField(loseRules, true);
                 showRawStartStacks = EditorGUILayout.Toggle("Show Raw Board Start Stacks", showRawStartStacks);
+                showRawEnemies = EditorGUILayout.Toggle("Show Raw Enemies", showRawEnemies);
                 showRawHandStacks = EditorGUILayout.Toggle("Show Raw Initial Hand", showRawHandStacks);
                 showRawGoals = EditorGUILayout.Toggle("Show Raw Goals", showRawGoals);
             }
@@ -285,6 +299,10 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             else if (editMode == EditMode.StartStacks)
             {
                 DrawStartStackTools();
+            }
+            else if (editMode == EditMode.Enemies)
+            {
+                DrawEnemyTools();
             }
             else if (editMode == EditMode.InitialHand)
             {
@@ -319,10 +337,11 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             }
             if (GUILayout.Button("Clear Shape"))
             {
-                if (EditorUtility.DisplayDialog("Clear Shape", "Remove all custom cells and start stacks outside the empty shape?", "Clear", "Cancel"))
+                if (EditorUtility.DisplayDialog("Clear Shape", "Remove all custom cells, start stacks, and enemies outside the empty shape?", "Clear", "Cancel"))
                 {
                     SetCustomCoordinates(new List<Vector2Int>(), GetPreviewShape());
                     RemoveStartStacksOutsideShape();
+                    RemoveEnemiesOutsideShape();
                 }
             }
         }
@@ -331,7 +350,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private void DrawStartStackTools()
     {
         EditorGUILayout.LabelField("Board Start Stack Tools", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Click an active cell to select it. If it has no stack, Board Starts mode creates a red starter stack.", MessageType.None);
+        EditorGUILayout.HelpBox("Click an active cell to select it. If it has no stack or enemy, Board Starts mode creates a red starter stack.", MessageType.None);
         using (new EditorGUILayout.HorizontalScope())
         {
             if (GUILayout.Button("Clean Stacks Outside Shape"))
@@ -347,6 +366,54 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                     Undo.RecordObject(levelConfig, "Set Tutorial Target");
                     tutorialTargetCell.vector2IntValue = selectedCell;
                     MarkDirty();
+                }
+            }
+        }
+    }
+
+    private void DrawEnemyTools()
+    {
+        EditorGUILayout.LabelField("Enemy Tools", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Click an active empty cell to place or select an enemy. Enemy cells block stack placement at runtime.", MessageType.None);
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            enemyBrushId = EditorGUILayout.TextField("Enemy Id", string.IsNullOrEmpty(enemyBrushId) ? "basic" : enemyBrushId);
+            using (new EditorGUI.DisabledScope(!hasSelectedCell || !CanPlaceEnemyAt(selectedCell)))
+            {
+                if (GUILayout.Button("Place On Selected", GUILayout.Width(130f)))
+                {
+                    Undo.RecordObject(levelConfig, "Place Enemy");
+                    selectedEnemyIndex = AddOrUpdateEnemy(selectedCell, enemyBrushId);
+                    MarkDirty();
+                }
+            }
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Add DefeatAllEnemies Goal"))
+            {
+                Undo.RecordObject(levelConfig, "Add DefeatAllEnemies Goal");
+                AddGoal(LevelGoalType.DefeatAllEnemies, HexColor.Red, 0);
+                MarkDirty();
+            }
+            if (GUILayout.Button("Clean Enemies Outside Shape"))
+            {
+                Undo.RecordObject(levelConfig, "Remove Enemies Outside Shape");
+                RemoveEnemiesOutsideShape();
+                MarkDirty();
+            }
+            using (new EditorGUI.DisabledScope(enemies == null || enemies.arraySize == 0))
+            {
+                if (GUILayout.Button("Clear Enemies"))
+                {
+                    if (EditorUtility.DisplayDialog("Clear Enemies", "Remove every enemy from this level?", "Clear", "Cancel"))
+                    {
+                        Undo.RecordObject(levelConfig, "Clear Enemies");
+                        enemies.ClearArray();
+                        selectedEnemyIndex = -1;
+                        MarkDirty();
+                    }
                 }
             }
         }
@@ -406,6 +473,18 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                 AddGoal(HexColor.Red, 10);
                 MarkDirty();
             }
+            if (GUILayout.Button("Add Defeat All"))
+            {
+                Undo.RecordObject(levelConfig, "Add DefeatAllEnemies Goal");
+                AddGoal(LevelGoalType.DefeatAllEnemies, HexColor.Red, 0);
+                MarkDirty();
+            }
+            if (GUILayout.Button("Add Defeat N"))
+            {
+                Undo.RecordObject(levelConfig, "Add DefeatEnemies Goal");
+                AddGoal(LevelGoalType.DefeatEnemies, HexColor.Red, 3);
+                MarkDirty();
+            }
             if (GUILayout.Button("Create Goals From Start Stacks"))
             {
                 Undo.RecordObject(levelConfig, "Create Goals From Start Stacks");
@@ -431,6 +510,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     {
         int activeCount = BuildActiveCells().Count;
         int startCount = startingBoardStacks != null ? startingBoardStacks.arraySize : 0;
+        int enemyCount = enemies != null ? enemies.arraySize : 0;
         int handCount = initialHandStacks != null ? initialHandStacks.arraySize : 0;
         int goalCount = goals != null ? goals.arraySize : 0;
         string selected = hasSelectedCell ? selectedCell.ToString() : "none";
@@ -445,6 +525,14 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                 return;
             }
 
+            if (editMode == EditMode.Enemies)
+            {
+                EditorGUILayout.LabelField("Enemies: " + enemyCount + "   Selected: " + (HasSelectedEnemy() ? selectedEnemyIndex.ToString() : selected), EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField("Enemies block stack placement on their cells.", EditorStyles.miniLabel, GUILayout.Width(300f));
+                return;
+            }
+
             if (editMode == EditMode.Goals)
             {
                 EditorGUILayout.LabelField("Goals: " + goalCount, EditorStyles.boldLabel);
@@ -456,10 +544,12 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             DrawLegendSwatch(ActiveCellColor, "Active");
             DrawLegendSwatch(InactiveCellColor, "Off");
             DrawLegendSwatch(StartCellColor, "Start");
+            DrawLegendSwatch(EnemyCellColor, "Enemy");
+            DrawLegendSwatch(ConflictCellColor, "Conflict");
             DrawLegendSwatch(TutorialCellColor, "Tutorial");
             DrawLegendSwatch(SelectedCellColor, "Selected");
             GUILayout.FlexibleSpace();
-            EditorGUILayout.LabelField("Cells: " + activeCount + "   Board: " + startCount + "   Hand: " + handCount + "   Goals: " + goalCount + "   Selected: " + selected, GUILayout.Width(430f));
+            EditorGUILayout.LabelField("Cells: " + activeCount + "   Board: " + startCount + "   Enemies: " + enemyCount + "   Hand: " + handCount + "   Goals: " + goalCount + "   Selected: " + selected, GUILayout.Width(500f));
         }
     }
 
@@ -477,7 +567,9 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         EditorGUILayout.Space(4f);
         string hint = editMode == EditMode.Shape
             ? "Shape mode: use the brush above, then click hexes. The canvas uses the same layout formulas as the runtime board."
-            : "Board Starts mode: only active hexes are editable. The label shows stack colors from bottom to top.";
+            : editMode == EditMode.Enemies
+                ? "Enemies mode: only active cells without start stacks can receive enemies. Enemy cells block stack placement."
+                : "Board Starts mode: only active hexes without enemies are editable. The label shows stack colors from bottom to top.";
         EditorGUILayout.HelpBox(hint, MessageType.None);
 
         int editRadius = Mathf.Max(0, boardRadius.intValue);
@@ -497,9 +589,11 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         {
             bool isActive = active.Contains(coordinate);
             bool hasStart = FindStartStackIndex(coordinate) >= 0;
+            bool hasEnemy = FindEnemyIndex(coordinate) >= 0;
+            bool conflict = hasStart && hasEnemy;
             bool selected = hasSelectedCell && selectedCell == coordinate;
             bool tutorial = tutorialTargetCell.vector2IntValue == coordinate;
-            DrawHexCell(coordinate, centers[coordinate], isActive, hasStart, selected, tutorial, currentEvent);
+            DrawHexCell(coordinate, centers[coordinate], isActive, hasStart, hasEnemy, conflict, selected, tutorial, currentEvent);
         }
         GUI.EndScrollView();
     }
@@ -530,10 +624,10 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         return centers;
     }
 
-    private void DrawHexCell(Vector2Int coordinate, Vector2 center, bool isActive, bool hasStart, bool selected, bool tutorial, Event currentEvent)
+    private void DrawHexCell(Vector2Int coordinate, Vector2 center, bool isActive, bool hasStart, bool hasEnemy, bool conflict, bool selected, bool tutorial, Event currentEvent)
     {
-        bool disabled = editMode == EditMode.StartStacks && !isActive;
-        Color fill = selected ? SelectedCellColor : tutorial ? TutorialCellColor : hasStart ? StartCellColor : isActive ? ActiveCellColor : InactiveCellColor;
+        bool disabled = editMode != EditMode.Shape && !isActive;
+        Color fill = selected ? SelectedCellColor : conflict ? ConflictCellColor : tutorial ? TutorialCellColor : hasEnemy ? EnemyCellColor : hasStart ? StartCellColor : isActive ? ActiveCellColor : InactiveCellColor;
         if (disabled)
         {
             fill = new Color(fill.r, fill.g, fill.b, 0.35f);
@@ -554,18 +648,31 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             clipping = TextClipping.Clip
         };
         labelStyle.normal.textColor = disabled ? new Color(1f, 1f, 1f, 0.42f) : Color.white;
-        GUI.Label(labelRect, BuildCellLabel(coordinate, isActive, hasStart), labelStyle);
+        GUI.Label(labelRect, BuildCellLabel(coordinate, isActive, hasStart, hasEnemy, conflict), labelStyle);
 
         if (!disabled && currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && IsPointInsidePolygon(currentEvent.mousePosition, points))
         {
-            HandleCellClick(coordinate, isActive, hasStart);
+            HandleCellClick(coordinate, isActive, hasStart, hasEnemy);
             currentEvent.Use();
             Repaint();
         }
     }
 
-    private string BuildCellLabel(Vector2Int coordinate, bool isActive, bool hasStart)
+    private string BuildCellLabel(Vector2Int coordinate, bool isActive, bool hasStart, bool hasEnemy, bool conflict)
     {
+        if (conflict)
+        {
+            return coordinate.x + "," + coordinate.y + "\nCONFLICT";
+        }
+
+        if (hasEnemy)
+        {
+            int index = FindEnemyIndex(coordinate);
+            SerializedProperty enemy = enemies.GetArrayElementAtIndex(index);
+            string enemyId = enemy.FindPropertyRelative("enemyId").stringValue;
+            return coordinate.x + "," + coordinate.y + "\nE:" + (string.IsNullOrEmpty(enemyId) ? "basic" : enemyId);
+        }
+
         if (hasStart)
         {
             int index = FindStartStackIndex(coordinate);
@@ -575,10 +682,11 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         return isActive ? coordinate.x + "," + coordinate.y : "+";
     }
 
-    private void HandleCellClick(Vector2Int coordinate, bool isActive, bool hasStart)
+    private void HandleCellClick(Vector2Int coordinate, bool isActive, bool hasStart, bool hasEnemy)
     {
         hasSelectedCell = true;
         selectedCell = coordinate;
+        selectedEnemyIndex = FindEnemyIndex(coordinate);
 
         if (editMode == EditMode.Shape)
         {
@@ -586,7 +694,18 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             return;
         }
 
-        if (isActive && !hasStart)
+        if (editMode == EditMode.Enemies)
+        {
+            if (isActive && !hasEnemy && !hasStart)
+            {
+                Undo.RecordObject(levelConfig, "Add Enemy");
+                selectedEnemyIndex = AddOrUpdateEnemy(coordinate, enemyBrushId);
+                MarkDirty();
+            }
+            return;
+        }
+
+        if (isActive && !hasStart && !hasEnemy)
         {
             Undo.RecordObject(levelConfig, "Add Start Stack");
             AddOrUpdateStartStack(coordinate);
@@ -596,6 +715,12 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
     private void DrawSelectedCellEditor()
     {
+        if (editMode == EditMode.Enemies)
+        {
+            DrawSelectedEnemyCellEditor();
+            return;
+        }
+
         EditorGUILayout.Space(6f);
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
@@ -607,6 +732,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             }
 
             bool isActive = BuildActiveCells().Contains(selectedCell);
+            bool hasEnemy = FindEnemyIndex(selectedCell) >= 0;
             EditorGUILayout.LabelField("Coordinate", selectedCell.ToString());
             EditorGUILayout.LabelField("State", isActive ? "Active" : "Inactive");
 
@@ -616,13 +742,21 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                 return;
             }
 
+            if (hasEnemy)
+            {
+                EditorGUILayout.HelpBox("This cell has an enemy. Remove the enemy before assigning a start stack.", MessageType.Warning);
+            }
+
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Add/Update Start Stack"))
+                using (new EditorGUI.DisabledScope(hasEnemy))
                 {
-                    Undo.RecordObject(levelConfig, "Add Start Stack");
-                    AddOrUpdateStartStack(selectedCell);
-                    MarkDirty();
+                    if (GUILayout.Button("Add/Update Start Stack"))
+                    {
+                        Undo.RecordObject(levelConfig, "Add Start Stack");
+                        AddOrUpdateStartStack(selectedCell);
+                        MarkDirty();
+                    }
                 }
                 if (GUILayout.Button("Remove Start Stack"))
                 {
@@ -667,6 +801,83 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                     MarkDirty();
                 }
             }
+        }
+    }
+
+    private void DrawSelectedEnemyCellEditor()
+    {
+        EditorGUILayout.Space(6f);
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            EditorGUILayout.LabelField("Selected Enemy Cell", EditorStyles.boldLabel);
+            if (!hasSelectedCell)
+            {
+                EditorGUILayout.HelpBox("Select a cell in the grid.", MessageType.None);
+                return;
+            }
+
+            HashSet<Vector2Int> active = BuildActiveCells();
+            bool isActive = active.Contains(selectedCell);
+            bool hasStart = FindStartStackIndex(selectedCell) >= 0;
+            int enemyIndex = FindEnemyIndex(selectedCell);
+            selectedEnemyIndex = enemyIndex;
+
+            EditorGUILayout.LabelField("Coordinate", selectedCell.ToString());
+            EditorGUILayout.LabelField("State", isActive ? "Active" : "Inactive");
+
+            if (!isActive)
+            {
+                EditorGUILayout.HelpBox("This cell is outside the board shape. Add it in Shape mode before placing an enemy.", MessageType.Warning);
+                return;
+            }
+
+            if (hasStart)
+            {
+                EditorGUILayout.HelpBox("This cell has a starting stack. Enemies cannot share a cell with a stack.", MessageType.Warning);
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(hasStart))
+                {
+                    if (GUILayout.Button(enemyIndex >= 0 ? "Update Enemy Here" : "Place Enemy Here"))
+                    {
+                        Undo.RecordObject(levelConfig, enemyIndex >= 0 ? "Update Enemy" : "Place Enemy");
+                        selectedEnemyIndex = AddOrUpdateEnemy(selectedCell, enemyBrushId);
+                        MarkDirty();
+                    }
+                }
+
+                using (new EditorGUI.DisabledScope(enemyIndex < 0))
+                {
+                    if (GUILayout.Button("Remove Enemy"))
+                    {
+                        Undo.RecordObject(levelConfig, "Remove Enemy");
+                        RemoveEnemy(selectedCell);
+                        selectedEnemyIndex = -1;
+                        MarkDirty();
+                    }
+                }
+            }
+
+            if (enemyIndex < 0)
+            {
+                EditorGUILayout.HelpBox("Selected active cell has no enemy.", MessageType.None);
+                return;
+            }
+
+            SerializedProperty enemy = enemies.GetArrayElementAtIndex(enemyIndex);
+            SerializedProperty enemyId = enemy.FindPropertyRelative("enemyId");
+            SerializedProperty coordinate = enemy.FindPropertyRelative("coordinate");
+            SerializedProperty healthOverride = enemy.FindPropertyRelative("healthOverride");
+
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.PropertyField(enemyId);
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PropertyField(coordinate);
+            }
+            EditorGUILayout.PropertyField(healthOverride, new GUIContent("Health Override", "0 uses the archetype base health."));
         }
     }
 
@@ -768,11 +979,21 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
                     EditorGUILayout.PropertyField(goal.FindPropertyRelative("type"));
                     SerializedProperty type = goal.FindPropertyRelative("type");
-                    if ((LevelGoalType)type.enumValueIndex == LevelGoalType.ClearPieces)
+                    LevelGoalType goalType = (LevelGoalType)type.enumValueIndex;
+                    if (goalType == LevelGoalType.ClearPieces)
                     {
                         EditorGUILayout.PropertyField(goal.FindPropertyRelative("color"));
                     }
-                    EditorGUILayout.PropertyField(goal.FindPropertyRelative("requiredCount"));
+
+                    using (new EditorGUI.DisabledScope(goalType == LevelGoalType.DefeatAllEnemies))
+                    {
+                        EditorGUILayout.PropertyField(goal.FindPropertyRelative("requiredCount"));
+                    }
+
+                    if (goalType == LevelGoalType.DefeatAllEnemies)
+                    {
+                        EditorGUILayout.HelpBox("Required count is filled at runtime from the number of spawned enemies.", MessageType.None);
+                    }
                 }
             }
         }
@@ -871,6 +1092,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     {
         RemoveCustomCoordinate(coordinate);
         RemoveStartStack(coordinate);
+        RemoveEnemy(coordinate);
     }
 
     private void EnsureCustomShapeFromCurrent()
@@ -938,11 +1160,17 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
         SetCustomCoordinates(inverted, GetPreviewShape(), false);
         RemoveStartStacksOutsideShape();
+        RemoveEnemiesOutsideShape();
         MarkDirty();
     }
 
     private void RemoveStartStacksOutsideShape()
     {
+        if (startingBoardStacks == null)
+        {
+            return;
+        }
+
         HashSet<Vector2Int> active = BuildActiveCells();
         for (int i = startingBoardStacks.arraySize - 1; i >= 0; i--)
         {
@@ -952,6 +1180,25 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                 startingBoardStacks.DeleteArrayElementAtIndex(i);
             }
         }
+    }
+
+    private void RemoveEnemiesOutsideShape()
+    {
+        if (enemies == null)
+        {
+            return;
+        }
+
+        HashSet<Vector2Int> active = BuildActiveCells();
+        for (int i = enemies.arraySize - 1; i >= 0; i--)
+        {
+            Vector2Int coordinate = enemies.GetArrayElementAtIndex(i).FindPropertyRelative("coordinate").vector2IntValue;
+            if (!active.Contains(coordinate))
+            {
+                enemies.DeleteArrayElementAtIndex(i);
+            }
+        }
+        selectedEnemyIndex = -1;
     }
 
     private int FindStartStackIndex(Vector2Int coordinate)
@@ -965,6 +1212,34 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             }
         }
         return -1;
+    }
+
+    private int FindEnemyIndex(Vector2Int coordinate)
+    {
+        if (enemies == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < enemies.arraySize; i++)
+        {
+            SerializedProperty item = enemies.GetArrayElementAtIndex(i);
+            if (item.FindPropertyRelative("coordinate").vector2IntValue == coordinate)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private bool HasSelectedEnemy()
+    {
+        return enemies != null && selectedEnemyIndex >= 0 && selectedEnemyIndex < enemies.arraySize;
+    }
+
+    private bool CanPlaceEnemyAt(Vector2Int coordinate)
+    {
+        return BuildActiveCells().Contains(coordinate) && FindStartStackIndex(coordinate) < 0;
     }
 
     private void AddOrUpdateStartStack(Vector2Int coordinate)
@@ -997,6 +1272,46 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         if (index >= 0)
         {
             startingBoardStacks.DeleteArrayElementAtIndex(index);
+        }
+    }
+
+    private int AddOrUpdateEnemy(Vector2Int coordinate, string enemyId)
+    {
+        if (enemies == null)
+        {
+            return -1;
+        }
+
+        int index = FindEnemyIndex(coordinate);
+        if (index < 0)
+        {
+            enemies.InsertArrayElementAtIndex(enemies.arraySize);
+            index = enemies.arraySize - 1;
+        }
+
+        SerializedProperty item = enemies.GetArrayElementAtIndex(index);
+        item.FindPropertyRelative("enemyId").stringValue = string.IsNullOrWhiteSpace(enemyId) ? "basic" : enemyId;
+        item.FindPropertyRelative("coordinate").vector2IntValue = coordinate;
+        SerializedProperty healthOverride = item.FindPropertyRelative("healthOverride");
+        if (healthOverride.intValue < 0)
+        {
+            healthOverride.intValue = 0;
+        }
+
+        return index;
+    }
+
+    private void RemoveEnemy(Vector2Int coordinate)
+    {
+        if (enemies == null)
+        {
+            return;
+        }
+
+        int index = FindEnemyIndex(coordinate);
+        if (index >= 0)
+        {
+            enemies.DeleteArrayElementAtIndex(index);
         }
     }
 
@@ -1170,11 +1485,16 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
     private void AddGoal(HexColor color, int requiredCount)
     {
+        AddGoal(LevelGoalType.ClearPieces, color, requiredCount);
+    }
+
+    private void AddGoal(LevelGoalType type, HexColor color, int requiredCount)
+    {
         goals.InsertArrayElementAtIndex(goals.arraySize);
         SerializedProperty goal = goals.GetArrayElementAtIndex(goals.arraySize - 1);
-        goal.FindPropertyRelative("type").enumValueIndex = (int)LevelGoalType.ClearPieces;
+        goal.FindPropertyRelative("type").enumValueIndex = (int)type;
         goal.FindPropertyRelative("color").enumValueIndex = (int)color;
-        goal.FindPropertyRelative("requiredCount").intValue = Mathf.Max(1, requiredCount);
+        goal.FindPropertyRelative("requiredCount").intValue = type == LevelGoalType.DefeatAllEnemies ? 0 : Mathf.Max(1, requiredCount);
     }
 
     private void CreateGoalsFromStartStacks()
@@ -1314,12 +1634,17 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         orientation = levelObject?.FindProperty("orientation");
         customCoordinates = levelObject?.FindProperty("customCoordinates");
         startingBoardStacks = levelObject?.FindProperty("startingBoardStacks");
+        enemies = levelObject?.FindProperty("enemies");
         initialHandStacks = levelObject?.FindProperty("initialHandStacks");
         handGeneration = levelObject?.FindProperty("handGeneration");
         goals = levelObject?.FindProperty("goals");
         loseRules = levelObject?.FindProperty("loseRules");
         tutorialTargetCell = levelObject?.FindProperty("tutorialTargetCell");
         ClampSelectedHandStackIndex();
+        if (!HasSelectedEnemy())
+        {
+            selectedEnemyIndex = -1;
+        }
     }
 
     private void MarkDirty()

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace _Game.Merge
 {
     /// <summary>
-    /// Resolves merge chains and publishes gameplay results; visuals, timing, VFX, and sounds stay delegated to MergeAnimator.
+    /// Resolves queued merge chains and publishes gameplay results; visuals, timing, VFX, and sounds stay delegated to MergeAnimator.
     /// </summary>
     public class MergeSystem : MonoBehaviour
     {
@@ -19,6 +19,9 @@ namespace _Game.Merge
         private MergeAnimator animator;
         private HexCell lastMoveSourceCell;
         private HexCell lastMoveTargetCell;
+        private HexCell latestRequestedCell;
+        private readonly List<HexCell> pendingCells = new List<HexCell>();
+        private readonly List<HexCell> queuedCells = new List<HexCell>();
         private const bool PreferPlacedCellAsMergeTarget = true;
 
         public bool IsRunning { get; private set; }
@@ -32,9 +35,21 @@ namespace _Game.Merge
             this.animator = animator;
         }
 
+        public void RequestMerge(HexCell activeCell)
+        {
+            if (board == null || activeCell == null || activeCell.IsEmpty)
+            {
+                return;
+            }
+
+            latestRequestedCell = activeCell;
+            EnqueueCellAndNeighbours(activeCell, pendingCells, queuedCells);
+        }
+
         public IEnumerator RunMerge(HexCell activeCell)
         {
-            if (board == null || activeCell == null || activeCell.IsEmpty || IsRunning)
+            RequestMerge(activeCell);
+            if (board == null || IsRunning || pendingCells.Count == 0)
             {
                 yield break;
             }
@@ -42,10 +57,6 @@ namespace _Game.Merge
             IsRunning = true;
             MergeStarted?.Invoke();
             animator?.ResetSpeed();
-
-            List<HexCell> pendingCells = new List<HexCell>();
-            List<HexCell> queuedCells = new List<HexCell>();
-            EnqueueCellAndNeighbours(activeCell, pendingCells, queuedCells);
 
             int guard = 0;
             while (true)
@@ -55,7 +66,7 @@ namespace _Game.Merge
                     break;
                 }
 
-                HexCell currentCell = SelectNextMergeTarget(activeCell, pendingCells, queuedCells);
+                HexCell currentCell = SelectNextMergeTarget(pendingCells, queuedCells);
                 if (currentCell == null)
                 {
                     break;
@@ -69,6 +80,9 @@ namespace _Game.Merge
             }
 
             IsRunning = false;
+            latestRequestedCell = null;
+            pendingCells.Clear();
+            queuedCells.Clear();
             MergeFinished?.Invoke();
         }
 
@@ -147,11 +161,13 @@ namespace _Game.Merge
             }
         }
 
-        private HexCell SelectNextMergeTarget(HexCell activeCell, List<HexCell> pendingCells, List<HexCell> queuedCells)
+        private HexCell SelectNextMergeTarget(List<HexCell> pendingCells, List<HexCell> queuedCells)
         {
-            if (PreferPlacedCellAsMergeTarget && IsMergeCandidate(activeCell))
+            if (PreferPlacedCellAsMergeTarget && IsMergeCandidate(latestRequestedCell))
             {
-                return activeCell;
+                RemoveCell(pendingCells, latestRequestedCell);
+                RemoveCell(queuedCells, latestRequestedCell);
+                return latestRequestedCell;
             }
 
             HexCell queuedCandidate = DequeueNextMergeCandidate(pendingCells, queuedCells);
