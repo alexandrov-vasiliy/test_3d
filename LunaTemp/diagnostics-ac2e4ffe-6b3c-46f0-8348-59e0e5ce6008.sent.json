@@ -1,12 +1,12 @@
 {
-    "BuildID": "baae3eb5-f89d-44b4-a5a8-d9e7f05bdcb4",
+    "BuildID": "ac2e4ffe-6b3c-46f0-8348-59e0e5ce6008",
     "Command": "project:build",
     "ProjectID": "b5a0e32a9617746cc981009d48f1e861",
-    "ProjectStateHash": "c7d8602bf5eb84db0f9c088a72afdab40bf1587c7c46800a1ca89f8c32cc5ed9",
+    "ProjectStateHash": "17359f75b49d7cae609477c0457710bf0bf1587c7c46800a1ca89f8c32cc5ed9",
     "StageCompletedAt": 3,
     "EarliestFatalError": 0,
-    "StartTime": 1781016910529,
-    "EndTime": 1781016957822,
+    "StartTime": 1781017467379,
+    "EndTime": 1781017507759,
     "PlaygroundUserID": 36913,
     "OperatingSystem": "darwin",
     "UnityPackageID": null,
@@ -16,9 +16,9 @@
     "LogCount": 2,
     "Logs": [
         {
-            "LogID": "3621f752-6ec8-4c17-b891-a70ee3733b2e",
+            "LogID": "b1147de7-d7fe-47e2-aa11-9770fb44042d",
             "Order": 1,
-            "Timestamp": 1781016958471,
+            "Timestamp": 1781017508372,
             "Stage": 3,
             "ErrorType": 3,
             "ErrorCode": "LP3007",
@@ -40,9 +40,9 @@
             "Severity": 0
         },
         {
-            "LogID": "8901960b-cac0-4bbd-8700-fecc475e94b8",
+            "LogID": "9b4c7ce5-7828-4300-998a-4957f66bc861",
             "Order": 1,
-            "Timestamp": 1781016958472,
+            "Timestamp": 1781017508373,
             "Stage": 3,
             "ErrorType": 3,
             "ErrorCode": "LP3011",

@@ -35935,6 +35935,10 @@
                     {
                         "name": "CreateSmartFlipTween",
                         "excluded": false
+                    },
+                    {
+                        "name": "GetDisappearEffectPosition",
+                        "excluded": true
                     }
                 ]
             },

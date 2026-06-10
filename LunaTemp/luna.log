@@ -1,37 +1,37 @@
-report@config:load 43.17
+report@config:load 44.86
 Authorized using stored user info.
-report@account:authorize 7.64
-Exporting assets from Unity..................
+report@account:authorize 11.31
+Exporting assets from Unity...........
 
 [ Stage1 ] Assets exported from Unity and staged for further processing
-report@unity:export 15083.11
-report@config:load 44.37
-Using /Users/z/Documents/unity_projects/test_3d/Assets/TextMesh Pro/Fonts/LiberationSans.ttf file to generate an atlas for LiberationSans[28616] font
-  Using alphabet  ??1234567890-=qwertyuiop[]asdfghjkl;'\`zxcvbnm,./??!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:"|~ZXCVBNM<>?
+report@unity:export 8088.25
+report@config:load 48.17
 Using /Users/z/Documents/unity_projects/test_3d/Library/PackageCache/com.unity.render-pipelines.core@14.0.12/Runtime/Debugging/Prefabs/Fonts/PerfectDOSVGA437.ttf file to generate an atlas for PerfectDOSVGA437[31320] font
+  Using alphabet  ??1234567890-=qwertyuiop[]asdfghjkl;'\`zxcvbnm,./??!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:"|~ZXCVBNM<>?
+Using /Users/z/Documents/unity_projects/test_3d/Assets/TextMesh Pro/Fonts/LiberationSans.ttf file to generate an atlas for LiberationSans[28616] font
   Using alphabet  ??1234567890-=qwertyuiop[]asdfghjkl;'\`zxcvbnm,./??!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:"|~ZXCVBNM<>?
 Combined 97 glyphs into bitmap texture at /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage1/tmp/fonts/PerfectDOSVGA437-31320/output_0.png (10kb)
 Combined 97 glyphs into bitmap texture at /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage1/tmp/fonts/LiberationSans-28616/output_0.png (56kb)
-Found custom rules for texture Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset
-  {"maxWidth":512,"maxHeight":512,"format":"png32","compression":"none","quality":65,"script":"","ext":"","name":"Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset","isOverride":true}
 Found custom rules for texture Assets/Resources/TutorialHand.png
   {"maxWidth":512,"maxHeight":512,"format":"png32","compression":"quantSize","quality":65,"script":"","ext":"","name":"Assets/Resources/TutorialHand.png","isOverride":true}
+Found custom rules for texture Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset
+  {"maxWidth":512,"maxHeight":512,"format":"png32","compression":"none","quality":65,"script":"","ext":"","name":"Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset","isOverride":true}
 Resources:
 {}
-report@assets:stage2 4521.78
-report@assets:stage3 316.92
+report@assets:stage2 4297.72
+report@assets:stage3 307.83
 [ Stage2 ] Assets postprocessed and bundled successfully
-report@config:unity 0.48
-report@config:load 49.18
-report@config:unity 0.12
-report@code:compose 94.07
+report@config:unity 0.30
+report@config:load 49.92
+report@config:unity 0.17
+report@code:compose 95.93
 Authorized using stored user info.
-report@account:authorize 3.97
+report@account:authorize 3.80
 Microsoft (R) Build Engine version 16.10.1 for Mono
 Copyright (C) Microsoft Corporation. All rights reserved.
 
 
-Build started 09.06.2026 17:55:38.
+Build started 09.06.2026 18:04:48.
 
 Project "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj" on node 1 (Rebuild target(s)).
 
@@ -103,17 +103,17 @@ CoreCompile:
 
   Using shared compilation with compiler from directory: /Library/Frameworks/Mono.framework/Versions/6.12.0/lib/mono/msbuild/Current/bin/Roslyn
 
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(10,46): warning CS0649: Field 'PackshotController.canvasGroup' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(14,44): warning CS0649: Field 'SoundPlayer.elementDisappearClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(15,44): warning CS0649: Field 'SoundPlayer.allElementsDisappearCompleteClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-
 /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(24,45): warning CS0649: Field 'Main.hexColorConfig' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(11,41): warning CS0169: The field 'PackshotController.ctaButton' is never used [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(22,43): warning CS0649: Field 'BoardOutline.meshMaterial' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
 /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(23,45): warning CS0649: Field 'MergeAnimator.disappearEffectPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(24,44): warning CS0649: Field 'MergeAnimator.effectParent' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(15,47): warning CS0649: Field 'BoardOutline.linePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(22,41): warning CS0649: Field 'Main.hexCellPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
 /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(11,44): warning CS0649: Field 'SoundPlayer.stackPickupClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
@@ -121,50 +121,51 @@ CoreCompile:
 
 /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(13,44): warning CS0649: Field 'SoundPlayer.elementFlyToStackClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(11,41): warning CS0169: The field 'PackshotController.ctaButton' is never used [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(14,44): warning CS0649: Field 'SoundPlayer.elementDisappearClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(22,41): warning CS0649: Field 'Main.hexCellPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(15,44): warning CS0649: Field 'SoundPlayer.allElementsDisappearCompleteClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(10,46): warning CS0649: Field 'PackshotController.canvasGroup' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
+/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(24,44): warning CS0649: Field 'MergeAnimator.effectParent' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
 /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(23,41): warning CS0649: Field 'Main.hexPiecePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(15,47): warning CS0649: Field 'BoardOutline.linePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-
-/Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(22,43): warning CS0649: Field 'BoardOutline.meshMaterial' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-
 _CopyFilesMarkedCopyLocal:
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.ide.rider/3.0.0/JetBrains.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/JetBrains.dll".
-
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Html5.17.9.0/lib/net40/Bridge.Html5.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.Html5.dll".
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Core.17.9.42-luna/lib/net40/Bridge.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.dll".
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Newtonsoft.Json.1.16.0/lib/net40/Newtonsoft.Json.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Newtonsoft.Json.dll".
+
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.WebGL.1.22.0/lib/net40/Bridge.WebGL.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.WebGL.dll".
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Newtonsoft.Json.1.16.0/lib/net40/Newtonsoft.Json.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Newtonsoft.Json.dll".
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.ide.rider/3.0.0/JetBrains.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/JetBrains.dll".
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Html5.17.9.0/lib/net40/Bridge.Html5.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.Html5.dll".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/DOTween.1.2.705/lib/net40/DOTween.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/DOTween.dll".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.es5.2.8.6733/lib/net40/Retyped.es5.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.es5.dll".
 
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.scripthost.2.8.6733/lib/net40/Retyped.scripthost.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.scripthost.dll".
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.Core.1.6.6733/lib/net40/Retyped.Core.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.Core.dll".
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.dom.2.8.6733/lib/net40/Retyped.dom.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.dom.dll".
-
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.textmeshpro/3.0.6/TextMeshPro.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/TextMeshPro.dll".
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.scripthost.2.8.6733/lib/net40/Retyped.scripthost.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.scripthost.dll".
+
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.dom.2.8.6733/lib/net40/Retyped.dom.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.dom.dll".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Vendor/UnityEngine.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/UnityEngine.dll".
 
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.urp/7.6/UnityEngine.UniversalRenderPipeline.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/UnityEngine.UniversalRenderPipeline.dll".
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.ui/1.2.1/UnityEngine.UI.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/UnityEngine.UI.dll".
 
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Core.17.9.42-luna/lib/net40/Bridge.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.xml".
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/com.unity.urp/7.6/UnityEngine.UniversalRenderPipeline.dll" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/UnityEngine.UniversalRenderPipeline.dll".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Html5.17.9.0/lib/net40/Bridge.Html5.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.Html5.xml".
+
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Core.17.9.42-luna/lib/net40/Bridge.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.xml".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.WebGL.1.22.0/lib/net40/Bridge.WebGL.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Bridge.WebGL.xml".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Bridge.Newtonsoft.Json.1.16.0/lib/net40/Newtonsoft.Json.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Newtonsoft.Json.xml".
 
-  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.Core.1.6.6733/lib/net40/Retyped.Core.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.Core.xml".
-
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.dom.2.8.6733/lib/net40/Retyped.dom.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.dom.xml".
+
+  Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.Core.1.6.6733/lib/net40/Retyped.Core.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.Core.xml".
 
   Copying file from "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/packages/Retyped.es5.2.8.6733/lib/net40/Retyped.es5.xml" to "/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/bin/Debug/Retyped.es5.xml".
 
@@ -200,22 +201,23 @@ Build succeeded.
 
 (CoreCompile target) -> 
 
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(10,46): warning CS0649: Field 'PackshotController.canvasGroup' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(14,44): warning CS0649: Field 'SoundPlayer.elementDisappearClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(15,44): warning CS0649: Field 'SoundPlayer.allElementsDisappearCompleteClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
   /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(24,45): warning CS0649: Field 'Main.hexColorConfig' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(23,45): warning CS0649: Field 'MergeAnimator.disappearEffectPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(11,41): warning CS0169: The field 'PackshotController.ctaButton' is never used [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(22,43): warning CS0649: Field 'BoardOutline.meshMaterial' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(24,44): warning CS0649: Field 'MergeAnimator.effectParent' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(23,45): warning CS0649: Field 'MergeAnimator.disappearEffectPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(15,47): warning CS0649: Field 'BoardOutline.linePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(22,41): warning CS0649: Field 'Main.hexCellPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
   /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(11,44): warning CS0649: Field 'SoundPlayer.stackPickupClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+
   /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(12,44): warning CS0649: Field 'SoundPlayer.stackDropClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
   /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(13,44): warning CS0649: Field 'SoundPlayer.elementFlyToStackClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(11,41): warning CS0169: The field 'PackshotController.ctaButton' is never used [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(14,44): warning CS0649: Field 'SoundPlayer.elementDisappearClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Audio/SoundPlayer.cs(15,44): warning CS0649: Field 'SoundPlayer.allElementsDisappearCompleteClip' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(22,41): warning CS0649: Field 'Main.hexCellPrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Packshot/PackshotController.cs(10,46): warning CS0649: Field 'PackshotController.canvasGroup' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
+  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Merge/MergeAnimator.cs(24,44): warning CS0649: Field 'MergeAnimator.effectParent' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
   /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/Main.cs(23,41): warning CS0649: Field 'Main.hexPiecePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(15,47): warning CS0649: Field 'BoardOutline.linePrefab' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
-  /Users/z/Documents/unity_projects/test_3d/LunaTemp/stage3/processed-scripts/Assets/_Game/Board/BoardOutline.cs(22,43): warning CS0649: Field 'BoardOutline.meshMaterial' is never assigned to, and will always have its default value null [/Users/z/Downloads/7/pipeline/templates/LunaCompiler/Scripts/Scripts.csproj]
 
 
     14 Warning(s)
@@ -223,17 +225,17 @@ Build succeeded.
 
 
 
-Time Elapsed 00:00:14.47
+Time Elapsed 00:00:14.56
 
 Source code compiled successfully!
 Diagnostics gathered successfully
-report@code:build 27400.25
-report@diagnostics:verify 0.40
-report@diagnostics:upload 1747.23
-report@code:stage 6839.70
+report@code:build 27674.40
+report@diagnostics:verify 0.43
+report@diagnostics:upload 1855.32
+report@code:stage 6753.39
 [ Stage3 ] Code compiled and bundled successfully.
-report@code:bundle 36136.89
-report@package:stage 1380.46
+report@code:bundle 36435.41
+report@package:stage 1378.07
 [ Stage4 ] Target platform: develop
 [ Stage4 ] Package bundled successfully
 report@assets:stats 0.24
