@@ -2232,7 +2232,7 @@ MonoBehaviour:
       data:
         enemyId: skeleton
         displayName: Skeleton
-        components:
+        tags:
         - rid: 968039963860402177
         - rid: 968039963860402178
         - rid: 968039963860402179
@@ -2245,6 +2245,7 @@ MonoBehaviour:
       type: {class: EnemyHealth, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
         maxHealth: 3
+        currentHealth: -1
     - rid: 968039963860402178
       type: {class: EnemyIntentLoop, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
@@ -2260,10 +2261,12 @@ MonoBehaviour:
         defaultDeathVfx: {fileID: 0}
     - rid: 968039963860402180
       type: {class: EnemyIntentAttack, ns: _Game.Enemies, asm: Assembly-CSharp}
-      data: 
+      data:
+        damage: 5
     - rid: 968039963860402181
       type: {class: EnemyIntentDefence, ns: _Game.Enemies, asm: Assembly-CSharp}
-      data: 
+      data:
+        defence: 1
 --- !u!1 &2000000110
 GameObject:
   m_ObjectHideFlags: 0
@@ -2312,6 +2315,7 @@ MonoBehaviour:
   enemiesRoot: {fileID: 0}
   defaultEnemyId: basic
   placeholderScale: {x: 0.72, y: 0.72, z: 0.72}
+  intentExecutionDelay: 0.35
 --- !u!1 &2095965078
 GameObject:
   m_ObjectHideFlags: 0
