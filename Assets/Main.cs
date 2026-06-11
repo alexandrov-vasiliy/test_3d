@@ -11,6 +11,7 @@ using _Game.Levels;
 using _Game.Merge;
 using _Game.Packshot;
 using _Game.Player;
+using _Game.Runes;
 using _Game.Stacks;
 using _Game.Tutorial;
 using _Game.UI;
@@ -72,6 +73,8 @@ public class Main : MonoBehaviour
     private EnemyCatalog enemyCatalog;
     private EnemySpawner enemySpawner;
     private PlayerHealth playerHealth;
+    private RuneCombatController runeCombatController;
+    private RuneCastPresenter runeCastPresenter;
     private TutorialHandController tutorialHandController;
     private PackshotController packshotController;
     private LevelFlowController levelFlowController;
@@ -117,6 +120,8 @@ public class Main : MonoBehaviour
         enemyCatalog = EnsureSceneComponent<EnemyCatalog>("EnemyCatalog");
         enemySpawner = EnsureSceneComponent<EnemySpawner>("EnemySpawner");
         playerHealth = EnsureSceneComponent<PlayerHealth>("PlayerHealth");
+        runeCastPresenter = EnsureSceneComponent<RuneCastPresenter>("RuneCastPresenter");
+        runeCombatController = EnsureSceneComponent<RuneCombatController>("RuneCombatController");
         tutorialHandController = EnsureSceneComponent<TutorialHandController>("TutorialHandController");
         packshotController = EnsureSceneComponent<PackshotController>("PackshotController");
         levelFlowController = EnsureSceneComponent<LevelFlowController>("LevelFlowController");
@@ -161,6 +166,14 @@ public class Main : MonoBehaviour
         PlayerHealth health = ResolveSceneComponent<PlayerHealth>("PlayerHealth");
         health.transform.SetParent(root, false);
         playerHealth = health;
+
+        RuneCastPresenter runePresenter = ResolveSceneComponent<RuneCastPresenter>("RuneCastPresenter");
+        runePresenter.transform.SetParent(root, false);
+        runeCastPresenter = runePresenter;
+
+        RuneCombatController runeCombat = ResolveSceneComponent<RuneCombatController>("RuneCombatController");
+        runeCombat.transform.SetParent(root, false);
+        runeCombatController = runeCombat;
 
         MergeAnimator animator = ResolveSceneComponent<MergeAnimator>("MergeAnimator");
         animator.transform.SetParent(root, false);
@@ -244,6 +257,8 @@ public class Main : MonoBehaviour
         soundPlayer.Initialize(dragController);
         mergeAnimator.Initialize(assets, soundPlayer);
         mergeSystem.Initialize(boardController, mergeAnimator);
+        mergeSystem.SetRuneResolver(new LegacyHexColorRuneResolver(hexColorConfig));
+        runeCombatController.Initialize(mergeSystem, enemySpawner.Registry, playerHealth, runeCastPresenter, playerHealth != null ? playerHealth.transform : null);
         tutorialHandController.Initialize(assets, camera);
         healthView?.Bind(playerHealth);
 
@@ -252,7 +267,7 @@ public class Main : MonoBehaviour
         goalTracker = new GoalTracker();
         moveAvailabilityService = new MoveAvailabilityService();
         levelProgressService = new LevelProgressService();
-        levelLoader = new LevelLoader(boardController, handController, handGenerator, enemySpawner, goalTracker, tutorialHandController, levelHudView, goalsPanelView);
+        levelLoader = new LevelLoader(boardController, handController, handGenerator, enemySpawner, runeCombatController, goalTracker, tutorialHandController, levelHudView, goalsPanelView);
 
         levelFlowController.Initialize(
             boardController,

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using _Game.Board;
+using _Game.Runes;
 using _Game.Stacks;
 using UnityEngine;
 
@@ -20,12 +21,17 @@ namespace _Game.Merge
         private HexCell lastMoveSourceCell;
         private HexCell lastMoveTargetCell;
         private HexCell latestRequestedCell;
+        private IRuneResolver runeResolver;
+        private int clearSequence;
         private readonly List<HexCell> pendingCells = new List<HexCell>();
         private readonly List<HexCell> queuedCells = new List<HexCell>();
         private const bool PreferPlacedCellAsMergeTarget = true;
 
         public bool IsRunning { get; private set; }
         public event Action<HexColor, int> PiecesCleared;
+        public event Action<RuneClearContext> RuneClearStarted;
+        public event Action<RuneClearContext, int, Vector3> RunePieceConsumed;
+        public event Action<RuneClearContext> RuneClearCompleted;
         public event Action MergeStarted;
         public event Action MergeFinished;
 
@@ -33,6 +39,11 @@ namespace _Game.Merge
         {
             this.board = board;
             this.animator = animator;
+        }
+
+        public void SetRuneResolver(IRuneResolver runeResolver)
+        {
+            this.runeResolver = runeResolver;
         }
 
         public void RequestMerge(HexCell activeCell)
@@ -141,16 +152,40 @@ namespace _Game.Merge
             {
                 HexColor clearedColor = cell.stack.TopColor;
                 int clearedCount = cell.stack.CountTopSameColor();
+                HexStackView stackView = board.GetStackView(cell);
+                bool hasRuneContext = TryCreateRuneClearContext(cell, stackView, clearedColor, clearedCount, out RuneClearContext runeContext);
+                if (hasRuneContext)
+                {
+                    RuneClearStarted?.Invoke(runeContext);
+                }
+
                 cell.stack.RemoveTopPieces(clearedCount);
                 PiecesCleared?.Invoke(clearedColor, clearedCount);
-                HexStackView stackView = board.GetStackView(cell);
                 if (animator != null)
                 {
-                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearedCount, clearedColor));
+                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearedCount, clearedColor, (consumedIndex, pieceWorldPosition) =>
+                    {
+                        if (hasRuneContext)
+                        {
+                            RunePieceConsumed?.Invoke(runeContext, consumedIndex, pieceWorldPosition);
+                        }
+                    }));
                 }
                 else
                 {
+                    if (hasRuneContext)
+                    {
+                        for (int i = 0; i < clearedCount; i++)
+                        {
+                            RunePieceConsumed?.Invoke(runeContext, i, GetRuneCastWorldPosition(cell, stackView));
+                        }
+                    }
                     stackView?.RemoveTopVisualHexes(clearedCount);
+                }
+
+                if (hasRuneContext)
+                {
+                    RuneClearCompleted?.Invoke(runeContext);
                 }
 
                 if (cell.IsEmpty)
@@ -159,6 +194,29 @@ namespace _Game.Merge
                     yield break;
                 }
             }
+        }
+
+        private bool TryCreateRuneClearContext(HexCell cell, HexStackView stackView, HexColor color, int count, out RuneClearContext context)
+        {
+            context = default;
+            if (runeResolver == null || !runeResolver.TryResolveLegacyColor(color, out RuneDefinition rune) || rune == null)
+            {
+                return false;
+            }
+
+            context = new RuneClearContext(++clearSequence, rune, count, cell, cell != null ? cell.coordinate : default, GetRuneCastWorldPosition(cell, stackView), clearSequence);
+            return true;
+        }
+
+        private Vector3 GetRuneCastWorldPosition(HexCell cell, HexStackView stackView)
+        {
+            if (stackView != null)
+            {
+                return stackView.GetTopPosition();
+            }
+
+            HexCellView cellView = board != null ? board.GetCellView(cell) : null;
+            return cellView != null ? cellView.transform.position : transform.position;
         }
 
         private HexCell SelectNextMergeTarget(List<HexCell> pendingCells, List<HexCell> queuedCells)

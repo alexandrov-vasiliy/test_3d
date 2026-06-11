@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using _Game.Audio;
@@ -93,6 +94,11 @@ namespace _Game.Merge
 
         public IEnumerator AnimateDisappear(HexStackView stackView, int count, HexColor color)
         {
+            yield return AnimateDisappear(stackView, count, color, null);
+        }
+
+        public IEnumerator AnimateDisappear(HexStackView stackView, int count, HexColor color, Action<int, Vector3> pieceConsuming)
+        {
             if (stackView == null || count <= 0)
             {
                 yield break;
@@ -104,15 +110,18 @@ namespace _Game.Merge
             Vector3 effectPosition = GetDisappearEffectPosition(stackView);
             Sequence sequence = DOTween.Sequence();
 
-            foreach (HexPieceView piece in pieces)
+            for (int i = 0; i < pieces.Count; i++)
             {
+                HexPieceView piece = pieces[i];
                 if (piece == null)
                 {
                     continue;
                 }
 
+                int consumedIndex = i;
                 Sequence pieceSequence = DOTween.Sequence();
                 pieceSequence.AppendCallback(PlayElementDisappearSound);
+                pieceSequence.AppendCallback(() => pieceConsuming?.Invoke(consumedIndex, piece.transform.position));
                 pieceSequence.Append(piece.transform.DOScale(Vector3.zero, duration).SetEase(Ease.InQuad));
                 sequence.Append(pieceSequence);
                 sequence.AppendInterval(stepDelay);

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Holds the ECS-like runtime tag bag for one spawned enemy; view, registry, goal progress, and spawning are handled elsewhere.
+    /// Holds the ECS-like runtime tag bag and damage resolution for one spawned enemy; view, registry, goal progress, and spawning are handled elsewhere.
     /// </summary>
     public sealed class EnemyRuntime
     {
@@ -65,13 +65,18 @@ namespace _Game.Enemies
 
         public bool ApplyDamage(int amount)
         {
+            return ApplyDamage(amount, false);
+        }
+
+        public bool ApplyDamage(int amount, bool ignoreDefence)
+        {
             if (!IsAlive || amount <= 0 || !TryGetTag(out EnemyHealth health))
             {
                 return false;
             }
 
             int remainingDamage = amount;
-            if (TryGetTag(out EnemyDefence defence))
+            if (!ignoreDefence && TryGetTag(out EnemyDefence defence))
             {
                 remainingDamage = defence.AbsorbDamage(remainingDamage);
             }

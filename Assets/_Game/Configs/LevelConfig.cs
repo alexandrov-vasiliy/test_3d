@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using _Game.Board;
+using _Game.Runes;
 using _Game.Stacks;
 using UnityEngine;
 
 namespace _Game.Configs
 {
     /// <summary>
-    /// Stores all designer-authored data needed to load one level; runtime services consume this asset but do not mutate it as save state.
+    /// Stores all designer-authored data needed to load one level, including board, enemies, goals, and available rune compositions; runtime services consume this asset but do not mutate it as save state.
     /// </summary>
     [CreateAssetMenu(menuName = "Hex Merge/Level Config")]
     public class LevelConfig : ScriptableObject
@@ -110,6 +111,9 @@ namespace _Game.Configs
         [Header("Hand")]
         public List<StackDefinition> initialHandStacks = new List<StackDefinition>();
         public HandGenerationSettings handGeneration = new HandGenerationSettings();
+
+        [Header("Runes")]
+        [SerializeReference] public List<RuneDefinition> availableRunes = new List<RuneDefinition>();
 
         [Header("Enemies")]
         public List<EnemyDefinition> enemies = new List<EnemyDefinition>();

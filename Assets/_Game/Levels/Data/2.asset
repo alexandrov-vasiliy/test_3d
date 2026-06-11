@@ -29,7 +29,11 @@ MonoBehaviour:
   - {x: -1, y: 0}
   - {x: 0, y: 0}
   - {x: 1, y: 0}
+  - {x: -2, y: -1}
+  - {x: -1, y: -1}
   - {x: 0, y: -1}
+  - {x: 1, y: -1}
+  - {x: 2, y: -1}
   - {x: -2, y: -2}
   - {x: -1, y: -2}
   - {x: 0, y: -2}
@@ -50,14 +54,21 @@ MonoBehaviour:
     maxColorRunLength: 8
     finiteDeckMode: 0
     finiteDeckStacks: []
+  availableRunes: []
   enemies:
   - enemyId: basic
     coordinate: {x: 0, y: 1}
     healthOverride: 0
-  goals: []
+  goals:
+  - type: 3
+    color: 0
+    requiredCount: 0
   loseRules:
     loseWhenNoMovesRemain: 1
     moveLimit: 0
   tutorialTargetCell: {x: 0, y: 0}
   trayStacks: []
   completeWhenTrayEmpty: 1
+  references:
+    version: 2
+    RefIds: []

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Owns runtime combat state, active intent progression, and presentation lifecycle for one enemy; victory and goal tracking stay outside this controller.
+    /// Owns runtime combat state, active intent progression, damage requests, and presentation lifecycle for one enemy; victory and goal tracking stay outside this controller.
     /// </summary>
     public sealed class EnemyController : MonoBehaviour
     {
@@ -33,12 +33,17 @@ namespace _Game.Enemies
 
         public bool ApplyDamage(int amount)
         {
+            return ApplyDamage(amount, false);
+        }
+
+        public bool ApplyDamage(int amount, bool ignoreDefence)
+        {
             if (Runtime == null || !Runtime.IsAlive)
             {
                 return false;
             }
 
-            bool defeated = Runtime.ApplyDamage(amount);
+            bool defeated = Runtime.ApplyDamage(amount, ignoreDefence);
             if (defeated)
             {
                 PublishDefeated();

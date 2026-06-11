@@ -5,7 +5,7 @@ using UnityEngine;
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Tracks which board coordinates are occupied by living enemies so placement checks can reject blocked cells.
+    /// Tracks living enemies by board coordinate so placement and combat targeting can query occupancy without owning enemy state.
     /// </summary>
     public sealed class EnemyRegistry
     {
@@ -71,6 +71,46 @@ namespace _Game.Enemies
         public bool TryGetEnemy(Vector2Int coordinate, out EnemyController enemy)
         {
             return enemiesByCoordinate.TryGetValue(coordinate, out enemy);
+        }
+
+        public void GetAliveEnemies(List<EnemyController> results)
+        {
+            if (results == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<Vector2Int, EnemyController> pair in enemiesByCoordinate)
+            {
+                EnemyController enemy = pair.Value;
+                if (enemy != null && enemy.IsAlive)
+                {
+                    results.Add(enemy);
+                }
+            }
+        }
+
+        public bool TryGetNearestAliveEnemy(Vector3 worldPosition, out EnemyController enemy)
+        {
+            enemy = null;
+            float bestDistance = float.MaxValue;
+            foreach (KeyValuePair<Vector2Int, EnemyController> pair in enemiesByCoordinate)
+            {
+                EnemyController candidate = pair.Value;
+                if (candidate == null || !candidate.IsAlive)
+                {
+                    continue;
+                }
+
+                float distance = (candidate.transform.position - worldPosition).sqrMagnitude;
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    enemy = candidate;
+                }
+            }
+
+            return enemy != null;
         }
 
         public void Clear()
