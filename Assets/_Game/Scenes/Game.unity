@@ -470,7 +470,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5185894, y: -0, z: -0, w: 0.85502344}
-  m_LocalPosition: {x: 0, y: 8.29, z: -10}
+  m_LocalPosition: {x: 0, y: 14.17, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -716,9 +716,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 395445732}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.91, z: -9.14}
+  m_LocalScale: {x: 0.61109, y: 0.61109, z: 0.61109}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1264714267}
@@ -1078,7 +1078,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 437858, guid: 1ae6e4e008749404d95ce29b596ce5e0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.62623
+      value: 0.11
       objectReference: {fileID: 0}
     - target: {fileID: 437858, guid: 1ae6e4e008749404d95ce29b596ce5e0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1781,11 +1781,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeAnimator
   baseMoveDuration: 0.35
-  baseDisappearDuration: 0.28
+  baseDisappearDuration: 0.1
   speedIncreasePerStep: 0.3
   maxSpeedMultiplier: 3
   jumpPower: 2
-  pieceStagger: 0.035
+  pieceStagger: 0.015
   flipDegrees: 360
   landingTiltDegrees: 18
   disappearStepDelay: 0.015
@@ -2351,6 +2351,7 @@ MonoBehaviour:
         - rid: 968039963860402177
         - rid: 968039963860402178
         - rid: 968039963860402179
+        - rid: 968039963860402183
         prefab: {fileID: 0}
         baseHealth: 1
         positionOffset: {x: 0, y: 0.35, z: 0}
@@ -2359,7 +2360,7 @@ MonoBehaviour:
     - rid: 968039963860402177
       type: {class: EnemyHealth, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
-        maxHealth: 3
+        maxHealth: 8
         currentHealth: -1
     - rid: 968039963860402178
       type: {class: EnemyIntentLoop, ns: _Game.Enemies, asm: Assembly-CSharp}
@@ -2370,7 +2371,7 @@ MonoBehaviour:
     - rid: 968039963860402179
       type: {class: EnemyVisualReference, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
-        prefab: {fileID: 175986, guid: cdc26bac7dd09f24082080f45f2cd4ba, type: 3}
+        prefab: {fileID: 1897462516706159303, guid: 194976fb97f954e749f7703c71ef5bd6, type: 3}
         positionOffset: {x: 0, y: 0.35, z: 0}
         defaultHitVfx: {fileID: 1489431029902184, guid: 4430919f14c50f84085d287cbcb2c30e, type: 3}
         defaultDeathVfx: {fileID: 0}
@@ -2382,6 +2383,11 @@ MonoBehaviour:
       type: {class: EnemyIntentDefence, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
         defence: 1
+    - rid: 968039963860402183
+      type: {class: EnemyIdentity, ns: _Game.Enemies, asm: Assembly-CSharp}
+      data:
+        enemyId: skeleton
+        displayName: Skeleton
 --- !u!1 &2000000110
 GameObject:
   m_ObjectHideFlags: 0

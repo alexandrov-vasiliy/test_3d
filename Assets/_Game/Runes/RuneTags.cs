@@ -187,7 +187,7 @@ namespace _Game.Runes
     public sealed class RuneProjectileVisualTag : RuneTag
     {
         [SerializeField] private GameObject prefab;
-        [SerializeField] private float speed = 7f;
+        [SerializeField] private float speed = 17f;
         [SerializeField] private float hitDistance = 0.18f;
         [SerializeField] private float dissipateDuration = 0.2f;
 

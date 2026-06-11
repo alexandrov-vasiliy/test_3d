@@ -147,7 +147,6 @@ namespace _Game.Enemies
             GameObject enemyObject = CreateEnemyObject(archetype, enemyId);
             enemyObject.transform.SetParent(EnsureEnemiesRoot(), true);
             enemyObject.transform.position = cellView.transform.position + archetype.PositionOffset;
-            enemyObject.transform.eulerAngles = new Vector3(0f, 180f, 0f);
             EnemyController controller = enemyObject.GetComponent<EnemyController>();
             if (controller == null)
             {
@@ -156,6 +155,7 @@ namespace _Game.Enemies
 
             int health = definition.healthOverride > 0 ? definition.healthOverride : archetype.BaseHealth;
             controller.Initialize(new EnemyRuntime(BuildRuntimeTags(archetype, enemyId, definition.coordinate, health)));
+            InitializeEnemyView(enemyObject, controller);
             if (!registry.TryRegister(controller))
             {
                 DestroyEnemyObject(enemyObject);
@@ -213,6 +213,20 @@ namespace _Game.Enemies
             enemyObject.name = "Enemy_" + enemyId;
             enemyObject.transform.localScale = placeholderScale;
             return enemyObject;
+        }
+
+        private static void InitializeEnemyView(GameObject enemyObject, EnemyController controller)
+        {
+            if (enemyObject == null || controller == null)
+            {
+                return;
+            }
+
+            EnemyView view = enemyObject.GetComponentInChildren<EnemyView>(true);
+            if (view != null)
+            {
+                view.Initialize(controller);
+            }
         }
 
         private void OnEnemyDefeated(EnemyController enemy)

@@ -5,13 +5,15 @@ using UnityEngine;
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Owns runtime combat state, active intent progression, damage requests, and presentation lifecycle for one enemy; victory and goal tracking stay outside this controller.
+    /// Owns runtime combat state, active intent progression, damage requests, and view-facing state events for one enemy; victory and goal tracking stay outside this controller.
     /// </summary>
     public sealed class EnemyController : MonoBehaviour
     {
         private bool defeatPublished;
 
         public event Action<EnemyController> Defeated;
+        public event Action<int, int> HealthChanged;
+        public event Action<EnemyController, int> Damaged;
 
         public EnemyRuntime Runtime { get; private set; }
         public string EnemyId => Runtime != null ? Runtime.EnemyId : string.Empty;
@@ -43,7 +45,15 @@ namespace _Game.Enemies
                 return false;
             }
 
+            int previousHealth = Runtime.CurrentHealth;
             bool defeated = Runtime.ApplyDamage(amount, ignoreDefence);
+            int healthDamage = Mathf.Max(0, previousHealth - Runtime.CurrentHealth);
+            if (healthDamage > 0)
+            {
+                HealthChanged?.Invoke(Runtime.CurrentHealth, Runtime.MaxHealth);
+                Damaged?.Invoke(this, healthDamage);
+            }
+
             if (defeated)
             {
                 PublishDefeated();
@@ -84,6 +94,7 @@ namespace _Game.Enemies
             }
 
             Runtime.ApplyDamage(Runtime.CurrentHealth + Runtime.Defence);
+            HealthChanged?.Invoke(Runtime.CurrentHealth, Runtime.MaxHealth);
             PublishDefeated();
         }
 

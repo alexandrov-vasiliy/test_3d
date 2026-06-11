@@ -147,7 +147,7 @@ namespace _Game.Runes
 
             float speed = projectileTag != null ? projectileTag.Speed : 7f;
             Vector3 current = Visual.transform.position;
-            Vector3 targetPosition = target.position;
+            Vector3 targetPosition = new Vector3(target.position.x, current.y, target.position.z);
             Visual.transform.position = Vector3.MoveTowards(current, targetPosition, speed * Mathf.Max(0f, deltaTime));
             return Vector3.Distance(Visual.transform.position, targetPosition) <= HitDistance;
         }

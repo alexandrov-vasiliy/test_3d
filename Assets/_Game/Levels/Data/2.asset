@@ -39,7 +39,10 @@ MonoBehaviour:
   - {x: 0, y: -2}
   - {x: 1, y: -2}
   - {x: 2, y: -2}
-  startingBoardStacks: []
+  startingBoardStacks:
+  - coordinate: {x: -1, y: -2}
+    stack:
+      colorsBottomToTop: 0000000002000000020000000200000002000000020000000200000002000000
   initialHandStacks: []
   handGeneration:
     handSize: 3
