@@ -333,7 +333,7 @@ public readonly struct RuneDamageRequest
 3. Добавить базовые tags: identity, color presentation, material presentation, match group, base damage, additional damage, true damage, player heal, fire effect marker/VFX, charge visual, projectile visual, `TargetNearestEnemyTag`.
 4. Расширить `LevelConfig` списком доступных рун уровня.
 5. Перевести `HandGenerationSettings` на allowed rune ids или available rune list.
-6. Перевести `HexPiece`/`HexStack`/`StackDefinition` на rune id или rune instance; `HexColor` оставить только как временный migration adapter.
+6. Перевести `HexPiece`/`HexStack`/`StackDefinition` на rune id или rune instance; `HexColor` enum удалить после перевода runtime и editor tooling.
 7. Добавить reflection-based editor tooling для добавления rune tags/effects/presets на уровень.
 8. Добавить rune clear lifecycle events в `MergeSystem`, передающие rune data, count, cell, coordinate, world position, chain index.
 9. Расширить `MergeAnimator.AnimateDisappear` callback-ом на каждый уничтожаемый visual hex.
@@ -353,10 +353,10 @@ public readonly struct RuneDamageRequest
 
 ## Проверка
 
-- Existing `ClearPieces` goal продолжает обновляться через compatibility `MergeSystem.PiecesCleared` до migration.
+- Existing `ClearPieces` goal обновляется через `MergeSystem.PiecesCleared(string runeId, int count)` без color enum compatibility.
 - Runtime rune activation использует `RuneDefinition`/`RuneTag`, а не `HexColor`.
 - Level editor может добавить доступную руну через reflection-discovered tags/presets.
-- Hand generation берет руны из level available runes, а не из enum palette.
+- Hand generation берет `allowedRuneIds` из level config, а не из enum palette.
 - При очищении 10+ одинаковых рун создается charge visual над очищаемой стопкой.
 - На каждый уничтоженный visual hex charge visual получает particle contribution и увеличивается.
 - После исчезновения всей cleared group projectile летит к ближайшему живому врагу.
@@ -385,10 +385,20 @@ public readonly struct RuneDamageRequest
 
 Нет открытых вопросов по текущим принятым RuneCombat правилам.
 
+## Текущий статус реализации
+
+- `HexColor` enum и `LegacyHexColorRuneResolver` удалены.
+- Runtime stack model хранит `HexPiece.runeId`; `HexStack`, `HandGenerator`, `MergeSystem`, `GoalTracker`, stack visuals and clear animation переведены на string rune ids.
+- `RuneLibrary` заменяет legacy resolver: built-in default runes загружаются всегда, level `availableRunes` переопределяет их по `RuneDefinition.RuneId`.
+- `LevelConfig.StackDefinition.runeIdsBottomToTop`, `HandGenerationSettings.allowedRuneIds`, `GoalDefinition.runeId` стали авторскими non-enum полями.
+- Старые serialized поля `colorsBottomToTop`, `allowedColors`, goal `color` мигрируют через hidden legacy index fields и `FormerlySerializedAs`.
+- Старые level editor windows теперь пишут `runeIdsBottomToTop` string values; добавлен отдельный `Tools/Runes/Rune Composer` для reflection-based composition of `RuneTag` classes.
+- `HexColorConfig` пока сохранен как existing asset type для visual overrides, но внутри маппит `runeId -> Color/Material` и умеет мигрировать старый enum index; это не enum-модель.
+
 ## Риски
 
-- Полный отказ от `HexColor` затрагивает stack generation, merge matching, goals, editor previews, materials and serialized level assets. Это больше, чем один `RuneCombatController`, поэтому нужен migration layer.
-- Если оставить `HexColor` в combat path, система снова станет enum-driven и будет плохо расширяться. `HexColor` допустим только как временный legacy adapter.
+- Старые serialized level assets имеют runtime/editor десериализационную миграцию, но для production все равно полезен explicit asset migration tool, который сохранит assets уже в новом формате.
+- `HexColorConfig` сохраняет старое имя класса ради asset/reference compatibility; если нужен чистый нейминг, его стоит переименовать в `RuneVisualConfig` отдельным safe migration шагом.
 - Текущий `MergeSystem` удаляет model pieces до анимации; для корректного шар-сбора нужно аккуратно синхронизировать model clear, visual consume callbacks и combat resolution.
 - Если атаковать до завершения disappear animation, визуально враг может умереть раньше, чем шар собрался.
 - Если `RuneCastPresenter` начнет применять damage, presentation layer станет gameplay layer. Это запрещено.

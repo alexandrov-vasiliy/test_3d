@@ -35,37 +35,60 @@ MonoBehaviour:
   - {x: 1, y: -1}
   - {x: 2, y: -1}
   - {x: -2, y: -2}
-  - {x: -1, y: -2}
   - {x: 0, y: -2}
   - {x: 1, y: -2}
   - {x: 2, y: -2}
   startingBoardStacks:
-  - coordinate: {x: -1, y: -2}
+  - coordinate: {x: 1, y: 1}
     stack:
-      colorsBottomToTop: 0000000002000000020000000200000002000000020000000200000002000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   initialHandStacks: []
+  selectedRuneIds:
+  - fire
   handGeneration:
     handSize: 3
     useRandomSeed: 1
     randomSeed: 1
-    allowedColors: 000000000100000002000000030000000400000005000000
     minStackHeight: 5
     maxStackHeight: 8
-    generateColorRuns: 1
+    generateRuneRuns: 1
     sameColorRunChance: 0.85
     minColorRunLength: 5
     maxColorRunLength: 8
     finiteDeckMode: 0
     finiteDeckStacks: []
-  availableRunes: []
+    legacyAllowedRuneIds:
+    - fire
+    - water
+    - heal
+    - light
+    - arcane
+    - ember
+    legacyAllowedColorIndexes: 000000000100000002000000030000000400000005000000
+  legacyAvailableRunes:
+  - runeId: fire
+    displayName: Fire Rune
+    tags:
+    - rid: 968039963860402184
+    - rid: 968039963860402185
+    - rid: 968039963860402186
+    - rid: 968039963860402187
+    - rid: 968039963860402188
+    - rid: 968039963860402189
+    - rid: 968039963860402190
+    - rid: 968039963860402191
+    - rid: 968039963860402192
+    - rid: 968039963860402193
   enemies:
   - enemyId: basic
     coordinate: {x: 0, y: 1}
     healthOverride: 0
   goals:
   - type: 3
-    color: 0
+    runeId: fire
     requiredCount: 0
+    legacyColorIndex: 0
   loseRules:
     loseWhenNoMovesRemain: 1
     moveLimit: 0
@@ -74,4 +97,49 @@ MonoBehaviour:
   completeWhenTrayEmpty: 1
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 968039963860402184
+      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        runeId: fire
+        displayName: Fire Rune
+    - rid: 968039963860402185
+      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        color: {r: 0.95, g: 0.18, b: 0.18, a: 1}
+    - rid: 968039963860402186
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        matchGroup: fire
+    - rid: 968039963860402187
+      type: {class: RuneDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 3
+    - rid: 968039963860402188
+      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402189
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        baseScale: 0.25
+        scalePerPiece: 0.04
+        maxScale: 1.5
+        offset: {x: 0, y: 0.85, z: 0}
+    - rid: 968039963860402190
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        speed: 17
+        hitDistance: 0.18
+        dissipateDuration: 0.2
+    - rid: 968039963860402191
+      type: {class: TargetNearestEnemyTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402192
+      type: {class: RuneFireEffectTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402193
+      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 

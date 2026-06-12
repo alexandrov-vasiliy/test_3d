@@ -3,26 +3,38 @@ using _Game.Board;
 using _Game.Runes;
 using _Game.Stacks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _Game.Configs
 {
     /// <summary>
-    /// Stores all designer-authored data needed to load one level, including board, enemies, goals, and available rune compositions; runtime services consume this asset but do not mutate it as save state.
+    /// Stores all designer-authored data needed to load one level, including board, enemies, goals, and selected rune ids; rune composition itself lives in the shared RuneCatalog.
     /// </summary>
     [CreateAssetMenu(menuName = "Hex Merge/Level Config")]
-    public class LevelConfig : ScriptableObject
+    public class LevelConfig : ScriptableObject, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Describes a stack from bottom to top so loaders and hand generators can create runtime stack models without owning level data.
         /// </summary>
         [System.Serializable]
-        public class StackDefinition
+        public class StackDefinition : ISerializationCallbackReceiver
         {
-            public List<HexColor> colorsBottomToTop = new List<HexColor>();
+            public List<string> runeIdsBottomToTop = new List<string>();
+            [FormerlySerializedAs("colorsBottomToTop")]
+            [SerializeField, HideInInspector] private List<int> legacyColorIndexesBottomToTop = new List<int>();
 
             public HexStack CreateStack()
             {
-                return new HexStack(colorsBottomToTop);
+                return new HexStack(runeIdsBottomToTop);
+            }
+
+            public void OnBeforeSerialize()
+            {
+            }
+
+            public void OnAfterDeserialize()
+            {
+                ConvertLegacyColorIndexes(legacyColorIndexesBottomToTop, runeIdsBottomToTop);
             }
         }
 
@@ -37,7 +49,7 @@ namespace _Game.Configs
         }
 
         /// <summary>
-        /// Configures generated hands, color-run bias, and optional finite deck behavior for the hand generator.
+        /// Configures generated hands, same-rune run bias, and optional finite deck behavior for the hand generator; the rune pool itself is selected at the level root.
         /// </summary>
         [System.Serializable]
         public class HandGenerationSettings
@@ -45,34 +57,46 @@ namespace _Game.Configs
             public int handSize = 3;
             public bool useRandomSeed = true;
             public int randomSeed = 1;
-            public List<HexColor> allowedColors = new List<HexColor>
-            {
-                HexColor.Red,
-                HexColor.Blue,
-                HexColor.Green,
-                HexColor.Yellow,
-                HexColor.Purple,
-                HexColor.Orange
-            };
             public int minStackHeight = 1;
             public int maxStackHeight = 3;
-            public bool generateColorRuns = true;
+            public bool generateRuneRuns = true;
             [Range(0f, 1f)] public float sameColorRunChance = 0.85f;
             public int minColorRunLength = 2;
             public int maxColorRunLength = 4;
             public bool finiteDeckMode;
             public List<StackDefinition> finiteDeckStacks = new List<StackDefinition>();
+            [FormerlySerializedAs("allowedRuneIds")]
+            [SerializeField, HideInInspector] private List<string> legacyAllowedRuneIds = new List<string>();
+            [FormerlySerializedAs("allowedColors")]
+            [SerializeField, HideInInspector] private List<int> legacyAllowedColorIndexes = new List<int>();
+
+            public IReadOnlyList<string> LegacyAllowedRuneIds => legacyAllowedRuneIds;
+            public IReadOnlyList<int> LegacyAllowedColorIndexes => legacyAllowedColorIndexes;
         }
 
         /// <summary>
         /// Describes one level goal; goal tracking is performed by GoalTracker rather than by merge animation or level data.
         /// </summary>
         [System.Serializable]
-        public class GoalDefinition
+        public class GoalDefinition : ISerializationCallbackReceiver
         {
             public LevelGoalType type = LevelGoalType.ClearPieces;
-            public HexColor color = HexColor.Red;
+            public string runeId = "fire";
             public int requiredCount = 10;
+            [FormerlySerializedAs("color")]
+            [SerializeField, HideInInspector] private int legacyColorIndex = -1;
+
+            public void OnBeforeSerialize()
+            {
+            }
+
+            public void OnAfterDeserialize()
+            {
+                if (legacyColorIndex >= 0)
+                {
+                    runeId = LegacyColorIndexToRuneId(legacyColorIndex);
+                }
+            }
         }
 
         /// <summary>
@@ -110,10 +134,10 @@ namespace _Game.Configs
 
         [Header("Hand")]
         public List<StackDefinition> initialHandStacks = new List<StackDefinition>();
+        public List<string> selectedRuneIds = new List<string>();
         public HandGenerationSettings handGeneration = new HandGenerationSettings();
-
-        [Header("Runes")]
-        [SerializeReference] public List<RuneDefinition> availableRunes = new List<RuneDefinition>();
+        [FormerlySerializedAs("availableRunes")]
+        [SerializeField, HideInInspector] private List<RuneDefinition> legacyAvailableRunes = new List<RuneDefinition>();
 
         [Header("Enemies")]
         public List<EnemyDefinition> enemies = new List<EnemyDefinition>();
@@ -141,6 +165,107 @@ namespace _Game.Configs
             }
 
             return trayStacks;
+        }
+
+        public IReadOnlyList<string> GetAllowedGeneratedRuneIds()
+        {
+            return selectedRuneIds;
+        }
+
+        public void OnBeforeSerialize()
+        {
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if ((selectedRuneIds == null || selectedRuneIds.Count == 0) && legacyAvailableRunes != null)
+            {
+                if (selectedRuneIds == null)
+                {
+                    selectedRuneIds = new List<string>();
+                }
+
+                for (int i = 0; i < legacyAvailableRunes.Count; i++)
+                {
+                    RuneDefinition rune = legacyAvailableRunes[i];
+                    if (rune != null && !string.IsNullOrWhiteSpace(rune.RuneId) && !selectedRuneIds.Contains(rune.RuneId))
+                    {
+                        selectedRuneIds.Add(rune.RuneId);
+                    }
+                }
+            }
+
+            if (selectedRuneIds == null)
+            {
+                selectedRuneIds = new List<string>();
+            }
+
+            if (selectedRuneIds.Count == 0 && handGeneration != null)
+            {
+                AppendMissingRuneIds(selectedRuneIds, handGeneration.LegacyAllowedRuneIds);
+                AppendLegacyColorIndexes(selectedRuneIds, handGeneration.LegacyAllowedColorIndexes);
+            }
+        }
+
+        private static void ConvertLegacyColorIndexes(List<int> legacyColorIndexes, List<string> runeIds)
+        {
+            if (legacyColorIndexes == null || legacyColorIndexes.Count == 0 || runeIds == null || runeIds.Count > 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < legacyColorIndexes.Count; i++)
+            {
+                runeIds.Add(LegacyColorIndexToRuneId(legacyColorIndexes[i]));
+            }
+        }
+
+        private static void AppendLegacyColorIndexes(List<string> runeIds, IReadOnlyList<int> legacyColorIndexes)
+        {
+            if (runeIds == null || legacyColorIndexes == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < legacyColorIndexes.Count; i++)
+            {
+                string runeId = LegacyColorIndexToRuneId(legacyColorIndexes[i]);
+                if (!runeIds.Contains(runeId))
+                {
+                    runeIds.Add(runeId);
+                }
+            }
+        }
+
+        private static void AppendMissingRuneIds(List<string> runeIds, IReadOnlyList<string> legacyRuneIds)
+        {
+            if (runeIds == null || legacyRuneIds == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < legacyRuneIds.Count; i++)
+            {
+                string runeId = legacyRuneIds[i];
+                if (!string.IsNullOrWhiteSpace(runeId) && !runeIds.Contains(runeId))
+                {
+                    runeIds.Add(runeId);
+                }
+            }
+        }
+
+        private static string LegacyColorIndexToRuneId(int legacyColorIndex)
+        {
+            switch (legacyColorIndex)
+            {
+                case 0: return "fire";
+                case 1: return "water";
+                case 2: return "heal";
+                case 3: return "light";
+                case 4: return "arcane";
+                case 5: return "ember";
+                default: return "fire";
+            }
         }
     }
 

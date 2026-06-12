@@ -28,7 +28,7 @@ namespace _Game.Merge
         private const bool PreferPlacedCellAsMergeTarget = true;
 
         public bool IsRunning { get; private set; }
-        public event Action<HexColor, int> PiecesCleared;
+        public event Action<string, int> PiecesCleared;
         public event Action<RuneClearContext> RuneClearStarted;
         public event Action<RuneClearContext, int, Vector3> RunePieceConsumed;
         public event Action<RuneClearContext> RuneClearCompleted;
@@ -120,7 +120,7 @@ namespace _Game.Merge
             }
 
             lastMoveSourceCell = matchingNeighbour;
-            List<HexPiece> movedPieces = matchingNeighbour.stack.PopTopSameColor();
+            List<HexPiece> movedPieces = matchingNeighbour.stack.PopTopSameRune();
             foreach (HexPiece piece in movedPieces)
             {
                 targetCell.stack.Push(piece);
@@ -150,20 +150,20 @@ namespace _Game.Merge
         {
             while (CanClearTop(cell))
             {
-                HexColor clearedColor = cell.stack.TopColor;
-                int clearedCount = cell.stack.CountTopSameColor();
+                string clearedRuneId = cell.stack.TopRuneId;
+                int clearedCount = cell.stack.CountTopSameRune();
                 HexStackView stackView = board.GetStackView(cell);
-                bool hasRuneContext = TryCreateRuneClearContext(cell, stackView, clearedColor, clearedCount, out RuneClearContext runeContext);
+                bool hasRuneContext = TryCreateRuneClearContext(cell, stackView, clearedRuneId, clearedCount, out RuneClearContext runeContext);
                 if (hasRuneContext)
                 {
                     RuneClearStarted?.Invoke(runeContext);
                 }
 
                 cell.stack.RemoveTopPieces(clearedCount);
-                PiecesCleared?.Invoke(clearedColor, clearedCount);
+                PiecesCleared?.Invoke(clearedRuneId, clearedCount);
                 if (animator != null)
                 {
-                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearedCount, clearedColor, (consumedIndex, pieceWorldPosition) =>
+                    yield return StartCoroutine(animator.AnimateDisappear(stackView, clearedCount, clearedRuneId, (consumedIndex, pieceWorldPosition) =>
                     {
                         if (hasRuneContext)
                         {
@@ -196,10 +196,10 @@ namespace _Game.Merge
             }
         }
 
-        private bool TryCreateRuneClearContext(HexCell cell, HexStackView stackView, HexColor color, int count, out RuneClearContext context)
+        private bool TryCreateRuneClearContext(HexCell cell, HexStackView stackView, string runeId, int count, out RuneClearContext context)
         {
             context = default;
-            if (runeResolver == null || !runeResolver.TryResolveLegacyColor(color, out RuneDefinition rune) || rune == null)
+            if (runeResolver == null || !runeResolver.TryResolveRuneId(runeId, out RuneDefinition rune) || rune == null)
             {
                 return false;
             }
@@ -266,7 +266,7 @@ namespace _Game.Merge
 
         private bool CanClearTop(HexCell cell)
         {
-            return cell != null && !cell.IsEmpty && cell.stack.CountTopSameColor() >= clearMatchCount;
+            return cell != null && !cell.IsEmpty && cell.stack.CountTopSameRune() >= clearMatchCount;
         }
 
         private HexCell DequeueNextMergeCandidate(List<HexCell> pendingCells, List<HexCell> queuedCells)
@@ -339,11 +339,11 @@ namespace _Game.Merge
                 return null;
             }
 
-            HexColor activeTop = activeCell.stack.TopColor;
+            string activeTop = activeCell.stack.TopRuneId;
             List<HexCell> neighbours = GetMatchingNeighboursInStableOrder(activeCell);
             foreach (HexCell neighbour in neighbours)
             {
-                if (neighbour != null && !neighbour.IsEmpty && ColorsMatch(neighbour.stack.TopColor, activeTop))
+                if (neighbour != null && !neighbour.IsEmpty && RunesMatch(neighbour.stack.TopRuneId, activeTop))
                 {
                     return neighbour;
                 }
@@ -510,9 +510,23 @@ namespace _Game.Merge
             return yCompare != 0 ? yCompare : a.coordinate.x.CompareTo(b.coordinate.x);
         }
 
-        private static bool ColorsMatch(HexColor a, HexColor b)
+        private bool RunesMatch(string a, string b)
         {
-            return (int)a == (int)b;
+            return string.Equals(GetMatchGroup(a), GetMatchGroup(b), StringComparison.Ordinal);
+        }
+
+        private string GetMatchGroup(string runeId)
+        {
+            if (!string.IsNullOrWhiteSpace(runeId) &&
+                runeResolver != null &&
+                runeResolver.TryResolveRuneId(runeId, out RuneDefinition rune) &&
+                rune != null &&
+                rune.TryGetTag(out RuneMatchGroupTag matchGroup))
+            {
+                return matchGroup.MatchGroup;
+            }
+
+            return string.IsNullOrWhiteSpace(runeId) ? string.Empty : runeId;
         }
     }
 }

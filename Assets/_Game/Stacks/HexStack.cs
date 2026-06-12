@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace _Game.Stacks
 {
+    /// <summary>
+    /// Owns the mutable runtime piece order for one board or hand stack; merge rules inspect rune ids while visuals stay in HexStackView.
+    /// </summary>
     [System.Serializable]
     public class HexStack
     {
@@ -11,32 +14,32 @@ namespace _Game.Stacks
         public IReadOnlyList<HexPiece> Pieces => pieces;
         public int Count => pieces.Count;
         public bool IsEmpty => pieces.Count == 0;
-        public HexColor TopColor => IsEmpty ? default : pieces[pieces.Count - 1].color;
+        public string TopRuneId => IsEmpty ? string.Empty : pieces[pieces.Count - 1].runeId;
 
         public HexStack()
         {
         }
 
-        public HexStack(IEnumerable<HexColor> colorsBottomToTop)
+        public HexStack(IEnumerable<string> runeIdsBottomToTop)
         {
-            foreach (HexColor color in colorsBottomToTop)
+            foreach (string runeId in runeIdsBottomToTop)
             {
-                pieces.Add(new HexPiece(color));
+                pieces.Add(new HexPiece(runeId));
             }
         }
 
-        public int CountTopSameColor()
+        public int CountTopSameRune()
         {
             if (IsEmpty)
             {
                 return 0;
             }
 
-            HexColor color = TopColor;
+            string runeId = TopRuneId;
             int count = 0;
             for (int i = pieces.Count - 1; i >= 0; i--)
             {
-                if (pieces[i].color != color)
+                if (!string.Equals(pieces[i].runeId, runeId, System.StringComparison.Ordinal))
                 {
                     break;
                 }
@@ -68,10 +71,10 @@ namespace _Game.Stacks
             }
         }
 
-        public List<HexPiece> PopTopSameColor()
+        public List<HexPiece> PopTopSameRune()
         {
             List<HexPiece> result = new List<HexPiece>();
-            int count = CountTopSameColor();
+            int count = CountTopSameRune();
             for (int i = 0; i < count; i++)
             {
                 result.Add(PopTop());

@@ -4,6 +4,9 @@ using _Game.Stacks;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Provides scene authoring tools for the legacy Main fallback board and stack data; it now writes rune ids while remaining editor-only.
+/// </summary>
 public class HexGridShapeEditorWindow : EditorWindow
 {
     private enum EditMode
@@ -815,7 +818,7 @@ public class HexGridShapeEditorWindow : EditorWindow
             SerializedProperty colors = GetSelectedTrayStackColors();
             if (colors == null)
             {
-                EditorGUILayout.HelpBox("Selected tray stack has no colorsBottomToTop property.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Selected tray stack has no runeIdsBottomToTop property.", MessageType.Warning);
                 return;
             }
 
@@ -1049,7 +1052,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         if (colors != null && colors.arraySize == 0)
         {
             colors.InsertArrayElementAtIndex(0);
-            colors.GetArrayElementAtIndex(0).enumValueIndex = (int)HexColor.Red;
+            colors.GetArrayElementAtIndex(0).stringValue = "fire";
         }
     }
 
@@ -1064,7 +1067,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         EditorGUILayout.LabelField("Add Color On Top");
         using (new EditorGUILayout.HorizontalScope())
         {
-            foreach (HexColor color in System.Enum.GetValues(typeof(HexColor)))
+            foreach (string color in RuneEditorDefaults.DefaultRuneIds)
             {
                 Color previousColor = GUI.backgroundColor;
                 GUI.backgroundColor = GetHexColorPreview(color);
@@ -1102,7 +1105,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         int visibleCount = Mathf.Min(colors.arraySize, maxVisible);
         for (int i = 0; i < visibleCount; i++)
         {
-            HexColor color = (HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex;
+            string color = colors.GetArrayElementAtIndex(i).stringValue;
             Rect chipRect = new Rect(rect.x + i * step, rect.y, chipSize, chipSize);
             DrawColorChip(chipRect, color, i == colors.arraySize - 1);
         }
@@ -1114,7 +1117,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         }
     }
 
-    private static void DrawColorChip(Rect rect, HexColor color, bool isTop)
+    private static void DrawColorChip(Rect rect, string color, bool isTop)
     {
         Color preview = GetHexColorPreview(color);
         EditorGUI.DrawRect(rect, preview);
@@ -1190,7 +1193,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         SerializedProperty item = trayStacks.GetArrayElementAtIndex(index);
         SerializedProperty colors = GetTrayStackColorsProperty(item);
         colors?.ClearArray();
-        AddColorToStack(colors, HexColor.Red);
+        AddColorToStack(colors, "fire");
         return index;
     }
 
@@ -1212,10 +1215,10 @@ public class HexGridShapeEditorWindow : EditorWindow
             return;
         }
 
-        List<HexColor> colors = new List<HexColor>();
+        List<string> colors = new List<string>();
         for (int i = 0; i < sourceColors.arraySize; i++)
         {
-            colors.Add((HexColor)sourceColors.GetArrayElementAtIndex(i).enumValueIndex);
+            colors.Add(sourceColors.GetArrayElementAtIndex(i).stringValue);
         }
 
         trayStacks.InsertArrayElementAtIndex(selectedTrayStackIndex + 1);
@@ -1226,12 +1229,12 @@ public class HexGridShapeEditorWindow : EditorWindow
     private void GenerateTrayStacks()
     {
         trayStacks.ClearArray();
-        AddGeneratedTrayStack(HexColor.Blue, HexColor.Red);
-        AddGeneratedTrayStack(HexColor.Yellow, HexColor.Blue);
-        AddGeneratedTrayStack(HexColor.Purple, HexColor.Green);
+        AddGeneratedTrayStack("water", "fire");
+        AddGeneratedTrayStack("light", "water");
+        AddGeneratedTrayStack("arcane", "heal");
     }
 
-    private void AddGeneratedTrayStack(params HexColor[] colors)
+    private void AddGeneratedTrayStack(params string[] colors)
     {
         trayStacks.InsertArrayElementAtIndex(trayStacks.arraySize);
         SerializedProperty item = trayStacks.GetArrayElementAtIndex(trayStacks.arraySize - 1);
@@ -1250,15 +1253,15 @@ public class HexGridShapeEditorWindow : EditorWindow
     private static SerializedProperty GetBoardStackColorsProperty(SerializedProperty boardStack)
     {
         SerializedProperty stack = boardStack.FindPropertyRelative("stack");
-        return stack != null ? stack.FindPropertyRelative("colorsBottomToTop") : null;
+        return stack != null ? stack.FindPropertyRelative("runeIdsBottomToTop") : null;
     }
 
     private static SerializedProperty GetTrayStackColorsProperty(SerializedProperty trayStack)
     {
-        return trayStack != null ? trayStack.FindPropertyRelative("colorsBottomToTop") : null;
+        return trayStack != null ? trayStack.FindPropertyRelative("runeIdsBottomToTop") : null;
     }
 
-    private static void AddColorToStack(SerializedProperty colors, HexColor color)
+    private static void AddColorToStack(SerializedProperty colors, string color)
     {
         if (colors == null)
         {
@@ -1266,7 +1269,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         }
 
         colors.InsertArrayElementAtIndex(colors.arraySize);
-        colors.GetArrayElementAtIndex(colors.arraySize - 1).enumValueIndex = (int)color;
+        colors.GetArrayElementAtIndex(colors.arraySize - 1).stringValue = color;
     }
 
     private static void RemoveTopColor(SerializedProperty colors)
@@ -1277,7 +1280,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         }
     }
 
-    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<HexColor> colors)
+    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<string> colors)
     {
         if (colorsProperty == null)
         {
@@ -1288,7 +1291,7 @@ public class HexGridShapeEditorWindow : EditorWindow
         for (int i = 0; i < colors.Count; i++)
         {
             colorsProperty.InsertArrayElementAtIndex(i);
-            colorsProperty.GetArrayElementAtIndex(i).enumValueIndex = (int)colors[i];
+            colorsProperty.GetArrayElementAtIndex(i).stringValue = colors[i];
         }
     }
 
@@ -1302,26 +1305,27 @@ public class HexGridShapeEditorWindow : EditorWindow
         List<string> names = new List<string>();
         for (int i = 0; i < colors.arraySize; i++)
         {
-            names.Add(((HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex).ToString()[0].ToString());
+            string runeName = colors.GetArrayElementAtIndex(i).stringValue;
+            names.Add(string.IsNullOrEmpty(runeName) ? "?" : runeName[0].ToString().ToUpperInvariant());
         }
         return string.Join("", names);
     }
 
-    private static Color GetHexColorPreview(HexColor color)
+    private static Color GetHexColorPreview(string color)
     {
         switch (color)
         {
-            case HexColor.Red:
+            case "fire":
                 return new Color(1f, 0.28f, 0.22f, 1f);
-            case HexColor.Blue:
+            case "water":
                 return new Color(0.22f, 0.55f, 1f, 1f);
-            case HexColor.Green:
+            case "heal":
                 return new Color(0.25f, 0.82f, 0.35f, 1f);
-            case HexColor.Yellow:
+            case "light":
                 return new Color(1f, 0.9f, 0.2f, 1f);
-            case HexColor.Purple:
+            case "arcane":
                 return new Color(0.72f, 0.35f, 1f, 1f);
-            case HexColor.Orange:
+            case "ember":
                 return new Color(1f, 0.52f, 0.16f, 1f);
             default:
                 return Color.white;

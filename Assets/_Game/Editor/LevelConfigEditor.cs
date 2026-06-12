@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using _Game.Configs;
-using _Game.Stacks;
+using _Game.Runes;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,6 +19,10 @@ public class LevelConfigEditor : Editor
             {
                 LevelConfigHexGridEditorWindow.Open((LevelConfig)target);
             }
+            if (GUILayout.Button("Open Rune Composer", GUILayout.Height(28f)))
+            {
+                RuneComposerEditorWindow.Open();
+            }
             if (GUILayout.Button("Ping Asset", GUILayout.Height(28f), GUILayout.Width(100f)))
             {
                 EditorGUIUtility.PingObject(target);
@@ -26,12 +30,44 @@ public class LevelConfigEditor : Editor
         }
 
         DrawDefaultInspector();
+        DrawSelectedRunePicker();
         serializedObject.ApplyModifiedProperties();
 
         LevelConfig config = (LevelConfig)target;
         EditorGUILayout.Space(8f);
         DrawPreview(config);
         DrawValidation(config);
+    }
+
+    private void DrawSelectedRunePicker()
+    {
+        SerializedProperty selectedRuneIds = serializedObject.FindProperty("selectedRuneIds");
+        if (selectedRuneIds == null)
+        {
+            return;
+        }
+
+        RuneCatalog catalog = FindRuneCatalog();
+        EditorGUILayout.Space(8f);
+        EditorGUILayout.LabelField("Catalog Rune Selection", EditorStyles.boldLabel);
+        if (catalog == null || catalog.Runes == null || catalog.Runes.Count == 0)
+        {
+            EditorGUILayout.HelpBox("No RuneCatalog asset with runes was found. Create one via Tools/Runes/Rune Composer.", MessageType.Info);
+            return;
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Add From Catalog"))
+            {
+                ShowAddRuneMenu(selectedRuneIds, catalog);
+            }
+            if (GUILayout.Button("Open Catalog", GUILayout.Width(100f)))
+            {
+                Selection.activeObject = catalog;
+                EditorGUIUtility.PingObject(catalog);
+            }
+        }
     }
 
     private static void DrawPreview(LevelConfig config)
@@ -49,9 +85,11 @@ public class LevelConfigEditor : Editor
         }
 
         LevelConfig.HandGenerationSettings settings = config.handGeneration;
-        if (settings == null || settings.allowedColors == null || settings.allowedColors.Count == 0)
+        RuneCatalog catalog = FindRuneCatalog();
+        List<string> allowedRuneIds = GetCatalogRuneIds(catalog);
+        if (settings == null || allowedRuneIds == null || allowedRuneIds.Count == 0)
         {
-            EditorGUILayout.HelpBox("No predefined hand and no allowed generated colors.", MessageType.Warning);
+            EditorGUILayout.HelpBox("No predefined hand and no runes were found in RuneCatalog.", MessageType.Warning);
             return;
         }
 
@@ -61,8 +99,8 @@ public class LevelConfigEditor : Editor
         for (int i = 0; i < handSize; i++)
         {
             int height = random.Next(minHeight, maxHeight + 1);
-            List<HexColor> colors = GeneratePreviewStack(settings, random, height);
-            EditorGUILayout.LabelField("Slot " + (i + 1), string.Join(", ", colors));
+            List<string> runeIds = GeneratePreviewStack(settings, allowedRuneIds, random, height);
+            EditorGUILayout.LabelField("Slot " + (i + 1), string.Join(", ", runeIds));
         }
     }
 
@@ -86,8 +124,9 @@ public class LevelConfigEditor : Editor
     private static List<string> Validate(LevelConfig config)
     {
         List<string> errors = new List<string>();
+        RuneCatalog catalog = FindRuneCatalog();
         HashSet<Vector2Int> boardCells = BuildBoardCells(config);
-        HashSet<HexColor> availableColors = new HashSet<HexColor>();
+        HashSet<string> availableRuneIds = new HashSet<string>();
         HashSet<Vector2Int> startStackCells = new HashSet<Vector2Int>();
         HashSet<Vector2Int> enemyCells = new HashSet<Vector2Int>();
         int occupiedCells = 0;
@@ -113,7 +152,7 @@ public class LevelConfigEditor : Editor
                     startStackCells.Add(stack.coordinate);
                 }
 
-                AddStackColors(availableColors, stack.stack);
+                AddStackRuneIds(availableRuneIds, stack.stack);
             }
         }
 
@@ -161,11 +200,18 @@ public class LevelConfigEditor : Editor
         {
             for (int i = 0; i < initialHand.Count; i++)
             {
-                AddStackColors(availableColors, initialHand[i]);
+                AddStackRuneIds(availableRuneIds, initialHand[i]);
             }
         }
 
         LevelConfig.HandGenerationSettings settings = config.handGeneration;
+        if (config.selectedRuneIds != null)
+        {
+            for (int i = 0; i < config.selectedRuneIds.Count; i++)
+            {
+                availableRuneIds.Add(config.selectedRuneIds[i]);
+            }
+        }
         if (settings == null)
         {
             errors.Add("Hand generation settings are missing.");
@@ -180,20 +226,13 @@ public class LevelConfigEditor : Editor
             {
                 errors.Add("Invalid stack height range.");
             }
-            if (settings.generateColorRuns && (settings.minColorRunLength < 2 || settings.maxColorRunLength < settings.minColorRunLength))
+            if (settings.generateRuneRuns && (settings.minColorRunLength < 2 || settings.maxColorRunLength < settings.minColorRunLength))
             {
-                errors.Add("Invalid color run length range.");
+                errors.Add("Invalid rune run length range.");
             }
-            if (!settings.finiteDeckMode && (settings.allowedColors == null || settings.allowedColors.Count == 0))
+            if (!settings.finiteDeckMode && (catalog == null || catalog.Runes == null || catalog.Runes.Count == 0))
             {
-                errors.Add("Infinite generation requires at least one allowed color.");
-            }
-            if (settings.allowedColors != null)
-            {
-                for (int i = 0; i < settings.allowedColors.Count; i++)
-                {
-                    availableColors.Add(settings.allowedColors[i]);
-                }
+                errors.Add("Infinite generation requires at least one rune in RuneCatalog.");
             }
         }
 
@@ -233,9 +272,9 @@ public class LevelConfigEditor : Editor
                     continue;
                 }
 
-                if (goal.type == LevelGoalType.ClearPieces && !availableColors.Contains(goal.color))
+                if (goal.type == LevelGoalType.ClearPieces && !availableRuneIds.Contains(goal.runeId))
                 {
-                    errors.Add("Goal color is not present in board, initial hand, or generation settings: " + goal.color);
+                    errors.Add("Goal rune id is not present in board, initial hand, or generation settings: " + goal.runeId);
                 }
             }
         }
@@ -253,49 +292,49 @@ public class LevelConfigEditor : Editor
         return errors;
     }
 
-    private static List<HexColor> GeneratePreviewStack(LevelConfig.HandGenerationSettings settings, System.Random random, int height)
+    private static List<string> GeneratePreviewStack(LevelConfig.HandGenerationSettings settings, IReadOnlyList<string> allowedRuneIds, System.Random random, int height)
     {
-        List<HexColor> colors = new List<HexColor>();
-        if (!settings.generateColorRuns)
+        List<string> runeIds = new List<string>();
+        if (!settings.generateRuneRuns)
         {
             for (int i = 0; i < height; i++)
             {
-                colors.Add(settings.allowedColors[random.Next(0, settings.allowedColors.Count)]);
+                runeIds.Add(allowedRuneIds[random.Next(0, allowedRuneIds.Count)]);
             }
-            return colors;
+            return runeIds;
         }
 
-        while (colors.Count < height)
+        while (runeIds.Count < height)
         {
-            HexColor? previousColor = colors.Count > 0 ? colors[colors.Count - 1] : (HexColor?)null;
-            HexColor color = PickPreviewColor(settings.allowedColors, previousColor, random);
-            int runLength = PickPreviewRunLength(settings, random, height - colors.Count);
-            for (int i = 0; i < runLength && colors.Count < height; i++)
+            string previousRuneId = runeIds.Count > 0 ? runeIds[runeIds.Count - 1] : null;
+            string runeId = PickPreviewRuneId(allowedRuneIds, previousRuneId, random);
+            int runLength = PickPreviewRunLength(settings, random, height - runeIds.Count);
+            for (int i = 0; i < runLength && runeIds.Count < height; i++)
             {
-                colors.Add(color);
+                runeIds.Add(runeId);
             }
         }
 
-        return colors;
+        return runeIds;
     }
 
-    private static HexColor PickPreviewColor(IReadOnlyList<HexColor> allowedColors, HexColor? excludedColor, System.Random random)
+    private static string PickPreviewRuneId(IReadOnlyList<string> allowedRuneIds, string excludedRuneId, System.Random random)
     {
-        if (!excludedColor.HasValue || allowedColors.Count <= 1)
+        if (string.IsNullOrWhiteSpace(excludedRuneId) || allowedRuneIds.Count <= 1)
         {
-            return allowedColors[random.Next(0, allowedColors.Count)];
+            return allowedRuneIds[random.Next(0, allowedRuneIds.Count)];
         }
 
-        HexColor color;
+        string runeId;
         int guard = 0;
         do
         {
-            color = allowedColors[random.Next(0, allowedColors.Count)];
+            runeId = allowedRuneIds[random.Next(0, allowedRuneIds.Count)];
             guard++;
         }
-        while (color == excludedColor.Value && guard < 16);
+        while (runeId == excludedRuneId && guard < 16);
 
-        return color;
+        return runeId;
     }
 
     private static int PickPreviewRunLength(LevelConfig.HandGenerationSettings settings, System.Random random, int remainingHeight)
@@ -352,26 +391,93 @@ public class LevelConfigEditor : Editor
         return cells;
     }
 
-    private static void AddStackColors(HashSet<HexColor> colors, LevelConfig.StackDefinition stack)
+    private static void AddStackRuneIds(HashSet<string> runeIds, LevelConfig.StackDefinition stack)
     {
-        if (stack == null || stack.colorsBottomToTop == null)
+        if (stack == null || stack.runeIdsBottomToTop == null)
         {
             return;
         }
 
-        for (int i = 0; i < stack.colorsBottomToTop.Count; i++)
+        for (int i = 0; i < stack.runeIdsBottomToTop.Count; i++)
         {
-            colors.Add(stack.colorsBottomToTop[i]);
+            runeIds.Add(stack.runeIdsBottomToTop[i]);
         }
     }
 
     private static string StackSummary(LevelConfig.StackDefinition stack)
     {
-        if (stack == null || stack.colorsBottomToTop == null || stack.colorsBottomToTop.Count == 0)
+        if (stack == null || stack.runeIdsBottomToTop == null || stack.runeIdsBottomToTop.Count == 0)
         {
             return "Empty";
         }
 
-        return string.Join(", ", stack.colorsBottomToTop);
+        return string.Join(", ", stack.runeIdsBottomToTop);
+    }
+
+    private static RuneCatalog FindRuneCatalog()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:RuneCatalog");
+        if (guids == null || guids.Length == 0)
+        {
+            return null;
+        }
+
+        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        return AssetDatabase.LoadAssetAtPath<RuneCatalog>(path);
+    }
+
+    private static List<string> GetCatalogRuneIds(RuneCatalog catalog)
+    {
+        if (catalog == null || catalog.Runes == null || catalog.Runes.Count == 0)
+        {
+            return null;
+        }
+
+        List<string> runeIds = new List<string>(catalog.Runes.Count);
+        for (int i = 0; i < catalog.Runes.Count; i++)
+        {
+            RuneDefinition rune = catalog.Runes[i];
+            if (rune != null && !string.IsNullOrWhiteSpace(rune.RuneId))
+            {
+                runeIds.Add(rune.RuneId);
+            }
+        }
+
+        return runeIds;
+    }
+
+    private static void ShowAddRuneMenu(SerializedProperty selectedRuneIds, RuneCatalog catalog)
+    {
+        GenericMenu menu = new GenericMenu();
+        HashSet<string> existingIds = new HashSet<string>();
+        for (int i = 0; i < selectedRuneIds.arraySize; i++)
+        {
+            existingIds.Add(selectedRuneIds.GetArrayElementAtIndex(i).stringValue);
+        }
+
+        for (int i = 0; i < catalog.Runes.Count; i++)
+        {
+            RuneDefinition rune = catalog.Runes[i];
+            if (rune == null || string.IsNullOrWhiteSpace(rune.RuneId) || existingIds.Contains(rune.RuneId))
+            {
+                continue;
+            }
+
+            string runeId = rune.RuneId;
+            string displayName = string.IsNullOrWhiteSpace(rune.DisplayName) ? runeId : rune.DisplayName;
+            menu.AddItem(new GUIContent(displayName + " (" + runeId + ")"), false, () =>
+            {
+                selectedRuneIds.InsertArrayElementAtIndex(selectedRuneIds.arraySize);
+                selectedRuneIds.GetArrayElementAtIndex(selectedRuneIds.arraySize - 1).stringValue = runeId;
+                selectedRuneIds.serializedObject.ApplyModifiedProperties();
+            });
+        }
+
+        if (menu.GetItemCount() == 0)
+        {
+            menu.AddDisabledItem(new GUIContent("No available runes"));
+        }
+
+        menu.ShowAsContext();
     }
 }

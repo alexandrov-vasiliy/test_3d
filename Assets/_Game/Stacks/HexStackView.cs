@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace _Game.Stacks
 {
+    /// <summary>
+    /// Owns the scene presentation for a runtime stack; gameplay state stays in HexStack while this class creates, moves, and rebuilds piece views.
+    /// </summary>
     public class HexStackView : MonoBehaviour
     {
         [SerializeField] private float heightOffset = 0.16f;
@@ -27,9 +30,9 @@ namespace _Game.Stacks
             return transform.position + new Vector3(0f, Mathf.Max(0, pieceViews.Count) * heightOffset, 0f);
         }
 
-        public HexPieceView AddVisualHexOnTop(HexColor color)
+        public HexPieceView AddVisualHexOnTop(string runeId)
         {
-            HexPieceView view = CreatePieceView(color);
+            HexPieceView view = CreatePieceView(runeId);
             AttachVisualHexOnTop(view);
             return view;
         }
@@ -106,7 +109,7 @@ namespace _Game.Stacks
 
             for (int i = 0; i < Stack.Pieces.Count; i++)
             {
-                AddVisualHexOnTop(Stack.Pieces[i].color);
+                AddVisualHexOnTop(Stack.Pieces[i].runeId);
             }
         }
 
@@ -120,9 +123,9 @@ namespace _Game.Stacks
             }
         }
 
-        private HexPieceView CreatePieceView(HexColor color)
+        private HexPieceView CreatePieceView(string runeId)
         {
-            Debug.Log("Creating piece view " + color.ToString());
+            runeId = string.IsNullOrWhiteSpace(runeId) ? "fire" : runeId;
             GameObject instance;
             if (assets != null && assets.HexPiecePrefab != null)
             {
@@ -130,7 +133,7 @@ namespace _Game.Stacks
             }
             else
             {
-                instance = new GameObject("HexPiece_" + color);
+                instance = new GameObject("HexPiece_" + runeId);
                 GameObject mesh = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 mesh.name = "RuntimeHexMesh";
                 mesh.transform.SetParent(instance.transform, false);
@@ -143,7 +146,7 @@ namespace _Game.Stacks
             {
                 view = instance.AddComponent<HexPieceView>();
             }
-            view.Initialize(color, assets != null ? assets.HexColorConfig : null);
+            view.Initialize(runeId, assets != null ? assets.RuneResolver : null);
             return view;
         }
     }

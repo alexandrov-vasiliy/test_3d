@@ -51,7 +51,7 @@ namespace _Game.Levels
             PlaceStartingBoardStacks(levelConfig);
             enemySpawner?.Spawn(levelConfig, board);
 
-            handGenerator.Begin(levelConfig);
+            handGenerator.Begin(levelConfig.GetInitialHandDefinitions(), levelConfig.handGeneration, levelConfig.HandSize);
             hand.InitializeHand();
 
             goalTracker.Initialize(levelConfig, enemySpawner != null ? enemySpawner.TotalSpawnedEnemies : 0);

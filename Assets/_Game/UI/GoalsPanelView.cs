@@ -86,7 +86,7 @@ namespace _Game.UI
         {
             if (goal.Definition.type == LevelGoalType.ClearPieces)
             {
-                return "Clear " + goal.Definition.color;
+                return "Clear " + goal.Definition.runeId;
             }
 
             if (goal.Definition.type == LevelGoalType.ClearBoard)

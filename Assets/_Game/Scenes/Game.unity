@@ -1117,6 +1117,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1ae6e4e008749404d95ce29b596ce5e0, type: 3}
+--- !u!1 &927408495
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 927408496}
+  m_Layer: 0
+  m_Name: RuneLibrary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &927408496
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927408495}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1264714267}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &993110000
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1314,7 +1345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Main
   hexCellPrefab: {fileID: 2919358834648328765, guid: a4720837c5fa742b2a227fbef0fc8865, type: 3}
   hexPiecePrefab: {fileID: 470351971931230265, guid: 171da1ebb3f9347658ae96a14226dfa0, type: 3}
-  hexColorConfig: {fileID: 11400000, guid: d50cd5388d85c4ea2ba84720b3378116, type: 2}
+  runeCatalog: {fileID: 11400000, guid: 6ee0b2b5ade9e4503aab5f183fa1e5e9, type: 2}
   gameCamera: {fileID: 330585545}
   levelDatabase: {fileID: 11400000, guid: ffc68f20640244186967898daee92640, type: 2}
   fallbackLevelConfig: {fileID: 11400000, guid: e029da455893e499386d46dfce84b304, type: 2}
@@ -1331,26 +1362,35 @@ MonoBehaviour:
   startingBoardStacks:
   - coordinate: {x: -1, y: 0}
     stack:
-      colorsBottomToTop: 01000000010000000100000001000000010000000100000001000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   - coordinate: {x: -1, y: -1}
     stack:
-      colorsBottomToTop: 02000000020000000200000002000000020000000000000000000000000000000000000000000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   - coordinate: {x: 1, y: -1}
     stack:
-      colorsBottomToTop: 04000000040000000400000004000000040000000300000003000000030000000300000003000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   - coordinate: {x: 1, y: 0}
     stack:
-      colorsBottomToTop: 05000000050000000500000005000000050000000400000004000000040000000400000004000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   - coordinate: {x: 0, y: 1}
     stack:
-      colorsBottomToTop: 0100000001000000010000000500000005000000050000000500000005000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   - coordinate: {x: 0, y: 0}
     stack:
-      colorsBottomToTop: 03000000030000000300000003000000030000000200000002000000020000000200000002000000
+      runeIdsBottomToTop: []
+      legacyColorIndexesBottomToTop: 
   trayStacks:
-  - colorsBottomToTop: 0000000000000000000000000000000000000000
-  - colorsBottomToTop: 0300000001000000
-  - colorsBottomToTop: 0400000002000000
+  - runeIdsBottomToTop: []
+    legacyColorIndexesBottomToTop: 
+  - runeIdsBottomToTop: []
+    legacyColorIndexesBottomToTop: 
+  - runeIdsBottomToTop: []
+    legacyColorIndexesBottomToTop: 
   configureCameraOnStart: 1
   cameraPosition: {x: 0, y: 10, z: -8.5}
   cameraEulerAngles: {x: 55, y: 0, z: 0}
@@ -1420,6 +1460,7 @@ Transform:
   - {fileID: 2000000111}
   - {fileID: 395445733}
   - {fileID: 1092618322}
+  - {fileID: 927408496}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1297401137

@@ -212,7 +212,7 @@ public class LevelDatabaseEditor : Editor
         config.goals.Add(new LevelConfig.GoalDefinition
         {
             type = LevelGoalType.ClearPieces,
-            color = HexColor.Red,
+            runeId = "fire",
             requiredCount = 10
         });
 

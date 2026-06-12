@@ -1,28 +1,39 @@
 using System.Collections.Generic;
 using _Game.Configs;
+using _Game.Runes;
 using _Game.Stacks;
 using UnityEngine;
 
 namespace _Game.Levels
 {
     /// <summary>
-        /// Creates runtime hand stacks from level rules, including biased same-color runs; it owns deterministic generation state but not tray visuals or input.
+    /// Creates runtime hand stacks from level hand settings and the shared rune catalog; it owns deterministic generation state but not tray visuals or input.
     /// </summary>
     public sealed class HandGenerator
     {
-        private LevelConfig levelConfig;
+        private readonly RuneCatalog runeCatalog;
+        private IReadOnlyList<LevelConfig.StackDefinition> initialHandDefinitions;
+        private LevelConfig.HandGenerationSettings handGenerationSettings;
+        private int handSize;
         private System.Random random;
         private int generatedHands;
         private int finiteDeckIndex;
 
-        public void Begin(LevelConfig levelConfig)
+        public HandGenerator(RuneCatalog runeCatalog)
         {
-            this.levelConfig = levelConfig;
+            this.runeCatalog = runeCatalog;
+        }
+
+        public void Begin(IReadOnlyList<LevelConfig.StackDefinition> initialHandDefinitions, LevelConfig.HandGenerationSettings handGenerationSettings, int handSize)
+        {
+            this.initialHandDefinitions = initialHandDefinitions;
+            this.handGenerationSettings = handGenerationSettings;
+            this.handSize = Mathf.Max(1, handSize);
             generatedHands = 0;
             finiteDeckIndex = 0;
 
-            int seed = levelConfig != null && levelConfig.handGeneration != null && levelConfig.handGeneration.useRandomSeed
-                ? levelConfig.handGeneration.randomSeed
+            int seed = handGenerationSettings != null && handGenerationSettings.useRandomSeed
+                ? handGenerationSettings.randomSeed
                 : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             random = new System.Random(seed);
         }
@@ -30,15 +41,14 @@ namespace _Game.Levels
         public bool TryGenerateInitialHand(out List<HexStack> stacks)
         {
             stacks = new List<HexStack>();
-            if (levelConfig == null)
+            if (handGenerationSettings == null)
             {
                 return false;
             }
 
-            IReadOnlyList<LevelConfig.StackDefinition> predefined = levelConfig.GetInitialHandDefinitions();
-            AddDefinitions(stacks, predefined, levelConfig.HandSize, 0);
+            AddDefinitions(stacks, initialHandDefinitions, handSize, 0);
 
-            while (stacks.Count < levelConfig.HandSize && TryGenerateStack(out HexStack generatedStack))
+            while (stacks.Count < handSize && TryGenerateStack(out HexStack generatedStack))
             {
                 stacks.Add(generatedStack);
             }
@@ -50,21 +60,21 @@ namespace _Game.Levels
         public bool TryGenerateNextHand(out List<HexStack> stacks)
         {
             stacks = new List<HexStack>();
-            if (levelConfig == null)
+            if (handGenerationSettings == null)
             {
                 return false;
             }
 
-            LevelConfig.HandGenerationSettings settings = levelConfig.handGeneration;
+            LevelConfig.HandGenerationSettings settings = handGenerationSettings;
             if (settings != null && settings.finiteDeckMode)
             {
-                AddDefinitions(stacks, settings.finiteDeckStacks, levelConfig.HandSize, finiteDeckIndex);
+                AddDefinitions(stacks, settings.finiteDeckStacks, handSize, finiteDeckIndex);
                 finiteDeckIndex += stacks.Count;
                 generatedHands++;
                 return stacks.Count > 0;
             }
 
-            while (stacks.Count < levelConfig.HandSize && TryGenerateStack(out HexStack stack))
+            while (stacks.Count < handSize && TryGenerateStack(out HexStack stack))
             {
                 stacks.Add(stack);
             }
@@ -93,8 +103,9 @@ namespace _Game.Levels
         private bool TryGenerateStack(out HexStack stack)
         {
             stack = null;
-            LevelConfig.HandGenerationSettings settings = levelConfig != null ? levelConfig.handGeneration : null;
-            if (settings == null || settings.allowedColors == null || settings.allowedColors.Count == 0)
+            LevelConfig.HandGenerationSettings settings = handGenerationSettings;
+            IReadOnlyList<string> allowedRuneIds = GetCatalogRuneIds();
+            if (settings == null || allowedRuneIds == null || allowedRuneIds.Count == 0)
             {
                 return false;
             }
@@ -102,56 +113,56 @@ namespace _Game.Levels
             int minHeight = Mathf.Max(1, settings.minStackHeight);
             int maxHeight = Mathf.Max(minHeight, settings.maxStackHeight);
             int height = random.Next(minHeight, maxHeight + 1);
-            List<HexColor> colors = new List<HexColor>(height);
+            List<string> runeIds = new List<string>(height);
 
-            if (!settings.generateColorRuns)
+            if (!settings.generateRuneRuns)
             {
                 for (int i = 0; i < height; i++)
                 {
-                    colors.Add(PickRandomColor(settings.allowedColors));
+                    runeIds.Add(PickRandomRuneId(allowedRuneIds));
                 }
 
-                stack = new HexStack(colors);
+                stack = new HexStack(runeIds);
                 return true;
             }
 
-            while (colors.Count < height)
+            while (runeIds.Count < height)
             {
-                HexColor? previousColor = colors.Count > 0 ? colors[colors.Count - 1] : (HexColor?)null;
-                HexColor color = PickRandomColor(settings.allowedColors, previousColor);
-                int runLength = PickRunLength(settings, height - colors.Count);
-                for (int i = 0; i < runLength && colors.Count < height; i++)
+                string previousRuneId = runeIds.Count > 0 ? runeIds[runeIds.Count - 1] : null;
+                string runeId = PickRandomRuneId(allowedRuneIds, previousRuneId);
+                int runLength = PickRunLength(settings, height - runeIds.Count);
+                for (int i = 0; i < runLength && runeIds.Count < height; i++)
                 {
-                    colors.Add(color);
+                    runeIds.Add(runeId);
                 }
             }
 
-            stack = new HexStack(colors);
+            stack = new HexStack(runeIds);
             return true;
         }
 
-        private HexColor PickRandomColor(IReadOnlyList<HexColor> allowedColors)
+        private string PickRandomRuneId(IReadOnlyList<string> allowedRuneIds)
         {
-            return allowedColors[random.Next(0, allowedColors.Count)];
+            return allowedRuneIds[random.Next(0, allowedRuneIds.Count)];
         }
 
-        private HexColor PickRandomColor(IReadOnlyList<HexColor> allowedColors, HexColor? excludedColor)
+        private string PickRandomRuneId(IReadOnlyList<string> allowedRuneIds, string excludedRuneId)
         {
-            if (!excludedColor.HasValue || allowedColors.Count <= 1)
+            if (string.IsNullOrWhiteSpace(excludedRuneId) || allowedRuneIds.Count <= 1)
             {
-                return PickRandomColor(allowedColors);
+                return PickRandomRuneId(allowedRuneIds);
             }
 
-            HexColor color;
+            string runeId;
             int guard = 0;
             do
             {
-                color = PickRandomColor(allowedColors);
+                runeId = PickRandomRuneId(allowedRuneIds);
                 guard++;
             }
-            while (color == excludedColor.Value && guard < 16);
+            while (string.Equals(runeId, excludedRuneId, System.StringComparison.Ordinal) && guard < 16);
 
-            return color;
+            return runeId;
         }
 
         private int PickRunLength(LevelConfig.HandGenerationSettings settings, int remainingHeight)
@@ -167,6 +178,26 @@ namespace _Game.Levels
             int maxRunLength = Mathf.Max(minRunLength, settings.maxColorRunLength);
             int runLength = random.Next(minRunLength, maxRunLength + 1);
             return Mathf.Clamp(runLength, 1, remainingHeight);
+        }
+
+        private IReadOnlyList<string> GetCatalogRuneIds()
+        {
+            if (runeCatalog == null || runeCatalog.Runes == null || runeCatalog.Runes.Count == 0)
+            {
+                return null;
+            }
+
+            List<string> runeIds = new List<string>(runeCatalog.Runes.Count);
+            for (int i = 0; i < runeCatalog.Runes.Count; i++)
+            {
+                RuneDefinition rune = runeCatalog.Runes[i];
+                if (rune != null && !string.IsNullOrWhiteSpace(rune.RuneId))
+                {
+                    runeIds.Add(rune.RuneId);
+                }
+            }
+
+            return runeIds;
         }
     }
 }

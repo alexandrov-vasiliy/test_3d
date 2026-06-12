@@ -29,7 +29,7 @@ public class MainEditor : Editor
 
     private SerializedProperty hexCellPrefab;
     private SerializedProperty hexPiecePrefab;
-    private SerializedProperty hexColorConfig;
+    private SerializedProperty runeCatalog;
     private SerializedProperty gameCamera;
     private SerializedProperty levelDatabase;
     private SerializedProperty fallbackLevelConfig;
@@ -64,7 +64,7 @@ public class MainEditor : Editor
     {
         hexCellPrefab = serializedObject.FindProperty("hexCellPrefab");
         hexPiecePrefab = serializedObject.FindProperty("hexPiecePrefab");
-        hexColorConfig = serializedObject.FindProperty("hexColorConfig");
+        runeCatalog = serializedObject.FindProperty("runeCatalog");
         gameCamera = serializedObject.FindProperty("gameCamera");
         levelDatabase = serializedObject.FindProperty("levelDatabase");
         fallbackLevelConfig = serializedObject.FindProperty("fallbackLevelConfig");
@@ -179,7 +179,7 @@ public class MainEditor : Editor
 
         EditorGUILayout.PropertyField(hexCellPrefab);
         EditorGUILayout.PropertyField(hexPiecePrefab);
-        EditorGUILayout.PropertyField(hexColorConfig);
+        EditorGUILayout.PropertyField(runeCatalog);
         EditorGUILayout.PropertyField(gameCamera);
         EditorGUILayout.Space(4f);
     }
@@ -412,7 +412,7 @@ public class MainEditor : Editor
             Vector3 position = trayOrigin + new Vector3(startX + i * spacing, 0f, 0f);
             Handles.color = TrayColor;
             Handles.DrawWireDisc(position, Vector3.up, 0.45f);
-            Handles.Label(position + Vector3.up * 0.25f, "Tray " + i + "\n" + StackSummary(trayStacks.GetArrayElementAtIndex(i).FindPropertyRelative("colorsBottomToTop")));
+            Handles.Label(position + Vector3.up * 0.25f, "Tray " + i + "\n" + StackSummary(trayStacks.GetArrayElementAtIndex(i).FindPropertyRelative("runeIdsBottomToTop")));
         }
     }
 
@@ -605,7 +605,7 @@ public class MainEditor : Editor
         EditorGUILayout.LabelField("Add Color On Top");
         using (new EditorGUILayout.HorizontalScope())
         {
-            foreach (HexColor color in System.Enum.GetValues(typeof(HexColor)))
+            foreach (string color in RuneEditorDefaults.DefaultRuneIds)
             {
                 if (GUILayout.Button(color.ToString()[0].ToString()))
                 {
@@ -648,7 +648,7 @@ public class MainEditor : Editor
         if (colors != null && colors.arraySize == 0)
         {
             colors.InsertArrayElementAtIndex(0);
-            colors.GetArrayElementAtIndex(0).enumValueIndex = (int)HexColor.Red;
+            colors.GetArrayElementAtIndex(0).stringValue = "fire";
         }
     }
 
@@ -672,7 +672,7 @@ public class MainEditor : Editor
                 continue;
             }
 
-            HexColor top = PickTopColorForCoordinate(coordinate);
+            string top = PickTopColorForCoordinate(coordinate);
             AddGeneratedBoardStack(coordinate, CreateGeneratedColors(coordinate, top));
         }
 
@@ -687,7 +687,7 @@ public class MainEditor : Editor
         HexGridGenerator.BoardShape shape = GetSceneShape();
         foreach (Vector2Int coordinate in GetSceneCoordinates(radius, shape))
         {
-            HexColor top = PickTopColorForCoordinate(coordinate);
+            string top = PickTopColorForCoordinate(coordinate);
             AddGeneratedBoardStack(coordinate, CreateGeneratedColors(coordinate, top));
         }
     }
@@ -695,9 +695,9 @@ public class MainEditor : Editor
     private void GenerateTrayStacks()
     {
         trayStacks.ClearArray();
-        AddGeneratedTrayStack(HexColor.Blue, HexColor.Red);
-        AddGeneratedTrayStack(HexColor.Yellow, HexColor.Blue);
-        AddGeneratedTrayStack(HexColor.Purple, HexColor.Green);
+        AddGeneratedTrayStack("water", "fire");
+        AddGeneratedTrayStack("light", "water");
+        AddGeneratedTrayStack("arcane", "heal");
     }
 
     private void EnsureMergeSetupAroundTutorialTarget()
@@ -707,11 +707,11 @@ public class MainEditor : Editor
         Vector2Int left = target + new Vector2Int(-1, 0);
 
         RemoveStartStack(target);
-        AddGeneratedBoardStack(right, new[] { HexColor.Yellow, HexColor.Red, HexColor.Red, HexColor.Red });
-        AddGeneratedBoardStack(left, new[] { HexColor.Blue, HexColor.Blue, HexColor.Red, HexColor.Red });
+        AddGeneratedBoardStack(right, new[] { "light", "fire", "fire", "fire" });
+        AddGeneratedBoardStack(left, new[] { "water", "water", "fire", "fire" });
     }
 
-    private void AddGeneratedBoardStack(Vector2Int coordinate, IReadOnlyList<HexColor> colors)
+    private void AddGeneratedBoardStack(Vector2Int coordinate, IReadOnlyList<string> colors)
     {
         if (!IsCoordinateOnBoard(coordinate))
         {
@@ -738,45 +738,45 @@ public class MainEditor : Editor
         return GetSceneCoordinates(radius, shape).Contains(coordinate);
     }
 
-    private void AddGeneratedTrayStack(params HexColor[] colors)
+    private void AddGeneratedTrayStack(params string[] colors)
     {
         trayStacks.InsertArrayElementAtIndex(trayStacks.arraySize);
         SerializedProperty item = trayStacks.GetArrayElementAtIndex(trayStacks.arraySize - 1);
-        SetColors(item.FindPropertyRelative("colorsBottomToTop"), colors);
+        SetColors(item.FindPropertyRelative("runeIdsBottomToTop"), colors);
     }
 
-    private static HexColor PickTopColorForCoordinate(Vector2Int coordinate)
+    private static string PickTopColorForCoordinate(Vector2Int coordinate)
     {
-        HexColor[] palette =
+        string[] palette =
         {
-            HexColor.Red,
-            HexColor.Blue,
-            HexColor.Green,
-            HexColor.Yellow,
-            HexColor.Purple,
-            HexColor.Orange
+            "fire",
+            "water",
+            "heal",
+            "light",
+            "arcane",
+            "ember"
         };
         int index = PositiveModulo(coordinate.x * 3 + coordinate.y * 5, palette.Length);
         return palette[index];
     }
 
-    private static HexColor[] CreateGeneratedColors(Vector2Int coordinate, HexColor top)
+    private static string[] CreateGeneratedColors(Vector2Int coordinate, string top)
     {
-        HexColor[] palette =
+        string[] palette =
         {
-            HexColor.Red,
-            HexColor.Blue,
-            HexColor.Green,
-            HexColor.Yellow,
-            HexColor.Purple,
-            HexColor.Orange
+            "fire",
+            "water",
+            "heal",
+            "light",
+            "arcane",
+            "ember"
         };
-        HexColor bottom = palette[PositiveModulo(coordinate.x + coordinate.y * 2, palette.Length)];
-        HexColor middle = palette[PositiveModulo(coordinate.x * 2 - coordinate.y, palette.Length)];
+        string bottom = palette[PositiveModulo(coordinate.x + coordinate.y * 2, palette.Length)];
+        string middle = palette[PositiveModulo(coordinate.x * 2 - coordinate.y, palette.Length)];
         return new[] { bottom, middle, top };
     }
 
-    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<HexColor> colors)
+    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<string> colors)
     {
         if (colorsProperty == null)
         {
@@ -787,11 +787,11 @@ public class MainEditor : Editor
         for (int i = 0; i < colors.Count; i++)
         {
             colorsProperty.InsertArrayElementAtIndex(i);
-            colorsProperty.GetArrayElementAtIndex(i).enumValueIndex = (int)colors[i];
+            colorsProperty.GetArrayElementAtIndex(i).stringValue = colors[i];
         }
     }
 
-    private static void AddColorToStack(SerializedProperty colors, HexColor color)
+    private static void AddColorToStack(SerializedProperty colors, string color)
     {
         if (colors == null)
         {
@@ -799,7 +799,7 @@ public class MainEditor : Editor
         }
 
         colors.InsertArrayElementAtIndex(colors.arraySize);
-        colors.GetArrayElementAtIndex(colors.arraySize - 1).enumValueIndex = (int)color;
+        colors.GetArrayElementAtIndex(colors.arraySize - 1).stringValue = color;
     }
 
     private static void RemoveTopColor(SerializedProperty colors)
@@ -829,7 +829,8 @@ public class MainEditor : Editor
         List<string> names = new List<string>();
         for (int i = 0; i < colors.arraySize; i++)
         {
-            names.Add(((HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex).ToString()[0].ToString());
+            string runeName = colors.GetArrayElementAtIndex(i).stringValue;
+            names.Add(string.IsNullOrEmpty(runeName) ? "?" : runeName[0].ToString().ToUpperInvariant());
         }
         return string.Join("", names);
     }
@@ -837,6 +838,6 @@ public class MainEditor : Editor
     private static SerializedProperty GetBoardStackColorsProperty(SerializedProperty boardStack)
     {
         SerializedProperty stack = boardStack.FindPropertyRelative("stack");
-        return stack != null ? stack.FindPropertyRelative("colorsBottomToTop") : null;
+        return stack != null ? stack.FindPropertyRelative("runeIdsBottomToTop") : null;
     }
 }

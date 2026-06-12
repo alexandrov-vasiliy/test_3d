@@ -30,7 +30,7 @@ public class Main : MonoBehaviour
     [Header("Assets")]
     [SerializeField] private GameObject hexCellPrefab;
     [SerializeField] private GameObject hexPiecePrefab;
-    [SerializeField] private HexColorConfig hexColorConfig;
+    [SerializeField] private RuneCatalog runeCatalog;
     [SerializeField] private Camera gameCamera;
 
     [Header("Levels")]
@@ -75,6 +75,7 @@ public class Main : MonoBehaviour
     private PlayerHealth playerHealth;
     private RuneCombatController runeCombatController;
     private RuneCastPresenter runeCastPresenter;
+    private RuneLibrary runeLibrary;
     private TutorialHandController tutorialHandController;
     private PackshotController packshotController;
     private LevelFlowController levelFlowController;
@@ -133,8 +134,9 @@ public class Main : MonoBehaviour
     private void BuildGameScene()
     {
         EnsureLevelLists();
+        runeLibrary = new RuneLibrary(runeCatalog);
         Camera camera = SetupCamera();
-        GameAssets assets = new GameAssets(ResolveHexCellPrefab(), ResolveHexPiecePrefab(), hexColorConfig, LoadTutorialHandSprite());
+        GameAssets assets = new GameAssets(ResolveHexCellPrefab(), ResolveHexPiecePrefab(), runeLibrary, LoadTutorialHandSprite());
         Transform root = EnsureRuntimeRoot();
 
         BoardController board = ResolveSceneComponent<BoardController>("BoardController");
@@ -257,12 +259,12 @@ public class Main : MonoBehaviour
         soundPlayer.Initialize(dragController);
         mergeAnimator.Initialize(assets, soundPlayer);
         mergeSystem.Initialize(boardController, mergeAnimator);
-        mergeSystem.SetRuneResolver(new LegacyHexColorRuneResolver(hexColorConfig));
+        mergeSystem.SetRuneResolver(runeLibrary);
         runeCombatController.Initialize(mergeSystem, enemySpawner.Registry, playerHealth, runeCastPresenter, playerHealth != null ? playerHealth.transform : null);
         tutorialHandController.Initialize(assets, camera);
         healthView?.Bind(playerHealth);
 
-        handGenerator = new HandGenerator();
+        handGenerator = new HandGenerator(runeCatalog);
         handController = new HandController(stackTrayController, handGenerator);
         goalTracker = new GoalTracker();
         moveAvailabilityService = new MoveAvailabilityService();
@@ -396,7 +398,7 @@ public class Main : MonoBehaviour
         runtimeFallbackLevelConfig.startingBoardStacks = CloneBoardStacks(startingBoardStacks);
         runtimeFallbackLevelConfig.initialHandStacks = CloneStacks(trayStacks);
         runtimeFallbackLevelConfig.trayStacks = CloneStacks(trayStacks);
-        runtimeFallbackLevelConfig.goals.Add(CreateGoal(HexColor.Red, 10));
+        runtimeFallbackLevelConfig.goals.Add(CreateGoal("fire", 10));
 
         HexGridGenerator generator = board != null ? board.GetComponent<HexGridGenerator>() : null;
         if (generator != null)
@@ -416,18 +418,18 @@ public class Main : MonoBehaviour
 
         if (startingBoardStacks.Count == 0)
         {
-            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(0, 0), HexColor.Red, HexColor.Red, HexColor.Red, HexColor.Red, HexColor.Red, HexColor.Red, HexColor.Red));
-            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(1, 0), HexColor.Red, HexColor.Red, HexColor.Red));
-            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(-1, 1), HexColor.Blue, HexColor.Blue, HexColor.Blue, HexColor.Blue));
-            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(-1, 0), HexColor.Green, HexColor.Green, HexColor.Green));
-            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(1, -1), HexColor.Yellow, HexColor.Orange, HexColor.Orange));
+            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(0, 0), "fire", "fire", "fire", "fire", "fire", "fire", "fire"));
+            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(1, 0), "fire", "fire", "fire"));
+            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(-1, 1), "water", "water", "water", "water"));
+            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(-1, 0), "heal", "heal", "heal"));
+            startingBoardStacks.Add(CreateBoardStack(new Vector2Int(1, -1), "light", "ember", "ember"));
         }
 
         if (trayStacks.Count == 0)
         {
-            trayStacks.Add(CreateStack(HexColor.Blue, HexColor.Red));
-            trayStacks.Add(CreateStack(HexColor.Yellow, HexColor.Blue));
-            trayStacks.Add(CreateStack(HexColor.Purple, HexColor.Green));
+            trayStacks.Add(CreateStack("water", "fire"));
+            trayStacks.Add(CreateStack("light", "water"));
+            trayStacks.Add(CreateStack("arcane", "heal"));
         }
     }
 
@@ -493,37 +495,37 @@ public class Main : MonoBehaviour
     private static LevelConfig.StackDefinition CloneStack(LevelConfig.StackDefinition source)
     {
         LevelConfig.StackDefinition clone = new LevelConfig.StackDefinition();
-        if (source != null && source.colorsBottomToTop != null)
+        if (source != null && source.runeIdsBottomToTop != null)
         {
-            clone.colorsBottomToTop.AddRange(source.colorsBottomToTop);
+            clone.runeIdsBottomToTop.AddRange(source.runeIdsBottomToTop);
         }
 
         return clone;
     }
 
-    private static LevelConfig.GoalDefinition CreateGoal(HexColor color, int requiredCount)
+    private static LevelConfig.GoalDefinition CreateGoal(string runeId, int requiredCount)
     {
         return new LevelConfig.GoalDefinition
         {
             type = LevelGoalType.ClearPieces,
-            color = color,
+            runeId = runeId,
             requiredCount = requiredCount
         };
     }
 
-    private static LevelConfig.BoardStackDefinition CreateBoardStack(Vector2Int coordinate, params HexColor[] colors)
+    private static LevelConfig.BoardStackDefinition CreateBoardStack(Vector2Int coordinate, params string[] runeIds)
     {
         return new LevelConfig.BoardStackDefinition
         {
             coordinate = coordinate,
-            stack = CreateStack(colors)
+            stack = CreateStack(runeIds)
         };
     }
 
-    private static LevelConfig.StackDefinition CreateStack(params HexColor[] colors)
+    private static LevelConfig.StackDefinition CreateStack(params string[] runeIds)
     {
         LevelConfig.StackDefinition definition = new LevelConfig.StackDefinition();
-        definition.colorsBottomToTop.AddRange(colors);
+        definition.runeIdsBottomToTop.AddRange(runeIds);
         return definition;
     }
 }

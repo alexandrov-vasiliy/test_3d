@@ -1,17 +1,33 @@
-using _Game.Configs;
+using _Game.Runes;
 using UnityEngine;
 
 namespace _Game.Stacks
 {
+    /// <summary>
+    /// Applies rune presentation data to one stack piece view; it owns renderer material setup but no gameplay logic.
+    /// </summary>
     public class HexPieceView : MonoBehaviour
     {
-        public HexColor Color { get; private set; }
+        public string RuneId { get; private set; }
 
-        public void Initialize(HexColor color, HexColorConfig colorConfig)
+        public void Initialize(string runeId, IRuneResolver runeResolver)
         {
-            Color = color;
-            Color unityColor = colorConfig != null ? colorConfig.GetColor(color) : HexColorConfig.GetFallbackColor(color);
-            Material configuredMaterial = colorConfig != null ? colorConfig.GetMaterial(color) : null;
+            RuneId = string.IsNullOrWhiteSpace(runeId) ? "fire" : runeId;
+            Color? unityColor = null;
+            Material configuredMaterial = null;
+
+            if (runeResolver != null && runeResolver.TryResolveRuneId(RuneId, out RuneDefinition rune) && rune != null)
+            {
+                if (rune.TryGetTag(out RuneColorTag colorTag))
+                {
+                    unityColor = colorTag.Color;
+                }
+
+                if (rune.TryGetTag(out RuneMaterialTag materialTag))
+                {
+                    configuredMaterial = materialTag.Material;
+                }
+            }
 
             MeshRenderer[] renderers = GetComponentsInChildren<MeshRenderer>(true);
             foreach (MeshRenderer renderer in renderers)
@@ -21,8 +37,12 @@ namespace _Game.Stacks
                     continue;
                 }
 
-                Material material = configuredMaterial != null ? new Material(configuredMaterial) : CreateRuntimeMaterial();
-                ApplyMaterialColor(material, unityColor);
+                Material material = configuredMaterial != null ? new Material(configuredMaterial) : (unityColor.HasValue ? CreateRuntimeMaterial() : null);
+                if (material != null && unityColor.HasValue)
+                {
+                    ApplyMaterialColor(material, unityColor.Value);
+                }
+
                 if (material != null)
                 {
                     renderer.material = material;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using _Game.Configs;
-using _Game.Stacks;
 
 namespace _Game.Goals
 {
@@ -82,13 +81,16 @@ namespace _Game.Goals
             GoalsChanged?.Invoke();
         }
 
-        public void OnPiecesCleared(HexColor color, int count)
+        public void OnPiecesCleared(string runeId, int count)
         {
             bool changed = false;
             for (int i = 0; i < goals.Count; i++)
             {
                 GoalProgress goal = goals[i];
-                if (goal.Definition == null || goal.Definition.type != LevelGoalType.ClearPieces || goal.Definition.color != color || goal.IsComplete)
+                if (goal.Definition == null ||
+                    goal.Definition.type != LevelGoalType.ClearPieces ||
+                    !string.Equals(goal.Definition.runeId, runeId, StringComparison.Ordinal) ||
+                    goal.IsComplete)
                 {
                     continue;
                 }

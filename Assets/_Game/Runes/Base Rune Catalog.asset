@@ -1,0 +1,237 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f7a3b0cb51f44a65a6dfa886d5f1559, type: 3}
+  m_Name: Base Rune Catalog
+  m_EditorClassIdentifier: 
+  runes:
+  - runeId: fire
+    displayName: Fire Rune
+    tags:
+    - rid: 968039963860402194
+    - rid: 968039963860402195
+    - rid: 968039963860402196
+    - rid: 968039963860402197
+    - rid: 968039963860402198
+    - rid: 968039963860402199
+    - rid: 968039963860402200
+    - rid: 968039963860402201
+    - rid: 968039963860402202
+    - rid: 968039963860402203
+  - runeId: heal
+    displayName: Heal Rune
+    tags:
+    - rid: 968039963860402204
+    - rid: 968039963860402205
+    - rid: 968039963860402206
+    - rid: 968039963860402207
+    - rid: 968039963860402208
+    - rid: 968039963860402209
+    - rid: 968039963860402210
+  - runeId: frost
+    displayName: Frost Rune
+    tags:
+    - rid: 968039963860402211
+    - rid: 968039963860402212
+    - rid: 968039963860402213
+    - rid: 968039963860402214
+    - rid: 968039963860402215
+    - rid: 968039963860402216
+    - rid: 968039963860402217
+    - rid: 968039963860402218
+    - rid: 968039963860402219
+    - rid: 968039963860402220
+  - runeId: arcane
+    displayName: arcane Rune
+    tags:
+    - rid: 968039963860402221
+    - rid: 968039963860402222
+    - rid: 968039963860402223
+    - rid: 968039963860402224
+    - rid: 968039963860402225
+    - rid: 968039963860402226
+    - rid: 968039963860402227
+    - rid: 968039963860402228
+    - rid: 968039963860402229
+    - rid: 968039963860402230
+  references:
+    version: 2
+    RefIds:
+    - rid: 968039963860402194
+      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        runeId: fire
+        displayName: Fire Rune
+    - rid: 968039963860402195
+      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        color: {r: 0.8584906, g: 0.3764266, b: 0.19842473, a: 1}
+    - rid: 968039963860402196
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        matchGroup: fire
+    - rid: 968039963860402197
+      type: {class: RuneDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 3
+    - rid: 968039963860402198
+      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402199
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 1722081097931586, guid: 4b21d5ab091be5a46ad6e87699fab62c, type: 3}
+        baseScale: 0.5
+        scalePerPiece: 0.5
+        maxScale: 4
+        offset: {x: 0, y: 0.85, z: 0}
+    - rid: 968039963860402200
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 1722081097931586, guid: 4b21d5ab091be5a46ad6e87699fab62c, type: 3}
+        speed: 17
+        hitDistance: 0.18
+        dissipateDuration: 0.2
+    - rid: 968039963860402201
+      type: {class: TargetNearestEnemyTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402202
+      type: {class: RuneFireEffectTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402203
+      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402204
+      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        runeId: heal
+        displayName: Heal Rune
+    - rid: 968039963860402205
+      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        color: {r: 0.18, g: 0.75, b: 0.32, a: 1}
+    - rid: 968039963860402206
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        matchGroup: heal
+    - rid: 968039963860402207
+      type: {class: RuneHealPlayerTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402208
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        baseScale: 0.25
+        scalePerPiece: 0.04
+        maxScale: 1.5
+        offset: {x: 0, y: 0.85, z: 0}
+    - rid: 968039963860402209
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        speed: 17
+        hitDistance: 0.18
+        dissipateDuration: 0.2
+    - rid: 968039963860402210
+      type: {class: HealPlayerRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402211
+      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        runeId: frost
+        displayName: Frost Rune
+    - rid: 968039963860402212
+      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        color: {r: 0.2031417, g: 0.3142508, b: 0.7830189, a: 1}
+    - rid: 968039963860402213
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        matchGroup: frost
+    - rid: 968039963860402214
+      type: {class: RuneDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402215
+      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402216
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        baseScale: 0.25
+        scalePerPiece: 0.04
+        maxScale: 1.5
+        offset: {x: 0, y: 0.85, z: 0}
+    - rid: 968039963860402217
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        speed: 17
+        hitDistance: 0.18
+        dissipateDuration: 0.2
+    - rid: 968039963860402218
+      type: {class: TargetNearestEnemyTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402219
+      type: {class: RuneFireEffectTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402220
+      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402221
+      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        runeId: arcane
+        displayName: arcane Rune
+    - rid: 968039963860402222
+      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        color: {r: 0.52601933, g: 0.21444462, b: 0.745283, a: 1}
+    - rid: 968039963860402223
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        matchGroup: arcane
+    - rid: 968039963860402224
+      type: {class: RuneDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402225
+      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 968039963860402226
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        baseScale: 0.25
+        scalePerPiece: 0.04
+        maxScale: 1.5
+        offset: {x: 0, y: 0.85, z: 0}
+    - rid: 968039963860402227
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data:
+        prefab: {fileID: 0}
+        speed: 17
+        hitDistance: 0.18
+        dissipateDuration: 0.2
+    - rid: 968039963860402228
+      type: {class: TargetNearestEnemyTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402229
+      type: {class: RuneFireEffectTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 
+    - rid: 968039963860402230
+      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      data: 

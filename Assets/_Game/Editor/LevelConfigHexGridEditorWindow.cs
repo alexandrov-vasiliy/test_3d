@@ -394,7 +394,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             if (GUILayout.Button("Add DefeatAllEnemies Goal"))
             {
                 Undo.RecordObject(levelConfig, "Add DefeatAllEnemies Goal");
-                AddGoal(LevelGoalType.DefeatAllEnemies, HexColor.Red, 0);
+                AddGoal(LevelGoalType.DefeatAllEnemies, "fire", 0);
                 MarkDirty();
             }
             if (GUILayout.Button("Clean Enemies Outside Shape"))
@@ -470,19 +470,19 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             if (GUILayout.Button("Add Clear Goal"))
             {
                 Undo.RecordObject(levelConfig, "Add Goal");
-                AddGoal(HexColor.Red, 10);
+                AddGoal("fire", 10);
                 MarkDirty();
             }
             if (GUILayout.Button("Add Defeat All"))
             {
                 Undo.RecordObject(levelConfig, "Add DefeatAllEnemies Goal");
-                AddGoal(LevelGoalType.DefeatAllEnemies, HexColor.Red, 0);
+                AddGoal(LevelGoalType.DefeatAllEnemies, "fire", 0);
                 MarkDirty();
             }
             if (GUILayout.Button("Add Defeat N"))
             {
                 Undo.RecordObject(levelConfig, "Add DefeatEnemies Goal");
-                AddGoal(LevelGoalType.DefeatEnemies, HexColor.Red, 3);
+                AddGoal(LevelGoalType.DefeatEnemies, "fire", 3);
                 MarkDirty();
             }
             if (GUILayout.Button("Create Goals From Start Stacks"))
@@ -914,7 +914,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             SerializedProperty colors = GetSelectedHandStackColors();
             if (colors == null)
             {
-                EditorGUILayout.HelpBox("Selected hand stack has no colorsBottomToTop property.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Selected hand stack has no runeIdsBottomToTop property.", MessageType.Warning);
                 return;
             }
 
@@ -982,7 +982,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
                     LevelGoalType goalType = (LevelGoalType)type.enumValueIndex;
                     if (goalType == LevelGoalType.ClearPieces)
                     {
-                        EditorGUILayout.PropertyField(goal.FindPropertyRelative("color"));
+                        EditorGUILayout.PropertyField(goal.FindPropertyRelative("runeId"));
                     }
 
                     using (new EditorGUI.DisabledScope(goalType == LevelGoalType.DefeatAllEnemies))
@@ -1262,7 +1262,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         }
         if (colors != null && colors.arraySize == 0)
         {
-            AddColorToStack(colors, HexColor.Red);
+            AddColorToStack(colors, "fire");
         }
     }
 
@@ -1326,7 +1326,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         EditorGUILayout.LabelField("Add Color On Top");
         using (new EditorGUILayout.HorizontalScope())
         {
-            foreach (HexColor color in System.Enum.GetValues(typeof(HexColor)))
+            foreach (string color in RuneEditorDefaults.DefaultRuneIds)
             {
                 Color previousColor = GUI.backgroundColor;
                 GUI.backgroundColor = GetHexColorPreview(color);
@@ -1364,7 +1364,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         int visibleCount = Mathf.Min(colors.arraySize, maxVisible);
         for (int i = 0; i < visibleCount; i++)
         {
-            HexColor color = (HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex;
+            string color = colors.GetArrayElementAtIndex(i).stringValue;
             Rect chipRect = new Rect(rect.x + i * step, rect.y, chipSize, chipSize);
             DrawColorChip(chipRect, color, i == colors.arraySize - 1);
         }
@@ -1376,7 +1376,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         }
     }
 
-    private static void DrawColorChip(Rect rect, HexColor color, bool isTop)
+    private static void DrawColorChip(Rect rect, string color, bool isTop)
     {
         Color preview = GetHexColorPreview(color);
         EditorGUI.DrawRect(rect, preview);
@@ -1440,7 +1440,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         SerializedProperty item = initialHandStacks.GetArrayElementAtIndex(index);
         SerializedProperty colors = GetStackColorsProperty(item);
         colors?.ClearArray();
-        AddColorToStack(colors, HexColor.Red);
+        AddColorToStack(colors, "fire");
         return index;
     }
 
@@ -1462,7 +1462,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
             return;
         }
 
-        List<HexColor> colors = ReadColors(sourceColors);
+        List<string> colors = ReadColors(sourceColors);
         initialHandStacks.InsertArrayElementAtIndex(selectedHandStackIndex + 1);
         selectedHandStackIndex++;
         SetColors(GetStackColorsProperty(initialHandStacks.GetArrayElementAtIndex(selectedHandStackIndex)), colors);
@@ -1471,35 +1471,35 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private void GenerateDefaultHandStacks()
     {
         initialHandStacks.ClearArray();
-        AddGeneratedHandStack(HexColor.Blue, HexColor.Red);
-        AddGeneratedHandStack(HexColor.Yellow, HexColor.Blue);
-        AddGeneratedHandStack(HexColor.Purple, HexColor.Green);
+        AddGeneratedHandStack("water", "fire");
+        AddGeneratedHandStack("light", "water");
+        AddGeneratedHandStack("arcane", "heal");
     }
 
-    private void AddGeneratedHandStack(params HexColor[] colors)
+    private void AddGeneratedHandStack(params string[] colors)
     {
         initialHandStacks.InsertArrayElementAtIndex(initialHandStacks.arraySize);
         SerializedProperty item = initialHandStacks.GetArrayElementAtIndex(initialHandStacks.arraySize - 1);
         SetColors(GetStackColorsProperty(item), colors);
     }
 
-    private void AddGoal(HexColor color, int requiredCount)
+    private void AddGoal(string color, int requiredCount)
     {
         AddGoal(LevelGoalType.ClearPieces, color, requiredCount);
     }
 
-    private void AddGoal(LevelGoalType type, HexColor color, int requiredCount)
+    private void AddGoal(LevelGoalType type, string color, int requiredCount)
     {
         goals.InsertArrayElementAtIndex(goals.arraySize);
         SerializedProperty goal = goals.GetArrayElementAtIndex(goals.arraySize - 1);
         goal.FindPropertyRelative("type").enumValueIndex = (int)type;
-        goal.FindPropertyRelative("color").enumValueIndex = (int)color;
+        goal.FindPropertyRelative("runeId").stringValue = color;
         goal.FindPropertyRelative("requiredCount").intValue = type == LevelGoalType.DefeatAllEnemies ? 0 : Mathf.Max(1, requiredCount);
     }
 
     private void CreateGoalsFromStartStacks()
     {
-        Dictionary<HexColor, int> counts = new Dictionary<HexColor, int>();
+        Dictionary<string, int> counts = new Dictionary<string, int>();
         for (int i = 0; i < startingBoardStacks.arraySize; i++)
         {
             SerializedProperty colors = GetBoardStackColorsProperty(startingBoardStacks.GetArrayElementAtIndex(i));
@@ -1510,13 +1510,13 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
             for (int colorIndex = 0; colorIndex < colors.arraySize; colorIndex++)
             {
-                HexColor color = (HexColor)colors.GetArrayElementAtIndex(colorIndex).enumValueIndex;
+                string color = colors.GetArrayElementAtIndex(colorIndex).stringValue;
                 counts[color] = counts.TryGetValue(color, out int value) ? value + 1 : 1;
             }
         }
 
         goals.ClearArray();
-        foreach (KeyValuePair<HexColor, int> pair in counts)
+        foreach (KeyValuePair<string, int> pair in counts)
         {
             AddGoal(pair.Key, Mathf.Max(10, pair.Value));
         }
@@ -1656,15 +1656,15 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
     private static SerializedProperty GetBoardStackColorsProperty(SerializedProperty boardStack)
     {
         SerializedProperty stack = boardStack.FindPropertyRelative("stack");
-        return stack != null ? stack.FindPropertyRelative("colorsBottomToTop") : null;
+        return stack != null ? stack.FindPropertyRelative("runeIdsBottomToTop") : null;
     }
 
     private static SerializedProperty GetStackColorsProperty(SerializedProperty stack)
     {
-        return stack != null ? stack.FindPropertyRelative("colorsBottomToTop") : null;
+        return stack != null ? stack.FindPropertyRelative("runeIdsBottomToTop") : null;
     }
 
-    private static void AddColorToStack(SerializedProperty colors, HexColor color)
+    private static void AddColorToStack(SerializedProperty colors, string color)
     {
         if (colors == null)
         {
@@ -1672,7 +1672,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         }
 
         colors.InsertArrayElementAtIndex(colors.arraySize);
-        colors.GetArrayElementAtIndex(colors.arraySize - 1).enumValueIndex = (int)color;
+        colors.GetArrayElementAtIndex(colors.arraySize - 1).stringValue = color;
     }
 
     private static void RemoveTopColor(SerializedProperty colors)
@@ -1683,9 +1683,9 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         }
     }
 
-    private static List<HexColor> ReadColors(SerializedProperty colors)
+    private static List<string> ReadColors(SerializedProperty colors)
     {
-        List<HexColor> result = new List<HexColor>();
+        List<string> result = new List<string>();
         if (colors == null)
         {
             return result;
@@ -1693,13 +1693,13 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
 
         for (int i = 0; i < colors.arraySize; i++)
         {
-            result.Add((HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex);
+            result.Add(colors.GetArrayElementAtIndex(i).stringValue);
         }
 
         return result;
     }
 
-    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<HexColor> colors)
+    private static void SetColors(SerializedProperty colorsProperty, IReadOnlyList<string> colors)
     {
         if (colorsProperty == null)
         {
@@ -1710,7 +1710,7 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         for (int i = 0; i < colors.Count; i++)
         {
             colorsProperty.InsertArrayElementAtIndex(i);
-            colorsProperty.GetArrayElementAtIndex(i).enumValueIndex = (int)colors[i];
+            colorsProperty.GetArrayElementAtIndex(i).stringValue = colors[i];
         }
     }
 
@@ -1724,7 +1724,8 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         List<string> names = new List<string>();
         for (int i = 0; i < colors.arraySize; i++)
         {
-            names.Add(((HexColor)colors.GetArrayElementAtIndex(i).enumValueIndex).ToString()[0].ToString());
+            string runeName = colors.GetArrayElementAtIndex(i).stringValue;
+            names.Add(string.IsNullOrEmpty(runeName) ? "?" : runeName[0].ToString().ToUpperInvariant());
         }
         return string.Join("", names);
     }
@@ -1809,21 +1810,21 @@ public class LevelConfigHexGridEditorWindow : EditorWindow
         return luminance > 0.58f ? Color.black : Color.white;
     }
 
-    private static Color GetHexColorPreview(HexColor color)
+    private static Color GetHexColorPreview(string color)
     {
         switch (color)
         {
-            case HexColor.Red:
+            case "fire":
                 return new Color(1f, 0.28f, 0.22f, 1f);
-            case HexColor.Blue:
+            case "water":
                 return new Color(0.22f, 0.55f, 1f, 1f);
-            case HexColor.Green:
+            case "heal":
                 return new Color(0.25f, 0.82f, 0.35f, 1f);
-            case HexColor.Yellow:
+            case "light":
                 return new Color(1f, 0.9f, 0.2f, 1f);
-            case HexColor.Purple:
+            case "arcane":
                 return new Color(0.72f, 0.35f, 1f, 1f);
-            case HexColor.Orange:
+            case "ember":
                 return new Color(1f, 0.52f, 0.16f, 1f);
             default:
                 return Color.white;

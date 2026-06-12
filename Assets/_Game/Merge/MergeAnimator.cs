@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using _Game.Audio;
-using _Game.Configs;
 using _Game.DI;
+using _Game.Runes;
 using _Game.Stacks;
 using DG.Tweening;
 using UnityEngine;
@@ -89,15 +89,15 @@ namespace _Game.Merge
 
         public IEnumerator AnimateDisappear(HexStackView stackView, int count)
         {
-            yield return AnimateDisappear(stackView, count, default(HexColor));
+            yield return AnimateDisappear(stackView, count, string.Empty);
         }
 
-        public IEnumerator AnimateDisappear(HexStackView stackView, int count, HexColor color)
+        public IEnumerator AnimateDisappear(HexStackView stackView, int count, string runeId)
         {
-            yield return AnimateDisappear(stackView, count, color, null);
+            yield return AnimateDisappear(stackView, count, runeId, null);
         }
 
-        public IEnumerator AnimateDisappear(HexStackView stackView, int count, HexColor color, Action<int, Vector3> pieceConsuming)
+        public IEnumerator AnimateDisappear(HexStackView stackView, int count, string runeId, Action<int, Vector3> pieceConsuming)
         {
             if (stackView == null || count <= 0)
             {
@@ -137,7 +137,7 @@ namespace _Game.Merge
                     }
                 }
                 stackView.SnapVisualsToStack();
-                SpawnDisappearEffect(effectPosition, color);
+                SpawnDisappearEffect(effectPosition, runeId);
                 PlayAllElementsDisappearCompleteSound();
             });
 		
@@ -158,7 +158,7 @@ namespace _Game.Merge
             return position + Vector3.up * disappearEffectSurfaceOffset;
         }
 
-        private void SpawnDisappearEffect(Vector3 position, HexColor color)
+        private void SpawnDisappearEffect(Vector3 position, string runeId)
         {
             if (disappearEffectPrefab == null)
             {
@@ -168,8 +168,14 @@ namespace _Game.Merge
             Transform parent = effectParent != null ? effectParent : transform;
             Transform prefabTransform = disappearEffectPrefab.transform;
             GameObject effect = Instantiate(disappearEffectPrefab, position + prefabTransform.localPosition, prefabTransform.localRotation, parent);
-            HexColorConfig colorConfig = assets != null ? assets.HexColorConfig : null;
-            ApplyEffectColor(effect, colorConfig != null ? colorConfig.GetColor(color) : HexColorConfig.GetFallbackColor(color));
+            if (assets != null &&
+                assets.RuneResolver != null &&
+                assets.RuneResolver.TryResolveRuneId(runeId, out RuneDefinition rune) &&
+                rune != null &&
+                rune.TryGetTag(out RuneColorTag colorTag))
+            {
+                ApplyEffectColor(effect, colorTag.Color);
+            }
             ParticleSystem[] particleSystems = effect.GetComponentsInChildren<ParticleSystem>(true);
             foreach (ParticleSystem particleSystem in particleSystems)
             {

@@ -1,13 +1,16 @@
 namespace _Game.Stacks
 {
+    /// <summary>
+    /// Stores one runtime stack piece as a rune identity token; gameplay effects and visuals are resolved by rune services instead of enum data.
+    /// </summary>
     [System.Serializable]
     public class HexPiece
     {
-        public HexColor color;
+        public string runeId;
 
-        public HexPiece(HexColor color)
+        public HexPiece(string runeId)
         {
-            this.color = color;
+            this.runeId = string.IsNullOrWhiteSpace(runeId) ? "fire" : runeId;
         }
     }
 }

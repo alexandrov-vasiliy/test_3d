@@ -16,57 +16,83 @@ MonoBehaviour:
   levelNumber: 1
   displayName: Level 1
   boardRadius: 2
-  boardShape: 1
-  customBaseShape: 0
+  boardShape: 2
+  customBaseShape: 1
   orientation: 0
   customCoordinates:
+  - {x: -2, y: 2}
+  - {x: -1, y: 2}
   - {x: 0, y: 2}
   - {x: -2, y: 1}
   - {x: -1, y: 1}
   - {x: 0, y: 1}
   - {x: 1, y: 1}
-  - {x: 2, y: 1}
   - {x: -2, y: 0}
   - {x: -1, y: 0}
   - {x: 0, y: 0}
   - {x: 1, y: 0}
   - {x: 2, y: 0}
-  - {x: -2, y: -1}
   - {x: -1, y: -1}
   - {x: 0, y: -1}
   - {x: 1, y: -1}
   - {x: 2, y: -1}
-  - {x: -2, y: -2}
-  - {x: -1, y: -2}
   - {x: 0, y: -2}
   - {x: 1, y: -2}
   - {x: 2, y: -2}
   startingBoardStacks: []
-  initialHandStacks: []
+  initialHandStacks:
+  - runeIdsBottomToTop: []
+    legacyColorIndexesBottomToTop: 
+  selectedRuneIds:
+  - fire
+  - water
+  - heal
+  - light
+  - arcane
+  - ember
   handGeneration:
     handSize: 3
     useRandomSeed: 1
     randomSeed: 1
-    allowedColors: 000000000100000002000000030000000400000005000000
     minStackHeight: 5
     maxStackHeight: 8
-    generateColorRuns: 1
+    generateRuneRuns: 1
     sameColorRunChance: 0.85
     minColorRunLength: 5
     maxColorRunLength: 8
     finiteDeckMode: 0
     finiteDeckStacks: []
+    legacyAllowedRuneIds:
+    - fire
+    - water
+    - heal
+    - light
+    - arcane
+    - ember
+    legacyAllowedColorIndexes: 000000000100000002000000030000000400000005000000
+  legacyAvailableRunes: []
   enemies:
   - enemyId: basic
     coordinate: {x: -1, y: 2}
     healthOverride: 0
+  - enemyId: basic
+    coordinate: {x: 1, y: 1}
+    healthOverride: 0
   goals:
-  - type: 0
-    color: 0
-    requiredCount: 10
+  - type: 3
+    runeId: fire
+    requiredCount: 0
+    legacyColorIndex: 0
+  - type: 3
+    runeId: fire
+    requiredCount: 0
+    legacyColorIndex: 0
   loseRules:
     loseWhenNoMovesRemain: 1
     moveLimit: 0
   tutorialTargetCell: {x: 0, y: 0}
   trayStacks: []
   completeWhenTrayEmpty: 1
+  references:
+    version: 2
+    RefIds: []
