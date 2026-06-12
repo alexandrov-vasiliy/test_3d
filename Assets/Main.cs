@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using _Game.Audio;
 using _Game.Board;
+using _Game.CameraFraming;
 using _Game.Configs;
 using _Game.DI;
 using _Game.Drag;
@@ -21,7 +22,7 @@ using UnityEditor;
 #endif
 
 /// <summary>
-/// Wires scene controllers, assets, UI views, and runtime services; level content is loaded from LevelConfig data instead of being owned here.
+/// Wires scene controllers, assets, UI views, dynamic board/tray layout, camera framing, and runtime services; level content is loaded from LevelConfig data instead of being owned here.
 /// </summary>
 public class Main : MonoBehaviour
 {
@@ -48,7 +49,9 @@ public class Main : MonoBehaviour
     [Header("Legacy Fallback Level")]
     [SerializeField] private int boardRadius = 2;
     [SerializeField] private Vector3 boardPosition = Vector3.zero;
-    [SerializeField] private Vector3 trayPosition = new Vector3(0f, 0f, -5.25f);
+    [SerializeField] private float trayHeight;
+    [Min(0f)]
+    [SerializeField] private float trayBoardGap = 0.75f;
     [SerializeField] private Vector2Int tutorialTargetCell = new Vector2Int(0, 1);
     [SerializeField] private List<LevelConfig.BoardStackDefinition> startingBoardStacks = new List<LevelConfig.BoardStackDefinition>();
     [SerializeField] private List<LevelConfig.StackDefinition> trayStacks = new List<LevelConfig.StackDefinition>();
@@ -58,6 +61,11 @@ public class Main : MonoBehaviour
     [SerializeField] private Vector3 cameraPosition = new Vector3(0f, 8.5f, -8.5f);
     [SerializeField] private Vector3 cameraEulerAngles = new Vector3(55f, 0f, 0f);
     [SerializeField] private float orthographicSize = 6.2f;
+    [SerializeField] private bool fitCameraToBoard = true;
+    [Min(0f)]
+    [SerializeField] private float boardCameraPadding = 0.75f;
+    [Min(0.01f)]
+    [SerializeField] private float minimumOrthographicSize = 1f;
 
     [Header("Valid Cell Highlight")]
     [SerializeField] private HexCellHighlightSettings cellHighlight = new HexCellHighlightSettings();
@@ -87,6 +95,7 @@ public class Main : MonoBehaviour
     private LevelProgressService levelProgressService;
     private LevelLoader levelLoader;
     private LevelConfig runtimeFallbackLevelConfig;
+    private BoardCameraFitter boardCameraFitter;
 
     private void Reset()
     {
@@ -102,6 +111,12 @@ public class Main : MonoBehaviour
 
         sceneBuilt = true;
         BuildGameScene();
+    }
+
+    private void LateUpdate()
+    {
+        PositionTrayRelativeToBoard();
+        boardCameraFitter?.Fit();
     }
 
 #if UNITY_EDITOR
@@ -148,7 +163,7 @@ public class Main : MonoBehaviour
 
         StackTrayController tray = ResolveSceneComponent<StackTrayController>("StackTrayController");
         tray.transform.SetParent(root, false);
-        tray.transform.position = trayPosition;
+        tray.transform.position = new Vector3(boardPosition.x, trayHeight, boardPosition.z);
         stackTrayController = tray;
 
         DragController drag = ResolveSceneComponent<DragController>("DragController");
@@ -258,6 +273,9 @@ public class Main : MonoBehaviour
         }
 
         boardController.InitializeDependencies(assets, camera, cellHighlight, soundPlayer);
+        boardCameraFitter = fitCameraToBoard
+            ? new BoardCameraFitter(camera, boardController, stackTrayController, boardCameraPadding, minimumOrthographicSize)
+            : null;
         enemySpawner.Initialize(enemyCatalog);
         boardController.SetEnemyRegistry(enemySpawner.Registry);
         stackTrayController.SetBoard(boardController);
@@ -300,6 +318,18 @@ public class Main : MonoBehaviour
             winScreenView,
             loseScreenView,
             levelTransitionView);
+    }
+
+    private void PositionTrayRelativeToBoard()
+    {
+        if (boardController == null || stackTrayController == null
+            || !boardController.TryGetBoardBoundsXZ(out Vector2 min, out _))
+        {
+            return;
+        }
+
+        float fixedX = boardController.transform.position.x;
+        stackTrayController.transform.position = new Vector3(fixedX, trayHeight, min.y - trayBoardGap);
     }
 
     public T FindSceneComponent<T>() where T : Component

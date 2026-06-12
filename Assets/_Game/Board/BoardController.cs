@@ -285,6 +285,30 @@ namespace _Game.Board
             return hasPoint;
         }
 
+        public bool GetBoardWorldCorners(List<Vector3> corners)
+        {
+            if (corners == null)
+            {
+                return false;
+            }
+
+            corners.Clear();
+            foreach (HexCellView view in views.Values)
+            {
+                if (view == null)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < 6; i++)
+                {
+                    corners.Add(view.GetCornerWorld(i));
+                }
+            }
+
+            return corners.Count > 0;
+        }
+
         public void HighlightCell(HexCell cell, bool active, bool valid)
         {
             foreach (HexCellView view in views.Values)

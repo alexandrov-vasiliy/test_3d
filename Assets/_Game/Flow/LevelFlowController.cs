@@ -16,10 +16,16 @@ using UnityEngine;
 namespace _Game.Flow
 {
     /// <summary>
-    /// Orchestrates full-game level state: input gating, queued merge completion, enemy intent turns, hand refill, player-death loss handling, win/lose screens, and level reloads.
+    /// Orchestrates level loading and full-game state, including input gating, merge completion, enemy turns, hand refill, result screens, progression, and editor-only debug level selection.
     /// </summary>
     public class LevelFlowController : MonoBehaviour
     {
+#if UNITY_EDITOR
+        [Header("Debug")]
+        [Tooltip("Loads this level instead of the saved progression level while running in the Unity Editor. Leave empty to use normal progression.")]
+        [SerializeField] private LevelConfig debugLevelOverride;
+#endif
+
         private BoardController board;
         private StackTrayController tray;
         private DragController drag;
@@ -223,6 +229,13 @@ namespace _Game.Flow
 
         private LevelConfig ResolveCurrentLevel()
         {
+#if UNITY_EDITOR
+            if (debugLevelOverride != null)
+            {
+                return debugLevelOverride;
+            }
+#endif
+
             int index = progressService != null ? progressService.CurrentLevelIndex : 0;
             if (levelDatabase != null && levelDatabase.Count > 0)
             {

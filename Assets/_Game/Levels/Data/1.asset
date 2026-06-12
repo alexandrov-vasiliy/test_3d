@@ -40,9 +40,7 @@ MonoBehaviour:
   - {x: 1, y: -2}
   - {x: 2, y: -2}
   startingBoardStacks: []
-  initialHandStacks:
-  - runeIdsBottomToTop: []
-    legacyColorIndexesBottomToTop: 
+  initialHandStacks: []
   selectedRuneIds:
   - fire
   - water
@@ -73,16 +71,9 @@ MonoBehaviour:
   legacyAvailableRunes: []
   enemies:
   - enemyId: basic
-    coordinate: {x: -1, y: 2}
-    healthOverride: 0
-  - enemyId: basic
-    coordinate: {x: 1, y: 1}
+    coordinate: {x: 0, y: 2}
     healthOverride: 0
   goals:
-  - type: 3
-    runeId: fire
-    requiredCount: 0
-    legacyColorIndex: 0
   - type: 3
     runeId: fire
     requiredCount: 0

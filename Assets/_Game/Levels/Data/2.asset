@@ -104,6 +104,12 @@ MonoBehaviour:
   - enemyId: basic
     coordinate: {x: 0, y: 1}
     healthOverride: 0
+  - enemyId: basic
+    coordinate: {x: 2, y: 0}
+    healthOverride: 0
+  - enemyId: basic
+    coordinate: {x: -2, y: 0}
+    healthOverride: 0
   goals:
   - type: 3
     runeId: fire

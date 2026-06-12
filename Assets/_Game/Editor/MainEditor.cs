@@ -41,7 +41,8 @@ public class MainEditor : Editor
     private SerializedProperty levelTransitionView;
     private SerializedProperty boardRadius;
     private SerializedProperty boardPosition;
-    private SerializedProperty trayPosition;
+    private SerializedProperty trayHeight;
+    private SerializedProperty trayBoardGap;
     private SerializedProperty tutorialTargetCell;
     private SerializedProperty startingBoardStacks;
     private SerializedProperty trayStacks;
@@ -49,6 +50,9 @@ public class MainEditor : Editor
     private SerializedProperty cameraPosition;
     private SerializedProperty cameraEulerAngles;
     private SerializedProperty orthographicSize;
+    private SerializedProperty fitCameraToBoard;
+    private SerializedProperty boardCameraPadding;
+    private SerializedProperty minimumOrthographicSize;
     private SerializedProperty cellHighlight;
 
     private Vector2Int selectedCell;
@@ -76,7 +80,8 @@ public class MainEditor : Editor
         levelTransitionView = serializedObject.FindProperty("levelTransitionView");
         boardRadius = serializedObject.FindProperty("boardRadius");
         boardPosition = serializedObject.FindProperty("boardPosition");
-        trayPosition = serializedObject.FindProperty("trayPosition");
+        trayHeight = serializedObject.FindProperty("trayHeight");
+        trayBoardGap = serializedObject.FindProperty("trayBoardGap");
         tutorialTargetCell = serializedObject.FindProperty("tutorialTargetCell");
         startingBoardStacks = serializedObject.FindProperty("startingBoardStacks");
         trayStacks = serializedObject.FindProperty("trayStacks");
@@ -84,6 +89,9 @@ public class MainEditor : Editor
         cameraPosition = serializedObject.FindProperty("cameraPosition");
         cameraEulerAngles = serializedObject.FindProperty("cameraEulerAngles");
         orthographicSize = serializedObject.FindProperty("orthographicSize");
+        fitCameraToBoard = serializedObject.FindProperty("fitCameraToBoard");
+        boardCameraPadding = serializedObject.FindProperty("boardCameraPadding");
+        minimumOrthographicSize = serializedObject.FindProperty("minimumOrthographicSize");
         cellHighlight = serializedObject.FindProperty("cellHighlight");
     }
 
@@ -262,7 +270,8 @@ public class MainEditor : Editor
 
         EditorGUILayout.PropertyField(boardRadius);
         EditorGUILayout.PropertyField(boardPosition);
-        EditorGUILayout.PropertyField(trayPosition);
+        EditorGUILayout.PropertyField(trayHeight);
+        EditorGUILayout.PropertyField(trayBoardGap);
         EditorGUILayout.PropertyField(tutorialTargetCell);
 
         EditorGUILayout.Space(4f);
@@ -317,6 +326,12 @@ public class MainEditor : Editor
         EditorGUILayout.PropertyField(cameraPosition);
         EditorGUILayout.PropertyField(cameraEulerAngles);
         EditorGUILayout.PropertyField(orthographicSize);
+        EditorGUILayout.PropertyField(fitCameraToBoard);
+        if (fitCameraToBoard.boolValue)
+        {
+            EditorGUILayout.PropertyField(boardCameraPadding);
+            EditorGUILayout.PropertyField(minimumOrthographicSize);
+        }
         EditorGUILayout.Space(4f);
     }
 
@@ -388,7 +403,7 @@ public class MainEditor : Editor
 
     private void DrawTraySceneGui()
     {
-        Vector3 trayOrigin = trayPosition.vector3Value;
+        Vector3 trayOrigin = GetPreviewTrayPosition();
         int count = Mathf.Max(0, trayStacks.arraySize);
         float spacing = 1.75f;
         StackTrayController tray = ((Main)target).FindSceneComponent<StackTrayController>();
@@ -414,6 +429,41 @@ public class MainEditor : Editor
             Handles.DrawWireDisc(position, Vector3.up, 0.45f);
             Handles.Label(position + Vector3.up * 0.25f, "Tray " + i + "\n" + StackSummary(trayStacks.GetArrayElementAtIndex(i).FindPropertyRelative("runeIdsBottomToTop")));
         }
+    }
+
+    private Vector3 GetPreviewTrayPosition()
+    {
+        int radius = Mathf.Max(0, boardRadius.intValue);
+        Vector3 boardOrigin = boardPosition.vector3Value;
+        float cellSize = GetSceneCellSize();
+        HexGridGenerator.BoardShape shape = GetSceneShape();
+        HexGridGenerator.HexOrientation orientation = GetSceneOrientation();
+        HexGridGenerator generator = GetSceneGridGenerator();
+        bool hasCorner = false;
+        float minimumZ = 0f;
+
+        foreach (Vector2Int coordinate in GetSceneCoordinates(radius, shape))
+        {
+            Vector3 center = boardOrigin + (generator != null && generator.Shape == HexGridGenerator.BoardShape.Custom
+                ? generator.CoordinateToWorld(coordinate)
+                : CoordinateToWorld(coordinate, cellSize, shape, orientation));
+            Vector3[] points = GetHexPoints(center, cellSize, orientation);
+            for (int i = 0; i < points.Length; i++)
+            {
+                Vector3 point = points[i];
+                if (!hasCorner)
+                {
+                    minimumZ = point.z;
+                    hasCorner = true;
+                    continue;
+                }
+
+                minimumZ = Mathf.Min(minimumZ, point.z);
+            }
+        }
+
+        float trayZ = hasCorner ? minimumZ - trayBoardGap.floatValue : boardOrigin.z;
+        return new Vector3(boardOrigin.x, trayHeight.floatValue, trayZ);
     }
 
     private void DrawHex(Vector3 center, float size, HexGridGenerator.HexOrientation orientation, Color fill, Color outline)
