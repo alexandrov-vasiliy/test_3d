@@ -20,9 +20,11 @@ namespace _Game.Merge
         private MergeAnimator animator;
         private HexCell lastMoveSourceCell;
         private HexCell lastMoveTargetCell;
+        private HexCell lastClearedCell;
         private HexCell latestRequestedCell;
         private IRuneResolver runeResolver;
         private int clearSequence;
+        private bool clearPerformedInStep;
         private readonly List<HexCell> pendingCells = new List<HexCell>();
         private readonly List<HexCell> queuedCells = new List<HexCell>();
         private const bool PreferPlacedCellAsMergeTarget = true;
@@ -77,17 +79,51 @@ namespace _Game.Merge
                     break;
                 }
 
-                HexCell currentCell = SelectNextMergeTarget(pendingCells, queuedCells);
-                if (currentCell == null)
+                bool movedAny = false;
+                while (guard < maxChainSteps)
+                {
+                    HexCell currentCell = SelectNextMoveTarget(pendingCells, queuedCells);
+                    if (currentCell == null)
+                    {
+                        break;
+                    }
+
+                    guard++;
+                    yield return StartCoroutine(ProcessMoveStep(currentCell));
+                    if (lastMoveSourceCell == null)
+                    {
+                        continue;
+                    }
+
+                    movedAny = true;
+                    EnqueueCellAndNeighbours(lastMoveTargetCell, pendingCells, queuedCells);
+                    EnqueueCellAndNeighbours(lastMoveSourceCell, pendingCells, queuedCells);
+                }
+
+                bool clearedAny = false;
+                while (guard < maxChainSteps)
+                {
+                    HexCell currentCell = SelectNextClearTarget(pendingCells, queuedCells);
+                    if (currentCell == null)
+                    {
+                        break;
+                    }
+
+                    guard++;
+                    yield return StartCoroutine(ProcessClearStep(currentCell));
+                    if (!clearPerformedInStep)
+                    {
+                        continue;
+                    }
+
+                    clearedAny = true;
+                    EnqueueCellAndNeighbours(lastClearedCell, pendingCells, queuedCells);
+                }
+
+                if (!movedAny && !clearedAny)
                 {
                     break;
                 }
-
-                guard++;
-                yield return StartCoroutine(ProcessMergeStep(currentCell));
-
-                EnqueueCellAndNeighbours(lastMoveTargetCell, pendingCells, queuedCells);
-                EnqueueCellAndNeighbours(lastMoveSourceCell, pendingCells, queuedCells);
             }
 
             IsRunning = false;
@@ -97,18 +133,12 @@ namespace _Game.Merge
             MergeFinished?.Invoke();
         }
 
-        private IEnumerator ProcessMergeStep(HexCell targetCell)
+        private IEnumerator ProcessMoveStep(HexCell targetCell)
         {
             lastMoveSourceCell = null;
             lastMoveTargetCell = targetCell;
 
             if (targetCell == null || targetCell.IsEmpty)
-            {
-                yield break;
-            }
-
-            yield return StartCoroutine(ResolveClears(targetCell));
-            if (targetCell.IsEmpty)
             {
                 yield break;
             }
@@ -142,14 +172,26 @@ namespace _Game.Merge
             {
                 ClearCellAndDestroyStackView(matchingNeighbour, fromView);
             }
+        }
 
-            yield return StartCoroutine(ResolveClears(targetCell));
+        private IEnumerator ProcessClearStep(HexCell cell)
+        {
+            lastClearedCell = cell;
+            clearPerformedInStep = false;
+
+            if (cell == null || cell.IsEmpty)
+            {
+                yield break;
+            }
+
+            yield return StartCoroutine(ResolveClears(cell));
         }
 
         private IEnumerator ResolveClears(HexCell cell)
         {
             while (CanClearTop(cell))
             {
+                clearPerformedInStep = true;
                 string clearedRuneId = cell.stack.TopRuneId;
                 int clearedCount = cell.stack.CountTopSameRune();
                 HexStackView stackView = board.GetStackView(cell);
@@ -219,35 +261,45 @@ namespace _Game.Merge
             return cellView != null ? cellView.transform.position : transform.position;
         }
 
-        private HexCell SelectNextMergeTarget(List<HexCell> pendingCells, List<HexCell> queuedCells)
+        private HexCell SelectNextMoveTarget(List<HexCell> pendingCells, List<HexCell> queuedCells)
         {
-            if (PreferPlacedCellAsMergeTarget && IsMergeCandidate(latestRequestedCell))
+            if (PreferPlacedCellAsMergeTarget && CanMoveIntoCell(latestRequestedCell))
             {
                 RemoveCell(pendingCells, latestRequestedCell);
                 RemoveCell(queuedCells, latestRequestedCell);
                 return latestRequestedCell;
             }
 
-            HexCell queuedCandidate = DequeueNextMergeCandidate(pendingCells, queuedCells);
+            HexCell queuedCandidate = DequeueNextMoveCandidate(pendingCells, queuedCells);
             if (queuedCandidate != null)
             {
                 return queuedCandidate;
             }
 
-            return FindAnyMergeCandidate();
+            return FindAnyMoveCandidate();
         }
 
-        private HexCell FindAnyMergeCandidate()
+        private HexCell SelectNextClearTarget(List<HexCell> pendingCells, List<HexCell> queuedCells)
         {
-            List<HexCell> cells = GetCellsInStableOrder();
-            foreach (HexCell cell in cells)
+            if (PreferPlacedCellAsMergeTarget && CanClearTop(latestRequestedCell))
             {
-                if (CanClearTop(cell))
-                {
-                    return cell;
-                }
+                RemoveCell(pendingCells, latestRequestedCell);
+                RemoveCell(queuedCells, latestRequestedCell);
+                return latestRequestedCell;
             }
 
+            HexCell queuedCandidate = DequeueNextClearCandidate(pendingCells, queuedCells);
+            if (queuedCandidate != null)
+            {
+                return queuedCandidate;
+            }
+
+            return FindAnyClearCandidate();
+        }
+
+        private HexCell FindAnyMoveCandidate()
+        {
+            List<HexCell> cells = GetCellsInStableOrder();
             foreach (HexCell cell in cells)
             {
                 if (FindMatchingNeighbour(cell) != null)
@@ -259,9 +311,18 @@ namespace _Game.Merge
             return null;
         }
 
-        private bool IsMergeCandidate(HexCell cell)
+        private HexCell FindAnyClearCandidate()
         {
-            return CanClearTop(cell) || FindMatchingNeighbour(cell) != null;
+            List<HexCell> cells = GetCellsInStableOrder();
+            foreach (HexCell cell in cells)
+            {
+                if (CanClearTop(cell))
+                {
+                    return cell;
+                }
+            }
+
+            return null;
         }
 
         private bool CanClearTop(HexCell cell)
@@ -269,7 +330,12 @@ namespace _Game.Merge
             return cell != null && !cell.IsEmpty && cell.stack.CountTopSameRune() >= clearMatchCount;
         }
 
-        private HexCell DequeueNextMergeCandidate(List<HexCell> pendingCells, List<HexCell> queuedCells)
+        private bool CanMoveIntoCell(HexCell cell)
+        {
+            return FindMatchingNeighbour(cell) != null;
+        }
+
+        private HexCell DequeueNextMoveCandidate(List<HexCell> pendingCells, List<HexCell> queuedCells)
         {
             while (pendingCells.Count > 0)
             {
@@ -277,7 +343,24 @@ namespace _Game.Merge
                 pendingCells.RemoveAt(0);
                 RemoveCell(queuedCells, cell);
 
-                if (IsMergeCandidate(cell))
+                if (CanMoveIntoCell(cell))
+                {
+                    return cell;
+                }
+            }
+
+            return null;
+        }
+
+        private HexCell DequeueNextClearCandidate(List<HexCell> pendingCells, List<HexCell> queuedCells)
+        {
+            while (pendingCells.Count > 0)
+            {
+                HexCell cell = pendingCells[0];
+                pendingCells.RemoveAt(0);
+                RemoveCell(queuedCells, cell);
+
+                if (CanClearTop(cell))
                 {
                     return cell;
                 }

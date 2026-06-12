@@ -1356,7 +1356,7 @@ MonoBehaviour:
   loseScreenView: {fileID: 81283992}
   levelTransitionView: {fileID: 993110002}
   boardRadius: 3
-  boardPosition: {x: 0, y: 0, z: 4.14}
+  boardPosition: {x: 0, y: 0, z: 2}
   trayPosition: {x: 0, y: 0, z: -5.36}
   tutorialTargetCell: {x: 0, y: -1}
   startingBoardStacks:
