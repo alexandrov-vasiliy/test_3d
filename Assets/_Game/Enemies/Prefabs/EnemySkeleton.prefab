@@ -146,6 +146,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8474630970013093495}
     - target: {fileID: 4464504968206194222, guid: 4d4ca938738ca448c9410d5c3d80e4a3, type: 3}
+      propertyPath: damageFlashColor.b
+      value: 0.36779106
+      objectReference: {fileID: 0}
+    - target: {fileID: 4464504968206194222, guid: 4d4ca938738ca448c9410d5c3d80e4a3, type: 3}
+      propertyPath: damageFlashColor.g
+      value: 0.36779106
+      objectReference: {fileID: 0}
+    - target: {fileID: 4464504968206194222, guid: 4d4ca938738ca448c9410d5c3d80e4a3, type: 3}
+      propertyPath: damageFlashColor.r
+      value: 0.8962264
+      objectReference: {fileID: 0}
+    - target: {fileID: 4464504968206194222, guid: 4d4ca938738ca448c9410d5c3d80e4a3, type: 3}
       propertyPath: flashRenderers.Array.size
       value: 1
       objectReference: {fileID: 0}

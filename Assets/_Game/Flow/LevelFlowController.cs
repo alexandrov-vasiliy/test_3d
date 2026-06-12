@@ -23,6 +23,7 @@ namespace _Game.Flow
         private BoardController board;
         private StackTrayController tray;
         private DragController drag;
+        private BoardRotationController rotation;
         private MergeSystem mergeSystem;
         private TutorialHandController tutorial;
         private PackshotController packshot;
@@ -50,6 +51,7 @@ namespace _Game.Flow
             BoardController board,
             StackTrayController tray,
             DragController drag,
+            BoardRotationController rotation,
             MergeSystem mergeSystem,
             TutorialHandController tutorial,
             PackshotController packshot,
@@ -73,6 +75,7 @@ namespace _Game.Flow
             this.board = board;
             this.tray = tray;
             this.drag = drag;
+            this.rotation = rotation;
             this.mergeSystem = mergeSystem;
             this.tutorial = tutorial;
             this.packshot = packshot;
@@ -429,6 +432,7 @@ namespace _Game.Flow
         private void SetInput(bool enabled)
         {
             drag?.SetInputEnabled(enabled);
+            rotation?.SetInputEnabled(enabled);
         }
 
         private void SetState(LevelFlowState state)

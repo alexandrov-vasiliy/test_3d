@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6805984484687052131}
   - component: {fileID: 1351371930799538400}
   - component: {fileID: 4464504968206194222}
+  - component: {fileID: 6242007648283923946}
   m_Layer: 0
   m_Name: EnemyViewCanvas
   m_TagString: Untagged
@@ -130,6 +131,19 @@ MonoBehaviour:
   deathBoolParameter: Death_b
   deathTypeIntParameter: DeathType_int
   deathType: 1
+--- !u!114 &6242007648283923946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 886625253846427536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd9fe439a927d4aaeb7aa59a96d1334c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 0}
 --- !u!1 &4989072286885547779
 GameObject:
   m_ObjectHideFlags: 0

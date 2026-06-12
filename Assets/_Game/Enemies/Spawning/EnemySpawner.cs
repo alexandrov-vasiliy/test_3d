@@ -145,8 +145,8 @@ namespace _Game.Enemies
             }
 
             GameObject enemyObject = CreateEnemyObject(archetype, enemyId);
-            enemyObject.transform.SetParent(EnsureEnemiesRoot(), true);
-            enemyObject.transform.position = cellView.transform.position + archetype.PositionOffset;
+            enemyObject.transform.SetParent(cellView.transform, false);
+            enemyObject.transform.localPosition = archetype.PositionOffset;
             EnemyController controller = enemyObject.GetComponent<EnemyController>();
             if (controller == null)
             {

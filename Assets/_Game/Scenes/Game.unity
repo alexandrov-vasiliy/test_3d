@@ -251,6 +251,7 @@ GameObject:
   - component: {fileID: 100466916}
   - component: {fileID: 100466917}
   - component: {fileID: 100466918}
+  - component: {fileID: 100466919}
   m_Layer: 0
   m_Name: BoardController
   m_TagString: Untagged
@@ -337,6 +338,23 @@ MonoBehaviour:
   meshHeight: 0.21
   meshBevelSize: 0.04
   meshSmoothNormals: 1
+--- !u!114 &100466919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100466914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5988b75b0e154e219f38416d86a5295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boundsPadding: 1
+  rotationDegreesPerScreenPixel: 0.2
+  rotationDeadZonePixels: 6
+  useSnapping: 1
+  snapDegreesPerSecond: 360
 --- !u!1 &324156632
 GameObject:
   m_ObjectHideFlags: 0

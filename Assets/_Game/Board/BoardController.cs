@@ -252,6 +252,39 @@ namespace _Game.Board
             return bestDistance <= pointerCellRadius ? bestCell : null;
         }
 
+        public bool TryGetBoardBoundsXZ(out Vector2 min, out Vector2 max)
+        {
+            min = default;
+            max = default;
+
+            bool hasPoint = false;
+            foreach (HexCellView view in views.Values)
+            {
+                if (view == null)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < 6; i++)
+                {
+                    Vector3 corner = view.GetCornerWorld(i);
+                    Vector2 point = new Vector2(corner.x, corner.z);
+                    if (!hasPoint)
+                    {
+                        min = point;
+                        max = point;
+                        hasPoint = true;
+                        continue;
+                    }
+
+                    min = Vector2.Min(min, point);
+                    max = Vector2.Max(max, point);
+                }
+            }
+
+            return hasPoint;
+        }
+
         public void HighlightCell(HexCell cell, bool active, bool valid)
         {
             foreach (HexCellView view in views.Values)

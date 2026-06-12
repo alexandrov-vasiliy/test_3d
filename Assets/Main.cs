@@ -67,6 +67,7 @@ public class Main : MonoBehaviour
     private BoardController boardController;
     private StackTrayController stackTrayController;
     private DragController dragController;
+    private BoardRotationController boardRotationController;
     private MergeAnimator mergeAnimator;
     private MergeSystem mergeSystem;
     private SoundPlayer soundPlayer;
@@ -115,6 +116,7 @@ public class Main : MonoBehaviour
         }
         stackTrayController = EnsureSceneComponent<StackTrayController>("StackTrayController");
         dragController = EnsureSceneComponent<DragController>("DragController");
+        boardRotationController = EnsureSceneComponent<BoardRotationController>("BoardRotationController");
         mergeAnimator = EnsureSceneComponent<MergeAnimator>("MergeAnimator");
         mergeSystem = EnsureSceneComponent<MergeSystem>("MergeSystem");
         soundPlayer = EnsureSceneComponent<SoundPlayer>("SoundPlayer");
@@ -152,6 +154,10 @@ public class Main : MonoBehaviour
         DragController drag = ResolveSceneComponent<DragController>("DragController");
         drag.transform.SetParent(root, false);
         dragController = drag;
+
+        BoardRotationController rotation = ResolveSceneComponent<BoardRotationController>("BoardRotationController");
+        rotation.transform.SetParent(root, false);
+        boardRotationController = rotation;
 
         SoundPlayer sounds = ResolveSceneComponent<SoundPlayer>("SoundPlayer");
         sounds.transform.SetParent(root, false);
@@ -256,6 +262,7 @@ public class Main : MonoBehaviour
         boardController.SetEnemyRegistry(enemySpawner.Registry);
         stackTrayController.SetBoard(boardController);
         dragController.Initialize(camera, boardController, stackTrayController);
+        boardRotationController.Initialize(camera, boardController, stackTrayController, dragController);
         soundPlayer.Initialize(dragController);
         mergeAnimator.Initialize(assets, soundPlayer);
         mergeSystem.Initialize(boardController, mergeAnimator);
@@ -275,6 +282,7 @@ public class Main : MonoBehaviour
             boardController,
             stackTrayController,
             dragController,
+            boardRotationController,
             mergeSystem,
             tutorialHandController,
             packshotController,
