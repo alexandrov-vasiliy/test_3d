@@ -313,6 +313,11 @@ namespace _Game.Flow
                     yield return StartCoroutine(enemySpawner.ExecuteActiveIntents(playerHealth));
                 }
 
+                if (State == LevelFlowState.Win || (goalTracker != null && goalTracker.IsComplete))
+                {
+                    yield break;
+                }
+
                 if (State == LevelFlowState.Lose || (playerHealth != null && !playerHealth.IsAlive))
                 {
                     yield break;

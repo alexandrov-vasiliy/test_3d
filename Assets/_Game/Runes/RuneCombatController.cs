@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using _Game.Enemies;
 using _Game.Merge;
 using _Game.Player;
+using _Game.Runes.Tags.Effects;
 using UnityEngine;
 
 namespace _Game.Runes
@@ -168,6 +169,7 @@ namespace _Game.Runes
                         continue;
                     }
 
+                    cast.SpawnImpact();
                     ApplyEffects(context, target, effects);
                     cast.Complete();
                     yield break;

@@ -15,7 +15,7 @@ MonoBehaviour:
   levelId: level_002
   levelNumber: 2
   displayName: Level 2
-  boardRadius: 2
+  boardRadius: 4
   boardShape: 2
   customBaseShape: 0
   orientation: 0
@@ -26,18 +26,38 @@ MonoBehaviour:
   - {x: 0, y: 1}
   - {x: 1, y: 1}
   - {x: 2, y: 1}
+  - {x: -3, y: 0}
+  - {x: -2, y: 0}
   - {x: -1, y: 0}
   - {x: 0, y: 0}
   - {x: 1, y: 0}
+  - {x: 2, y: 0}
+  - {x: 3, y: 0}
+  - {x: -3, y: -1}
   - {x: -2, y: -1}
   - {x: -1, y: -1}
   - {x: 0, y: -1}
   - {x: 1, y: -1}
   - {x: 2, y: -1}
+  - {x: 3, y: -1}
+  - {x: -3, y: -2}
   - {x: -2, y: -2}
+  - {x: -1, y: -2}
   - {x: 0, y: -2}
   - {x: 1, y: -2}
   - {x: 2, y: -2}
+  - {x: 3, y: -2}
+  - {x: -3, y: -3}
+  - {x: -2, y: -3}
+  - {x: -1, y: -3}
+  - {x: 0, y: -3}
+  - {x: 1, y: -3}
+  - {x: 2, y: -3}
+  - {x: 3, y: -3}
+  - {x: -3, y: -4}
+  - {x: -1, y: -4}
+  - {x: 1, y: -4}
+  - {x: 3, y: -4}
   startingBoardStacks:
   - coordinate: {x: 1, y: 1}
     stack:
@@ -48,7 +68,7 @@ MonoBehaviour:
   - fire
   handGeneration:
     handSize: 3
-    useRandomSeed: 1
+    useRandomSeed: 0
     randomSeed: 1
     minStackHeight: 5
     maxStackHeight: 8
@@ -99,28 +119,28 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 968039963860402184
-      type: {class: RuneIdentityTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneIdentityTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         runeId: fire
         displayName: Fire Rune
     - rid: 968039963860402185
-      type: {class: RuneColorTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneColorTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         color: {r: 0.95, g: 0.18, b: 0.18, a: 1}
     - rid: 968039963860402186
-      type: {class: RuneMatchGroupTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneMatchGroupTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         matchGroup: fire
     - rid: 968039963860402187
-      type: {class: RuneDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneDamageTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         value: 3
     - rid: 968039963860402188
-      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneAdditionalDamageTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         value: 1
     - rid: 968039963860402189
-      type: {class: RuneChargeVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneChargeVisualTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         prefab: {fileID: 0}
         baseScale: 0.25
@@ -128,7 +148,7 @@ MonoBehaviour:
         maxScale: 1.5
         offset: {x: 0, y: 0.85, z: 0}
     - rid: 968039963860402190
-      type: {class: RuneProjectileVisualTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneProjectileVisualTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data:
         prefab: {fileID: 0}
         speed: 17
@@ -138,8 +158,8 @@ MonoBehaviour:
       type: {class: TargetNearestEnemyTag, ns: _Game.Runes, asm: Assembly-CSharp}
       data: 
     - rid: 968039963860402192
-      type: {class: RuneFireEffectTag, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: RuneFireEffectTag, ns: _Game.Runes.Tags, asm: Assembly-CSharp}
       data: 
     - rid: 968039963860402193
-      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes, asm: Assembly-CSharp}
+      type: {class: DamageEnemyRuneEffect, ns: _Game.Runes.Tags.Effects, asm: Assembly-CSharp}
       data: 

@@ -1,5 +1,7 @@
 using System;
 using _Game.Runes;
+using _Game.Runes.Tags;
+using _Game.Runes.Tags.Effects;
 using UnityEditor;
 using UnityEngine;
 
@@ -144,19 +146,9 @@ public sealed class RuneComposerEditorWindow : EditorWindow
 
             for (int i = 0; i < tags.arraySize; i++)
             {
-                SerializedProperty tag = tags.GetArrayElementAtIndex(i);
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                if (DrawTagElement(tags, i))
                 {
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        EditorGUILayout.LabelField(GetManagedReferenceTypeName(tag), EditorStyles.boldLabel);
-                        if (GUILayout.Button("Remove", GUILayout.Width(70f)))
-                        {
-                            tags.DeleteArrayElementAtIndex(i);
-                            break;
-                        }
-                    }
-                    EditorGUILayout.PropertyField(tag, GUIContent.none, true);
+                    break;
                 }
             }
 
@@ -167,16 +159,38 @@ public sealed class RuneComposerEditorWindow : EditorWindow
     private void ShowAddTagMenu(SerializedProperty tags)
     {
         GenericMenu menu = new GenericMenu();
+        bool hasAvailableTags = false;
         foreach (Type type in TypeCache.GetTypesDerivedFrom<RuneTag>())
         {
-            if (type.IsAbstract || type.IsGenericType)
+            if (type.IsAbstract || type.IsGenericType || HasTagOfType(tags, type))
             {
                 continue;
             }
 
+            hasAvailableTags = true;
             menu.AddItem(new GUIContent(type.Name), false, () => AddTag(tags, type));
         }
+
+        if (!hasAvailableTags)
+        {
+            menu.AddDisabledItem(new GUIContent("All Tags Added"));
+        }
+
         menu.ShowAsContext();
+    }
+
+    private static bool HasTagOfType(SerializedProperty tags, Type type)
+    {
+        for (int i = 0; i < tags.arraySize; i++)
+        {
+            object tag = tags.GetArrayElementAtIndex(i).managedReferenceValue;
+            if (tag != null && tag.GetType() == type)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SetCatalog(RuneCatalog catalog)
@@ -212,10 +226,41 @@ public sealed class RuneComposerEditorWindow : EditorWindow
             new RuneColorTag(new Color(0.18f, 0.75f, 0.32f)),
             new RuneMatchGroupTag("heal"),
             new RuneHealPlayerTag(1),
+            new RuneAdditionalHealPlayerTag(1),
             new RuneChargeVisualTag(),
             new RuneProjectileVisualTag(),
             new HealPlayerRuneEffect()
         });
+    }
+
+    private static bool DrawTagElement(SerializedProperty tags, int index)
+    {
+        SerializedProperty tag = tags.GetArrayElementAtIndex(index);
+        object value = tag.managedReferenceValue;
+        Type tagType = value != null ? value.GetType() : null;
+
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                string label = tagType != null ? ObjectNames.NicifyVariableName(tagType.Name) : "Missing Tag";
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                {
+                    tags.DeleteArrayElementAtIndex(index);
+                    return true;
+                }
+            }
+
+            if (tagType == null)
+            {
+                EditorGUILayout.HelpBox("Serialized tag reference could not be resolved. Remove it or restore the missing type mapping.", MessageType.Warning);
+            }
+
+            EditorGUILayout.PropertyField(tag, GUIContent.none, true);
+        }
+
+        return false;
     }
 
     private void AddRune(string runeId, string displayName, RuneTag[] tags)
@@ -251,12 +296,4 @@ public sealed class RuneComposerEditorWindow : EditorWindow
         tags.GetArrayElementAtIndex(tags.arraySize - 1).managedReferenceValue = tag;
     }
 
-    private static string GetManagedReferenceTypeName(SerializedProperty property)
-    {
-        string fullName = property.managedReferenceFullTypename;
-        int lastSpace = fullName.LastIndexOf(' ');
-        string typeName = lastSpace >= 0 ? fullName.Substring(lastSpace + 1) : fullName;
-        int lastDot = typeName.LastIndexOf('.');
-        return lastDot >= 0 ? typeName.Substring(lastDot + 1) : typeName;
-    }
 }

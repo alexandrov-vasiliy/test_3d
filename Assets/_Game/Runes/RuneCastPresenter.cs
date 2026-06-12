@@ -1,9 +1,10 @@
+using _Game.Runes.Tags;
 using UnityEngine;
 
 namespace _Game.Runes
 {
     /// <summary>
-    /// Owns visual-only rune cast objects for a battle; gameplay effects are triggered by RuneCombatController after visual hit callbacks.
+    /// Owns visual-only rune charge, projectile, and impact objects for a battle; gameplay effects are triggered by RuneCombatController after visual hit callbacks.
     /// </summary>
     public sealed class RuneCastPresenter : MonoBehaviour
     {
@@ -15,10 +16,11 @@ namespace _Game.Runes
             RuneDefinition rune = context.Rune;
             RuneChargeVisualTag chargeTag = rune != null && rune.TryGetTag(out RuneChargeVisualTag resolvedCharge) ? resolvedCharge : null;
             RuneProjectileVisualTag projectileTag = rune != null && rune.TryGetTag(out RuneProjectileVisualTag resolvedProjectile) ? resolvedProjectile : null;
+            ProjectileImpactTag impactTag = rune != null && rune.TryGetTag(out ProjectileImpactTag resolvedImpact) ? resolvedImpact : null;
             Color color = rune != null && rune.TryGetTag(out RuneColorTag colorTag) ? colorTag.Color : Color.white;
             Vector3 offset = chargeTag != null ? chargeTag.Offset : new Vector3(0f, 0.85f, 0f);
             GameObject visual = CreateVisual(chargeTag != null ? chargeTag.Prefab : null, context.WorldPosition + offset, root, color);
-            return new ActiveRuneCast(this, visual, chargeTag, projectileTag, color);
+            return new ActiveRuneCast(this, visual, chargeTag, projectileTag, impactTag);
         }
 
         internal void Release(ActiveRuneCast cast)
@@ -29,6 +31,16 @@ namespace _Game.Runes
             }
 
             Destroy(cast.Visual);
+        }
+
+        internal void SpawnImpact(ProjectileImpactTag impactTag, Vector3 position)
+        {
+            if (impactTag == null || impactTag.Prefab == null)
+            {
+                return;
+            }
+
+            Instantiate(impactTag.Prefab, position, Quaternion.identity, ResolveCastRoot());
         }
 
         private Transform ResolveCastRoot()
@@ -110,15 +122,17 @@ namespace _Game.Runes
         private readonly RuneCastPresenter owner;
         private readonly RuneChargeVisualTag chargeTag;
         private readonly RuneProjectileVisualTag projectileTag;
+        private readonly ProjectileImpactTag impactTag;
         private int consumedPieces;
         private bool released;
 
-        public ActiveRuneCast(RuneCastPresenter owner, GameObject visual, RuneChargeVisualTag chargeTag, RuneProjectileVisualTag projectileTag, Color color)
+        public ActiveRuneCast(RuneCastPresenter owner, GameObject visual, RuneChargeVisualTag chargeTag, RuneProjectileVisualTag projectileTag, ProjectileImpactTag impactTag)
         {
             this.owner = owner;
             Visual = visual;
             this.chargeTag = chargeTag;
             this.projectileTag = projectileTag;
+            this.impactTag = impactTag;
             ApplyScale();
         }
 
@@ -150,6 +164,14 @@ namespace _Game.Runes
             Vector3 targetPosition = new Vector3(target.position.x, current.y, target.position.z);
             Visual.transform.position = Vector3.MoveTowards(current, targetPosition, speed * Mathf.Max(0f, deltaTime));
             return Vector3.Distance(Visual.transform.position, targetPosition) <= HitDistance;
+        }
+
+        public void SpawnImpact()
+        {
+            if (!IsReleased)
+            {
+                owner?.SpawnImpact(impactTag, CurrentPosition);
+            }
         }
 
         public void Dissipate()

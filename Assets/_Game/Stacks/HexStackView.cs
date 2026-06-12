@@ -9,7 +9,7 @@ namespace _Game.Stacks
     /// </summary>
     public class HexStackView : MonoBehaviour
     {
-        [SerializeField] private float heightOffset = 0.16f;
+        [SerializeField] private float heightOffset = 0.19f;
 
         private readonly List<HexPieceView> pieceViews = new List<HexPieceView>();
         private GameAssets assets;

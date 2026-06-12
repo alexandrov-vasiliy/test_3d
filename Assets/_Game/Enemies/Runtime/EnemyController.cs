@@ -1,15 +1,17 @@
 using System;
+using _Game.Enemies.Statuses;
 using _Game.Player;
 using UnityEngine;
 
 namespace _Game.Enemies
 {
     /// <summary>
-    /// Owns runtime combat state, active intent progression, damage requests, and view-facing state events for one enemy; victory and goal tracking stay outside this controller.
+    /// Owns runtime combat state, active intent progression, status turn hooks, damage requests, and view-facing events for one enemy; victory and goal tracking stay outside.
     /// </summary>
     public sealed class EnemyController : MonoBehaviour
     {
         private bool defeatPublished;
+        private EnemyStatusController statusController;
 
         public event Action<EnemyController> Defeated;
         public event Action<int, int> HealthChanged;
@@ -21,11 +23,19 @@ namespace _Game.Enemies
         public bool IsAlive => Runtime != null && Runtime.IsAlive;
         public int Defence => Runtime != null ? Runtime.Defence : 0;
         public EnemyIntent ActiveIntent => TryGetIntentLoop(out EnemyIntentLoop loop, out EnemyActiveIntent activeIntent) ? loop.Intents[activeIntent.ActiveIndex % loop.Intents.Count] : null;
+        public EnemyStatusController Statuses => statusController;
 
         public void Initialize(EnemyRuntime runtime)
         {
             Runtime = runtime;
             defeatPublished = false;
+            statusController = GetComponent<EnemyStatusController>();
+            if (statusController == null)
+            {
+                statusController = gameObject.AddComponent<EnemyStatusController>();
+            }
+
+            statusController.Initialize(this);
             if (Runtime != null && Runtime.TryGetTag(out EnemyActiveIntent activeIntent))
             {
                 activeIntent.Reset();
@@ -67,6 +77,11 @@ namespace _Game.Enemies
             Runtime?.AddDefence(amount);
         }
 
+        public void AddStatus(EnemyStatusEffect status)
+        {
+            statusController?.AddOrRefresh(status);
+        }
+
         public bool ExecuteActiveIntent(PlayerHealth playerHealth)
         {
             if (!IsAlive)
@@ -74,15 +89,30 @@ namespace _Game.Enemies
                 return false;
             }
 
+            bool skipIntent = statusController != null && statusController.BeginTurn();
+            if (!IsAlive)
+            {
+                statusController?.Clear();
+                return true;
+            }
+
+            if (skipIntent)
+            {
+                statusController?.CompleteTurn();
+                return true;
+            }
+
             EnemyIntent intent = ActiveIntent;
             if (intent == null)
             {
                 AdvanceIntent();
+                statusController?.CompleteTurn();
                 return false;
             }
 
             intent.Execute(this, playerHealth);
             AdvanceIntent();
+            statusController?.CompleteTurn();
             return true;
         }
 
@@ -127,6 +157,7 @@ namespace _Game.Enemies
             }
 
             defeatPublished = true;
+            statusController?.Clear();
             SetPresentationVisible(false);
             Defeated?.Invoke(this);
         }

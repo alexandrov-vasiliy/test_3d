@@ -331,12 +331,12 @@ MonoBehaviour:
   verticalOffset: 0.04
   borderColor: {r: 0, g: 1, b: 0.95, a: 1}
   useGlow: 1
-  glowWidthMultiplier: 1
+  glowWidthMultiplier: 11
   meshMaterial: {fileID: 2100000, guid: 879f18b88aea64814b2b6674a8aadb9a, type: 2}
-  meshScaleMultiplier: 1.04
+  meshScaleMultiplier: 1.2
   meshVerticalOffset: 0
-  meshHeight: 0.21
-  meshBevelSize: 0.04
+  meshHeight: 0.54
+  meshBevelSize: 111
   meshSmoothNormals: 1
 --- !u!114 &100466919
 MonoBehaviour:
@@ -1092,7 +1092,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 437858, guid: 1ae6e4e008749404d95ce29b596ce5e0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.00000069542
+      value: -0.14
       objectReference: {fileID: 0}
     - target: {fileID: 437858, guid: 1ae6e4e008749404d95ce29b596ce5e0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1374,8 +1374,8 @@ MonoBehaviour:
   loseScreenView: {fileID: 81283992}
   levelTransitionView: {fileID: 993110002}
   boardRadius: 3
-  boardPosition: {x: 0, y: 0, z: 2}
-  trayPosition: {x: 0, y: 0, z: -5.36}
+  boardPosition: {x: 0, y: 0, z: 1.49}
+  trayPosition: {x: 0, y: 0, z: -6.92}
   tutorialTargetCell: {x: 0, y: -1}
   startingBoardStacks:
   - coordinate: {x: -1, y: 0}
@@ -1416,7 +1416,7 @@ MonoBehaviour:
   cellHighlight:
     useMaterialTint: 1
     useOutline: 1
-    validColor: {r: 0.5471698, g: 0.28117853, b: 0.17292629, a: 1}
+    validColor: {r: 0.26415092, g: 0.25978994, b: 0.25542894, a: 1}
     outlineMaterial: {fileID: 2100000, guid: 5f39a7463508244a7b2c86f15c6226f4, type: 2}
     outlineLineWidth: 0.14
     outlineVerticalOffset: 0.06
@@ -1672,8 +1672,8 @@ Transform:
   m_GameObject: {fileID: 1522616674}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.09, z: 4.14}
-  m_LocalScale: {x: 4.6062, y: 4.6062, z: 4.6062}
+  m_LocalPosition: {x: 0, y: -0.63, z: 4.14}
+  m_LocalScale: {x: 3.342351, y: 4.6062, z: 4.6062}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2437,7 +2437,7 @@ MonoBehaviour:
     - rid: 968039963860402180
       type: {class: EnemyIntentAttack, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
-        damage: 5
+        damage: 1
     - rid: 968039963860402181
       type: {class: EnemyIntentDefence, ns: _Game.Enemies, asm: Assembly-CSharp}
       data:
